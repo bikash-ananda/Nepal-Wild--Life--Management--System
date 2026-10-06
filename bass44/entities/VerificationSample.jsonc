@@ -1,0 +1,170 @@
+{
+  "name": "VerificationSample",
+  "type": "object",
+  "properties": {
+    "image_url": {
+      "type": "string",
+      "title": "Image URL"
+    },
+    "ai_label": {
+      "type": "string",
+      "title": "AI Label (best guess used for display)"
+    },
+    "ai_confidence": {
+      "type": "number",
+      "title": "AI Confidence (0-1)",
+      "default": 0
+    },
+    "yolo_label": {
+      "type": "string",
+      "title": "YOLO 11 Label"
+    },
+    "yolo_confidence": {
+      "type": "number",
+      "title": "YOLO 11 Confidence (0-1)",
+      "default": 0
+    },
+    "llm_label": {
+      "type": "string",
+      "title": "LLM Vision Label"
+    },
+    "llm_confidence": {
+      "type": "number",
+      "title": "LLM Vision Confidence (0-1)",
+      "default": 0
+    },
+    "classifier_source": {
+      "type": "string",
+      "title": "Classifier Source",
+      "enum": [
+        "yolo",
+        "llm",
+        "escalated"
+      ],
+      "default": "escalated"
+    },
+    "verified_label": {
+      "type": "string",
+      "title": "Verified Label"
+    },
+    "verified_by": {
+      "type": "string",
+      "title": "Verified By"
+    },
+    "verified_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Verified At"
+    },
+    "site_id": {
+      "type": "string",
+      "title": "Site ID",
+      "ref": "Site"
+    },
+    "site_name": {
+      "type": "string",
+      "title": "Site Name"
+    },
+    "camera_id": {
+      "type": "string",
+      "title": "Camera ID"
+    },
+    "camera_name": {
+      "type": "string",
+      "title": "Camera Name"
+    },
+    "latitude": {
+      "type": "number",
+      "title": "Latitude"
+    },
+    "longitude": {
+      "type": "number",
+      "title": "Longitude"
+    },
+    "weather": {
+      "type": "string",
+      "title": "Weather"
+    },
+    "temperature_c": {
+      "type": "number",
+      "title": "Temperature (\u00b0C)"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "pending",
+        "verified",
+        "rejected",
+        "queued"
+      ],
+      "default": "pending"
+    },
+    "queued_for_training": {
+      "type": "boolean",
+      "title": "Queued for Training",
+      "default": false
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    },
+    "vote_count": {
+      "type": "number",
+      "title": "Vote Count",
+      "default": 0
+    },
+    "consensus_label": {
+      "type": "string",
+      "title": "Consensus Label"
+    },
+    "consensus_reached": {
+      "type": "boolean",
+      "title": "Consensus Reached",
+      "default": false
+    },
+    "expert_confirmed": {
+      "type": "boolean",
+      "title": "Expert Confirmed",
+      "default": false
+    },
+    "expert_id": {
+      "type": "string",
+      "title": "Expert ID"
+    },
+    "expert_name": {
+      "type": "string",
+      "title": "Expert Name"
+    },
+    "difficulty_tier": {
+      "type": "string",
+      "title": "Difficulty Tier",
+      "enum": [
+        "common",
+        "rare",
+        "escalated"
+      ],
+      "default": "common"
+    },
+    "game_mode": {
+      "type": "string",
+      "title": "Game Mode",
+      "enum": [
+        "hint_shown",
+        "hint_hidden"
+      ],
+      "default": "hint_shown"
+    },
+    "training_comments": {
+      "type": "array",
+      "title": "Training Comments (from correct votes)",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "image_url",
+    "ai_label"
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "name": "DeterrentRule",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Rule Name"
+    },
+    "site_id": {
+      "type": "string",
+      "title": "Site ID",
+      "ref": "Site"
+    },
+    "site_name": {
+      "type": "string",
+      "title": "Site Name"
+    },
+    "detection_type": {
+      "type": "string",
+      "enum": [
+        "monkey",
+        "animal",
+        "human",
+        "vehicle"
+      ],
+      "default": "monkey"
+    },
+    "min_confidence": {
+      "type": "number",
+      "title": "Min Confidence",
+      "default": 0.6
+    },
+    "require_ultrasonic": {
+      "type": "boolean",
+      "title": "Require Ultrasonic Confirm",
+      "default": true
+    },
+    "require_pir": {
+      "type": "boolean",
+      "title": "Require PIR Motion",
+      "default": false
+    },
+    "max_distance_m": {
+      "type": "number",
+      "title": "Max Distance (m)",
+      "default": 10
+    },
+    "deterrent_type": {
+      "type": "string",
+      "enum": [
+        "siren",
+        "ultrasonic_speaker",
+        "flash_light",
+        "rf_generator",
+        "laser",
+        "smart_relay",
+        "custom"
+      ],
+      "default": "siren"
+    },
+    "escalation_sequence": {
+      "type": "string",
+      "title": "Escalation Sequence",
+      "default": "flash -> siren -> audio"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "priority": {
+      "type": "number",
+      "default": 1
+    }
+  },
+  "required": [
+    "name",
+    "site_id"
+  ]
+}

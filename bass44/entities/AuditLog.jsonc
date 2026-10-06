@@ -1,0 +1,60 @@
+{
+  "name": "AuditLog",
+  "type": "object",
+  "properties": {
+    "action": {
+      "type": "string",
+      "title": "Action",
+      "enum": [
+        "create",
+        "update",
+        "delete",
+        "trigger",
+        "escalate",
+        "login",
+        "config_change",
+        "manual_override",
+        "system_alert"
+      ],
+      "default": "create"
+    },
+    "entity_type": {
+      "type": "string",
+      "title": "Entity Type"
+    },
+    "entity_id": {
+      "type": "string",
+      "title": "Entity ID"
+    },
+    "entity_name": {
+      "type": "string",
+      "title": "Entity Name"
+    },
+    "user_name": {
+      "type": "string",
+      "title": "User"
+    },
+    "details": {
+      "type": "string",
+      "title": "Details"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "info",
+        "warning",
+        "critical"
+      ],
+      "default": "info"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Timestamp"
+    }
+  },
+  "required": [
+    "action",
+    "entity_type"
+  ]
+}

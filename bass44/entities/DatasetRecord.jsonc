@@ -1,0 +1,136 @@
+{
+  "name": "DatasetRecord",
+  "type": "object",
+  "properties": {
+    "image_url": {
+      "type": "string",
+      "title": "Image URL"
+    },
+    "video_url": {
+      "type": "string",
+      "title": "Video Clip URL"
+    },
+    "correct_label": {
+      "type": "string",
+      "title": "Correct Label"
+    },
+    "bounding_boxes": {
+      "type": "array",
+      "title": "Bounding Boxes",
+      "items": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "width": {
+            "type": "number"
+          },
+          "height": {
+            "type": "number"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "camera_id": {
+      "type": "string",
+      "title": "Camera ID"
+    },
+    "camera_name": {
+      "type": "string",
+      "title": "Camera Name"
+    },
+    "site_id": {
+      "type": "string",
+      "title": "Site ID",
+      "ref": "Site"
+    },
+    "site_name": {
+      "type": "string",
+      "title": "Site Name"
+    },
+    "latitude": {
+      "type": "number",
+      "title": "Latitude"
+    },
+    "longitude": {
+      "type": "number",
+      "title": "Longitude"
+    },
+    "captured_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Captured At"
+    },
+    "weather": {
+      "type": "string",
+      "title": "Weather"
+    },
+    "temperature_c": {
+      "type": "number",
+      "title": "Temperature (\u00b0C)"
+    },
+    "sensor_readings": {
+      "type": "object",
+      "title": "Sensor Readings"
+    },
+    "verified_by": {
+      "type": "string",
+      "title": "Verified By"
+    },
+    "ai_prediction": {
+      "type": "string",
+      "title": "AI Prediction"
+    },
+    "ai_confidence": {
+      "type": "number",
+      "title": "AI Confidence (0-1)",
+      "default": 0
+    },
+    "ai_model_version": {
+      "type": "string",
+      "title": "AI Model Version"
+    },
+    "dataset_version": {
+      "type": "string",
+      "title": "Dataset Version",
+      "default": "v1.0"
+    },
+    "quality_score": {
+      "type": "number",
+      "title": "Quality Score (0-100)",
+      "default": 0
+    },
+    "is_duplicate": {
+      "type": "boolean",
+      "title": "Is Duplicate",
+      "default": false
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "pending",
+        "verified",
+        "training",
+        "deployed",
+        "rejected"
+      ],
+      "default": "pending"
+    },
+    "species": {
+      "type": "string",
+      "title": "Species"
+    }
+  },
+  "required": [
+    "image_url",
+    "correct_label"
+  ]
+}

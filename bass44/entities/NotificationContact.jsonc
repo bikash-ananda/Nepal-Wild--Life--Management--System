@@ -1,0 +1,77 @@
+{
+  "name": "NotificationContact",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Contact Name"
+    },
+    "site_id": {
+      "type": "string",
+      "title": "Site ID",
+      "ref": "Site"
+    },
+    "site_name": {
+      "type": "string",
+      "title": "Site Name"
+    },
+    "role": {
+      "type": "string",
+      "title": "Role",
+      "enum": [
+        "owner",
+        "family",
+        "manager",
+        "municipality",
+        "forest",
+        "emergency",
+        "researcher"
+      ],
+      "default": "owner"
+    },
+    "phone": {
+      "type": "string",
+      "title": "Phone"
+    },
+    "email": {
+      "type": "string",
+      "title": "Email"
+    },
+    "whatsapp": {
+      "type": "string",
+      "title": "WhatsApp"
+    },
+    "preferred_channel": {
+      "type": "string",
+      "title": "Preferred Channel",
+      "enum": [
+        "push",
+        "sms",
+        "email",
+        "whatsapp",
+        "messenger",
+        "voice_call",
+        "in_app"
+      ],
+      "default": "push"
+    },
+    "priority": {
+      "type": "number",
+      "title": "Priority",
+      "default": 1
+    },
+    "active": {
+      "type": "boolean",
+      "title": "Active",
+      "default": true
+    },
+    "available_hours": {
+      "type": "string",
+      "title": "Available Hours"
+    }
+  },
+  "required": [
+    "name",
+    "site_id"
+  ]
+}

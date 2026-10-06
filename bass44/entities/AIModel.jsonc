@@ -1,0 +1,101 @@
+{
+  "name": "AIModel",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Model Name"
+    },
+    "version": {
+      "type": "string",
+      "title": "Version"
+    },
+    "model_type": {
+      "type": "string",
+      "title": "Model Type",
+      "enum": [
+        "detection",
+        "prediction",
+        "voice",
+        "reaction"
+      ],
+      "default": "detection"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "active",
+        "training",
+        "validated",
+        "deprecated",
+        "rollback"
+      ],
+      "default": "active"
+    },
+    "accuracy": {
+      "type": "number",
+      "title": "Accuracy (%)",
+      "default": 0
+    },
+    "false_positive_rate": {
+      "type": "number",
+      "title": "False Positive Rate (%)",
+      "default": 0
+    },
+    "training_samples": {
+      "type": "number",
+      "title": "Training Samples",
+      "default": 0
+    },
+    "validation_samples": {
+      "type": "number",
+      "title": "Validation Samples",
+      "default": 0
+    },
+    "supported_classes": {
+      "type": "array",
+      "title": "Supported Classes",
+      "items": {
+        "type": "string"
+      }
+    },
+    "file_size_mb": {
+      "type": "number",
+      "title": "File Size (MB)"
+    },
+    "deployed_devices": {
+      "type": "number",
+      "title": "Deployed Devices",
+      "default": 0
+    },
+    "trained_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Trained At"
+    },
+    "deployed_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Deployed At"
+    },
+    "previous_version": {
+      "type": "string",
+      "title": "Previous Version"
+    },
+    "changelog": {
+      "type": "string",
+      "title": "Changelog"
+    },
+    "active": {
+      "type": "boolean",
+      "title": "Active",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "version",
+    "model_type"
+  ]
+}

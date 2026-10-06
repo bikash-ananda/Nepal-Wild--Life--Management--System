@@ -1,0 +1,67 @@
+{
+  "name": "ResponseAction",
+  "type": "object",
+  "properties": {
+    "case_type": {
+      "type": "string",
+      "title": "Case Type",
+      "enum": [
+        "incident",
+        "hwc",
+        "rescue",
+        "observation"
+      ],
+      "default": "incident"
+    },
+    "case_id": {
+      "type": "string",
+      "title": "Case ID"
+    },
+    "action_type": {
+      "type": "string",
+      "title": "Action Type",
+      "enum": [
+        "verify",
+        "assign",
+        "respond",
+        "evidence",
+        "comment",
+        "resolve",
+        "close",
+        "reject",
+        "duplicate"
+      ],
+      "default": "comment"
+    },
+    "action_description": {
+      "type": "string",
+      "title": "Action Description"
+    },
+    "performed_by": {
+      "type": "string",
+      "title": "Performed By ID"
+    },
+    "performed_by_name": {
+      "type": "string",
+      "title": "Performed By Name"
+    },
+    "status_change": {
+      "type": "string",
+      "title": "Status Change"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Timestamp"
+    }
+  },
+  "required": [
+    "case_type",
+    "case_id",
+    "action_type"
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "name": "DeviceTemplate",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Template Name"
+    },
+    "category": {
+      "type": "string",
+      "title": "Category",
+      "enum": [
+        "gateway",
+        "camera",
+        "sensor",
+        "deterrent",
+        "relay",
+        "actuator",
+        "other"
+      ],
+      "default": "other"
+    },
+    "device_type": {
+      "type": "string",
+      "title": "Device Type Label"
+    },
+    "manufacturer": {
+      "type": "string",
+      "title": "Default Manufacturer"
+    },
+    "default_protocol": {
+      "type": "string",
+      "title": "Default Protocol"
+    },
+    "supported_protocols": {
+      "type": "array",
+      "title": "Supported Protocols",
+      "items": {
+        "type": "string"
+      }
+    },
+    "default_port": {
+      "type": "number",
+      "title": "Default Port"
+    },
+    "auth_methods": {
+      "type": "array",
+      "title": "Supported Auth Methods",
+      "items": {
+        "type": "string"
+      }
+    },
+    "icon_name": {
+      "type": "string",
+      "title": "Icon Name",
+      "default": "Cpu"
+    },
+    "ai_capable": {
+      "type": "boolean",
+      "title": "AI Capable",
+      "default": false
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "default_power_source": {
+      "type": "string",
+      "title": "Default Power Source"
+    },
+    "active": {
+      "type": "boolean",
+      "title": "Active",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "device_type"
+  ]
+}

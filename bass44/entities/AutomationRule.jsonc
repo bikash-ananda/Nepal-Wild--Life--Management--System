@@ -1,0 +1,70 @@
+{
+  "name": "AutomationRule",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Rule Name"
+    },
+    "site_id": {
+      "type": "string",
+      "title": "Site ID",
+      "ref": "Site"
+    },
+    "site_name": {
+      "type": "string",
+      "title": "Site Name"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "conditions": {
+      "type": "array",
+      "title": "Conditions (IF / AND)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "operator": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "title": "Actions (THEN)",
+      "items": {
+        "type": "string"
+      }
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "priority": {
+      "type": "number",
+      "default": 1
+    },
+    "trigger_count": {
+      "type": "number",
+      "title": "Times Triggered",
+      "default": 0
+    },
+    "last_triggered": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Last Triggered"
+    }
+  },
+  "required": [
+    "name",
+    "site_id"
+  ]
+}

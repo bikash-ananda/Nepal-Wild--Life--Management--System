@@ -1,0 +1,92 @@
+{
+  "name": "DeterrentDevice",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Device Name"
+    },
+    "device_id": {
+      "type": "string",
+      "title": "Device ID"
+    },
+    "site_id": {
+      "type": "string",
+      "title": "Site ID",
+      "ref": "Site"
+    },
+    "site_name": {
+      "type": "string",
+      "title": "Site Name"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "siren",
+        "ultrasonic_emitter",
+        "flash_light",
+        "strobe_light",
+        "rf_deterrent",
+        "laser",
+        "water_sprinkler",
+        "mechanical_scarecrow",
+        "relay_controller",
+        "smart_actuator",
+        "drone",
+        "ai_voice_speaker"
+      ],
+      "default": "siren"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "online",
+        "offline",
+        "maintenance",
+        "triggered"
+      ],
+      "default": "online"
+    },
+    "power_level": {
+      "type": "number",
+      "title": "Power Level (%)",
+      "default": 100
+    },
+    "intensity_levels": {
+      "type": "number",
+      "title": "Intensity Levels",
+      "default": 3
+    },
+    "supported_species": {
+      "type": "array",
+      "title": "Supported Species",
+      "items": {
+        "type": "string"
+      }
+    },
+    "current_intensity": {
+      "type": "number",
+      "title": "Current Intensity",
+      "default": 0
+    },
+    "last_triggered": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Last Triggered"
+    },
+    "trigger_count": {
+      "type": "number",
+      "title": "Total Triggers",
+      "default": 0
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "site_id",
+    "type"
+  ]
+}

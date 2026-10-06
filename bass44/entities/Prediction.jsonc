@@ -1,0 +1,91 @@
+{
+  "name": "Prediction",
+  "type": "object",
+  "properties": {
+    "site_id": {
+      "type": "string",
+      "title": "Site ID",
+      "ref": "Site"
+    },
+    "site_name": {
+      "type": "string",
+      "title": "Site Name"
+    },
+    "animal_type": {
+      "type": "string",
+      "enum": [
+        "monkey",
+        "animal",
+        "wild_boar",
+        "elephant",
+        "leopard",
+        "bear",
+        "livestock",
+        "human"
+      ],
+      "default": "monkey"
+    },
+    "animal_count": {
+      "type": "number",
+      "default": 1
+    },
+    "probability": {
+      "type": "number",
+      "title": "Entry Probability (0-1)",
+      "default": 0.5
+    },
+    "estimated_arrival_minutes": {
+      "type": "number",
+      "title": "Est. Arrival (min)",
+      "default": 10
+    },
+    "direction": {
+      "type": "string",
+      "title": "Movement Direction",
+      "default": "east"
+    },
+    "speed_kmh": {
+      "type": "number",
+      "title": "Movement Speed (km/h)",
+      "default": 5
+    },
+    "route_description": {
+      "type": "string",
+      "title": "Predicted Route"
+    },
+    "risk_score": {
+      "type": "number",
+      "title": "Risk Score (0-100)",
+      "default": 50
+    },
+    "crop_damage_probability": {
+      "type": "number",
+      "title": "Crop Damage Probability (0-1)",
+      "default": 0.3
+    },
+    "recommended_action": {
+      "type": "string",
+      "title": "Recommended Action"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "fulfilled",
+        "expired",
+        "cancelled"
+      ],
+      "default": "active"
+    },
+    "predicted_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Predicted At"
+    }
+  },
+  "required": [
+    "site_id",
+    "animal_type",
+    "probability"
+  ]
+}

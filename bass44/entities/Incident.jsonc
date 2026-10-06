@@ -1,0 +1,156 @@
+{
+  "name": "Incident",
+  "type": "object",
+  "properties": {
+    "incident_id": {
+      "type": "string",
+      "title": "Incident ID"
+    },
+    "type": {
+      "type": "string",
+      "title": "Incident Type",
+      "enum": [
+        "poaching",
+        "wildlife_killing",
+        "injured_wildlife",
+        "dead_wildlife",
+        "illegal_hunting",
+        "illegal_trapping",
+        "illegal_trade",
+        "habitat_destruction",
+        "forest_fire",
+        "encroachment",
+        "wildlife_conflict",
+        "wildlife_rescue",
+        "dangerous_wildlife",
+        "ranger_emergency",
+        "other"
+      ],
+      "default": "other"
+    },
+    "severity": {
+      "type": "string",
+      "title": "Severity",
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low"
+      ],
+      "default": "medium"
+    },
+    "species": {
+      "type": "string",
+      "title": "Species"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "latitude": {
+      "type": "number",
+      "title": "Latitude"
+    },
+    "longitude": {
+      "type": "number",
+      "title": "Longitude"
+    },
+    "location_name": {
+      "type": "string",
+      "title": "Location / Area"
+    },
+    "affected_area": {
+      "type": "string",
+      "title": "Affected Area (GeoJSON polygon)"
+    },
+    "reported_by": {
+      "type": "string",
+      "title": "Reporter ID"
+    },
+    "reporter_name": {
+      "type": "string",
+      "title": "Reporter Name"
+    },
+    "reporter_role": {
+      "type": "string",
+      "title": "Reporter Role"
+    },
+    "photos": {
+      "type": "array",
+      "title": "Photos",
+      "items": {
+        "type": "string"
+      }
+    },
+    "videos": {
+      "type": "array",
+      "title": "Videos",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "title": "Evidence Files",
+      "items": {
+        "type": "string"
+      }
+    },
+    "assigned_officer": {
+      "type": "string",
+      "title": "Assigned Officer"
+    },
+    "response_team": {
+      "type": "string",
+      "title": "Response Team"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "reported",
+        "verified",
+        "assigned",
+        "in_progress",
+        "resolved",
+        "closed"
+      ],
+      "default": "reported"
+    },
+    "resolution": {
+      "type": "string",
+      "title": "Resolution"
+    },
+    "investigation_notes": {
+      "type": "string",
+      "title": "Investigation Notes"
+    },
+    "patrol_id": {
+      "type": "string",
+      "title": "Related Patrol ID"
+    },
+    "verified_by": {
+      "type": "string",
+      "title": "Verified By"
+    },
+    "verified_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Verified At"
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Occurred At"
+    },
+    "is_demo": {
+      "type": "boolean",
+      "title": "Demo Record",
+      "default": false
+    }
+  },
+  "required": [
+    "type",
+    "severity"
+  ]
+}

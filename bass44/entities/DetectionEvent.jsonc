@@ -1,0 +1,103 @@
+{
+  "name": "DetectionEvent",
+  "type": "object",
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "title": "Event ID"
+    },
+    "site_id": {
+      "type": "string",
+      "title": "Site ID"
+    },
+    "site_name": {
+      "type": "string",
+      "title": "Site Name"
+    },
+    "camera_id": {
+      "type": "string",
+      "title": "Camera ID"
+    },
+    "camera_name": {
+      "type": "string",
+      "title": "Camera Name"
+    },
+    "detection_type": {
+      "type": "string",
+      "enum": [
+        "monkey",
+        "animal",
+        "human",
+        "vehicle"
+      ],
+      "default": "monkey"
+    },
+    "object_count": {
+      "type": "number",
+      "default": 1
+    },
+    "confidence": {
+      "type": "number",
+      "title": "AI Confidence (0-1)",
+      "default": 0.85
+    },
+    "latitude": {
+      "type": "number"
+    },
+    "longitude": {
+      "type": "number"
+    },
+    "image_url": {
+      "type": "string",
+      "title": "Image URL"
+    },
+    "sensor_snapshot": {
+      "type": "object",
+      "title": "Sensor Snapshot"
+    },
+    "action_taken": {
+      "type": "string",
+      "title": "Action Taken",
+      "default": "none"
+    },
+    "deterrent_triggered": {
+      "type": "boolean",
+      "default": false
+    },
+    "ai_model_version": {
+      "type": "string",
+      "default": "yolov8n-v1.0"
+    },
+    "individual_id": {
+      "type": "string",
+      "title": "Identified Individual ID"
+    },
+    "match_confidence": {
+      "type": "number",
+      "title": "Individual Match Confidence (0-1)"
+    },
+    "weather": {
+      "type": "string",
+      "title": "Weather"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "confirmed",
+        "false_alarm",
+        "resolved"
+      ],
+      "default": "new"
+    },
+    "detected_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Detected At"
+    }
+  },
+  "required": [
+    "site_id",
+    "detection_type"
+  ]
+}

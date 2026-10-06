@@ -1,0 +1,71 @@
+{
+  "name": "VoiceCallLog",
+  "type": "object",
+  "properties": {
+    "contact_name": {
+      "type": "string",
+      "title": "Contact Name"
+    },
+    "phone": {
+      "type": "string",
+      "title": "Phone"
+    },
+    "site_id": {
+      "type": "string",
+      "title": "Site ID",
+      "ref": "Site"
+    },
+    "site_name": {
+      "type": "string",
+      "title": "Site Name"
+    },
+    "trigger": {
+      "type": "string",
+      "title": "Trigger"
+    },
+    "message": {
+      "type": "string",
+      "title": "Message"
+    },
+    "language": {
+      "type": "string",
+      "title": "Language",
+      "enum": [
+        "en",
+        "ne"
+      ],
+      "default": "ne"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "initiated",
+        "answered",
+        "no_answer",
+        "failed",
+        "busy"
+      ],
+      "default": "initiated"
+    },
+    "duration_seconds": {
+      "type": "number",
+      "title": "Duration (s)",
+      "default": 0
+    },
+    "acknowledged": {
+      "type": "boolean",
+      "title": "Acknowledged",
+      "default": false
+    },
+    "initiated_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Initiated At"
+    }
+  },
+  "required": [
+    "contact_name",
+    "phone"
+  ]
+}

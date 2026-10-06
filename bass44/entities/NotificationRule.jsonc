@@ -1,0 +1,85 @@
+{
+  "name": "NotificationRule",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Rule Name"
+    },
+    "site_id": {
+      "type": "string",
+      "title": "Site ID",
+      "ref": "Site"
+    },
+    "site_name": {
+      "type": "string",
+      "title": "Site Name"
+    },
+    "trigger_type": {
+      "type": "string",
+      "title": "Trigger Type",
+      "enum": [
+        "detection",
+        "prediction",
+        "device_offline",
+        "emergency",
+        "low_battery",
+        "crop_damage"
+      ],
+      "default": "detection"
+    },
+    "species": {
+      "type": "string",
+      "title": "Species"
+    },
+    "min_confidence": {
+      "type": "number",
+      "title": "Min Confidence",
+      "default": 0.5
+    },
+    "min_risk_level": {
+      "type": "string",
+      "title": "Min Risk Level",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "default": "medium"
+    },
+    "channels": {
+      "type": "array",
+      "title": "Channels",
+      "items": {
+        "type": "string"
+      }
+    },
+    "contact_roles": {
+      "type": "array",
+      "title": "Contact Roles",
+      "items": {
+        "type": "string"
+      }
+    },
+    "escalation_minutes": {
+      "type": "number",
+      "title": "Escalation After (min)",
+      "default": 5
+    },
+    "ai_optimized": {
+      "type": "boolean",
+      "title": "AI Optimized",
+      "default": true
+    },
+    "active": {
+      "type": "boolean",
+      "title": "Active",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "site_id"
+  ]
+}

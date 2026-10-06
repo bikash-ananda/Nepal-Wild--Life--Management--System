@@ -1,0 +1,59 @@
+{
+  "name": "Site",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Site Name"
+    },
+    "code": {
+      "type": "string",
+      "title": "Site Code"
+    },
+    "region": {
+      "type": "string",
+      "title": "Region",
+      "enum": [
+        "National",
+        "Provincial",
+        "District",
+        "Municipality",
+        "Organization"
+      ],
+      "default": "District"
+    },
+    "admin_level": {
+      "type": "string",
+      "title": "Admin Level"
+    },
+    "latitude": {
+      "type": "number",
+      "title": "Latitude"
+    },
+    "longitude": {
+      "type": "number",
+      "title": "Longitude"
+    },
+    "address": {
+      "type": "string",
+      "title": "Address"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive",
+        "maintenance"
+      ],
+      "default": "active"
+    },
+    "geofence_radius_m": {
+      "type": "number",
+      "title": "Geofence Radius (m)",
+      "default": 100
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

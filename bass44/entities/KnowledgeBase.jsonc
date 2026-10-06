@@ -1,0 +1,76 @@
+{
+  "name": "KnowledgeBase",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "Title"
+    },
+    "category": {
+      "type": "string",
+      "title": "Category",
+      "enum": [
+        "movement_pattern",
+        "seasonal_trend",
+        "deterrent_effectiveness",
+        "crop_damage",
+        "model_update",
+        "regional_insight"
+      ],
+      "default": "movement_pattern"
+    },
+    "region": {
+      "type": "string",
+      "title": "Region"
+    },
+    "species": {
+      "type": "string",
+      "title": "Species"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "data_points": {
+      "type": "number",
+      "title": "Data Points",
+      "default": 0
+    },
+    "confidence": {
+      "type": "number",
+      "title": "Confidence (0-1)",
+      "default": 0.5
+    },
+    "insights": {
+      "type": "string",
+      "title": "Key Insights"
+    },
+    "recommendations": {
+      "type": "string",
+      "title": "Recommendations"
+    },
+    "shared_by": {
+      "type": "string",
+      "title": "Shared By"
+    },
+    "verified": {
+      "type": "boolean",
+      "title": "Verified",
+      "default": false
+    },
+    "shared": {
+      "type": "boolean",
+      "title": "Shared",
+      "default": false
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+    }
+  },
+  "required": [
+    "title",
+    "category"
+  ]
+}

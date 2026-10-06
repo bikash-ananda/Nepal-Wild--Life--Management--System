@@ -1,0 +1,80 @@
+{
+  "name": "Alert",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "alert_type": {
+      "type": "string",
+      "enum": [
+        "monkey_detection",
+        "flagship_detection",
+        "device_offline",
+        "camera_offline",
+        "power_failure",
+        "low_battery",
+        "storage_full",
+        "sensor_fault"
+      ],
+      "default": "monkey_detection"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "info",
+        "warning",
+        "high",
+        "critical"
+      ],
+      "default": "warning"
+    },
+    "site_id": {
+      "type": "string",
+      "ref": "Site"
+    },
+    "site_name": {
+      "type": "string"
+    },
+    "device_id": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "species_name": {
+      "type": "string",
+      "title": "Species Name"
+    },
+    "latitude": {
+      "type": "number"
+    },
+    "longitude": {
+      "type": "number"
+    },
+    "image_url": {
+      "type": "string",
+      "title": "Detection Image URL"
+    },
+    "individual_id": {
+      "type": "string",
+      "title": "Linked Individual ID"
+    },
+    "acknowledged": {
+      "type": "boolean",
+      "default": false
+    },
+    "acknowledged_by": {
+      "type": "string"
+    },
+    "triggered_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "title",
+    "alert_type",
+    "severity"
+  ]
+}
