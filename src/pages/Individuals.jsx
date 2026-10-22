@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ScanFace, UserPlus, Search, Fingerprint } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import StatusBadge from "@/components/StatusBadge";
@@ -38,8 +38,8 @@ export default function Individuals() {
   const load = () => {
     setLoading(true);
     Promise.all([
-      base44.entities.AnimalIndividual.filter({}, { sort: "-last_seen_at", limit: 100 }),
-      base44.entities.Species.filter({ category: "wildlife" }, { limit: 200 }),
+      api.entities.AnimalIndividual.filter({}, { sort: "-last_seen_at", limit: 100 }),
+      api.entities.Species.filter({ category: "wildlife" }, { limit: 200 }),
     ])
       .then(([res, spRes]) => {
         setItems(res.items || res || []);

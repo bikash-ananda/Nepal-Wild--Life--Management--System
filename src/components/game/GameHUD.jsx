@@ -1,6 +1,5 @@
 import React from "react";
-import { Flame, Star, Trophy } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Flame, Star } from "lucide-react";
 
 // Compact heads-up display for the verification game: level title, total points,
 // current streak, and a progress bar toward the next level.

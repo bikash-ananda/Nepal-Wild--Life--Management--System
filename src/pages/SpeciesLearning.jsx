@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { PawPrint, Plus, Loader2, Trash2, Upload, Brain, Zap, Shield, CheckCircle2, X } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { PawPrint, Plus, Loader2, Trash2, Upload, Brain, CheckCircle2 } from "lucide-react";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,7 @@ export default function SpeciesLearning() {
   const { toast } = useToast();
 
   const load = async () => {
-    const s = await base44.entities.Species.list("-created_date", 100);
+    const s = await api.entities.Species.list("-created_date", 100);
     setSpecies(s); setLoading(false);
   };
 
@@ -46,8 +46,8 @@ export default function SpeciesLearning() {
   const handleAdd = async () => {
     if (!form.name) { toast({ title: "Name required", variant: "destructive" }); return; }
     setSaving(true);
-    await base44.entities.Species.create({ ...form, sample_count: 0, model_status: "not_trained", active: true });
-    await base44.entities.AuditLog.create({ action: "create", entity_type: "Species", entity_name: form.name, user_name: "admin", details: `Added new species: ${form.name} (${form.category})`, severity: "info", timestamp: new Date().toISOString() });
+    await api.entities.Species.create({ ...form, sample_count: 0, model_status: "not_trained", active: true });
+    await api.entities.AuditLog.create({ action: "create", entity_type: "Species", entity_name: form.name, user_name: "admin", details: `Added new species: ${form.name} (${form.category})`, severity: "info", timestamp: new Date().toISOString() });
     toast({ title: "Species added", description: `${form.name} is now available for detection. Upload labelled images to train the model.` });
     setSaving(false); setShowAdd(false);
     setForm({ name: "", scientific_name: "", category: "wildlife", description: "", detection_threshold: 0.7, response_rules: "", assigned_deterrents: [] });
@@ -59,25 +59,25 @@ export default function SpeciesLearning() {
   };
 
   const handleDelete = async (s) => {
-    await base44.entities.Species.delete(s.id);
+    await api.entities.Species.delete(s.id);
     toast({ title: "Species removed", description: `${s.name} has been deleted.` });
     load();
   };
 
   const handleTrain = async (s) => {
-    await base44.entities.Species.update(s.id, { model_status: "training" });
+    await api.entities.Species.update(s.id, { model_status: "training" });
     toast({ title: `Training started for ${s.name}`, description: "Collecting samples and training a new detection model..." });
     load();
     setTimeout(async () => {
-      await base44.entities.Species.update(s.id, { model_status: "trained", sample_count: (s.sample_count || 0) + 150 });
+      await api.entities.Species.update(s.id, { model_status: "trained", sample_count: (s.sample_count || 0) + 150 });
       toast({ title: `${s.name} model trained`, description: "Ready for evaluation and deployment." });
       load();
     }, 4000);
   };
 
   const handleDeploy = async (s) => {
-    await base44.entities.Species.update(s.id, { model_status: "deployed" });
-    await base44.entities.AuditLog.create({ action: "config_change", entity_type: "Species", entity_name: s.name, user_name: "admin", details: `Deployed detection model for ${s.name}`, severity: "warning", timestamp: new Date().toISOString() });
+    await api.entities.Species.update(s.id, { model_status: "deployed" });
+    await api.entities.AuditLog.create({ action: "config_change", entity_type: "Species", entity_name: s.name, user_name: "admin", details: `Deployed detection model for ${s.name}`, severity: "warning", timestamp: new Date().toISOString() });
     toast({ title: `${s.name} model deployed`, description: "Detection active on all connected devices." });
     load();
   };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { MapPin, Calendar, Route, Clock, Fingerprint, Footprints, ArrowRight, ScanFace } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import PrivateImage from "@/components/PrivateImage";
@@ -28,7 +28,7 @@ export default function SightingHistory() {
   const [identifyOpen, setIdentifyOpen] = useState(false);
 
   useEffect(() => {
-    base44.entities.AnimalIndividual.filter({ active: true }, { sort: "-last_seen_at", limit: 100 })
+    api.entities.AnimalIndividual.filter({ active: true }, { sort: "-last_seen_at", limit: 100 })
       .then((res) => setIndividuals(res.items || res || []))
       .catch(() => {})
       .finally(() => {});
@@ -40,8 +40,8 @@ export default function SightingHistory() {
     const detFilter = selectedId === "all" ? { individual_id: { $ne: null } } : { individual_id: selectedId };
     const obsFilter = selectedId === "all" ? { individual_id: { $ne: null } } : { individual_id: selectedId };
     Promise.all([
-      base44.entities.DetectionEvent.filter(detFilter, { sort: "-detected_at", limit: 100 }),
-      base44.entities.WildlifeObservation.filter(obsFilter, { sort: "-observed_at", limit: 100 }),
+      api.entities.DetectionEvent.filter(detFilter, { sort: "-detected_at", limit: 100 }),
+      api.entities.WildlifeObservation.filter(obsFilter, { sort: "-observed_at", limit: 100 }),
     ])
       .then(([dRes, oRes]) => {
         setDetections(dRes.items || dRes || []);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Loader2, ListOrdered, CheckCircle2, ChevronRight } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import { useToast } from "@/components/ui/use-toast";
@@ -17,7 +17,7 @@ export default function ExpertReview() {
 
   const load = useCallback(async () => {
     try {
-      const res = await base44.functions.invoke("verificationGame", { action: "reviewQueue" });
+      const res = await api.functions.invoke("verificationGame", { action: "reviewQueue" });
       setQueue(res.queue || []);
       if (!selectedId && (res.queue || []).length) setSelectedId(res.queue[0].id);
     } catch (e) {
@@ -41,11 +41,15 @@ export default function ExpertReview() {
 
   const handleConfirm = async () => {
     if (!selected) return;
+    const label = selected.consensus_label || selected.votes?.[0]?.voted_label;
+    if (!label) {
+      toast({ title: "No review label to confirm", description: "Collect a vote or use Override to enter the reviewed label.", variant: "destructive" });
+      return;
+    }
     setBusy(true);
     try {
-      await base44.functions.invoke("verificationGame", { action: "confirmLabel", sample_id: selected.id });
-      base44.functions.invoke("yoloRetrain", { action: "checkThreshold" }).catch(() => {});
-      toast({ title: "Label confirmed", description: `Verified as ${selected.consensus_label}. Voters awarded points.` });
+      await api.functions.invoke("verificationGame", { action: "confirmLabel", sample_id: selected.id, label });
+      toast({ title: "Label confirmed", description: `Saved as ${label}. Model training is not configured.` });
       refreshAfter();
     } catch (e) {
       setBusy(false);
@@ -57,9 +61,8 @@ export default function ExpertReview() {
     if (!selected || !label) return;
     setBusy(true);
     try {
-      await base44.functions.invoke("verificationGame", { action: "overrideLabel", sample_id: selected.id, label });
-      base44.functions.invoke("yoloRetrain", { action: "checkThreshold" }).catch(() => {});
-      toast({ title: "Label overridden", description: `Verified as ${label}. Matching voters awarded points.` });
+      await api.functions.invoke("verificationGame", { action: "overrideLabel", sample_id: selected.id, label });
+      toast({ title: "Label overridden", description: `Saved as ${label}. Model training is not configured.` });
       refreshAfter();
     } catch (e) {
       setBusy(false);
@@ -78,7 +81,7 @@ export default function ExpertReview() {
     <div>
       <PageHeader
         title="Expert Review"
-        description="High-value and low-agreement classifications need a senior verifier to confirm the ground truth before they feed model retraining."
+        description="A reviewer adjudicates image labels after community votes. The confirmed record can trigger site-scoped push alerts; model training remains disabled."
         icon={ListOrdered}
       />
 

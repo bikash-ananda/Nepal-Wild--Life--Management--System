@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, ShieldAlert, MapPin, User, Clock, Loader2 } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import SeverityBadge from "@/components/SeverityBadge";
 import StatusBadge from "@/components/StatusBadge";
 import DemoBadge from "@/components/DemoBadge";
 import CaseTimeline from "@/components/CaseTimeline";
-import { Button } from "@/components/ui/button";
 
 export default function IncidentDetail() {
   const { id } = useParams();
@@ -14,7 +13,7 @@ export default function IncidentDetail() {
   const [loading, setLoading] = useState(true);
 
   const load = () => {
-    base44.entities.Incident.get(id).then(setIncident).catch(() => {}).finally(() => setLoading(false));
+    api.entities.Incident.get(id).then(setIncident).catch(() => {}).finally(() => setLoading(false));
   };
   useEffect(() => { load(); }, [id]);
 
@@ -22,7 +21,7 @@ export default function IncidentDetail() {
   if (!incident) return <div className="text-center py-20 text-slate-500">Incident not found. <Link to="/incidents" className="text-emerald-600">Back</Link></div>;
 
   const updateStatus = async (status) => {
-    await base44.entities.Incident.update(incident.id, { status });
+    await api.entities.Incident.update(incident.id, { status });
     setIncident({ ...incident, status });
   };
 

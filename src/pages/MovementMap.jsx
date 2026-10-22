@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Route, Footprints, MapPin, Calendar, Ruler, Clock, Filter, Loader2, Eye, EyeOff, Fingerprint } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -42,9 +42,9 @@ export default function MovementMap() {
     (async () => {
       try {
         const [indRes, detRes, obsRes] = await Promise.all([
-          base44.entities.AnimalIndividual.filter({ active: true }, { sort: "-last_seen_at", limit: 100 }),
-          base44.entities.DetectionEvent.filter({ individual_id: { $ne: null } }, { sort: "-detected_at", limit: 200 }),
-          base44.entities.WildlifeObservation.filter({ individual_id: { $ne: null } }, { sort: "-observed_at", limit: 200 }),
+          api.entities.AnimalIndividual.filter({ active: true }, { sort: "-last_seen_at", limit: 100 }),
+          api.entities.DetectionEvent.filter({ individual_id: { $ne: null } }, { sort: "-detected_at", limit: 200 }),
+          api.entities.WildlifeObservation.filter({ individual_id: { $ne: null } }, { sort: "-observed_at", limit: 200 }),
         ]);
         setIndividuals(indRes.items || indRes || []);
         setDetections(detRes.items || detRes || []);

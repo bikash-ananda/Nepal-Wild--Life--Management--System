@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { CheckCircle2, Edit3, SkipForward, Loader2, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import PrivateImage from "@/components/PrivateImage";
 import { cn } from "@/lib/utils";
 

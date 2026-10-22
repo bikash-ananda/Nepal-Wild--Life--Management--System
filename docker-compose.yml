@@ -1,0 +1,130 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-nepal_wildlife}
+      POSTGRES_USER: ${POSTGRES_USER:-wildlife}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - backend
+
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    init: true
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      LOG_LEVEL: info
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: ${POSTGRES_DB:-nepal_wildlife}
+      PGUSER: ${POSTGRES_USER:-wildlife}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      PGPOOL_MAX: ${PGPOOL_MAX:-10}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      CAMERA_ENCRYPTION_KEY: ${CAMERA_ENCRYPTION_KEY:?Set CAMERA_ENCRYPTION_KEY in .env}
+      CAMERA_VPN_CIDRS: ${CAMERA_VPN_CIDRS:-}
+      MEDIAMTX_API_URL: http://mediamtx:9997
+      MEDIAMTX_API_USER: ${MEDIAMTX_API_USER:?Set MEDIAMTX_API_USER in .env}
+      MEDIAMTX_API_PASSWORD: ${MEDIAMTX_API_PASSWORD:?Set MEDIAMTX_API_PASSWORD in .env}
+      SESSION_TTL: ${SESSION_TTL:-12h}
+      APP_ORIGIN: ${APP_ORIGIN:?Set APP_ORIGIN in .env}
+      APP_VERSION: ${APP_VERSION:-1.0.0}
+      ALLOW_SELF_REGISTRATION: ${ALLOW_SELF_REGISTRATION:-false}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:?Set BOOTSTRAP_ADMIN_EMAIL in .env}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:?Set BOOTSTRAP_ADMIN_PASSWORD in .env}
+      BOOTSTRAP_ADMIN_NAME: ${BOOTSTRAP_ADMIN_NAME:-Wildlife Administrator}
+      MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-20971520}
+      MEDIA_ROOT: /data/media
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:admin@bikasheng.com.np}
+    volumes:
+      - media_data:/data/media
+    depends_on:
+      db:
+        condition: service_healthy
+      mediamtx:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - edge
+      - backend
+      - camera_control
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    networks:
+      - edge
+
+  mediamtx:
+    image: bluenviron/mediamtx:1.21.2
+    restart: unless-stopped
+    init: true
+    ports:
+      - "8189:8189/udp"
+    volumes:
+      - ./mediamtx.yml:/mediamtx.yml:ro
+    networks:
+      - edge
+      - camera_control
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_started
+      mediamtx:
+        condition: service_started
+    networks:
+      - edge
+
+networks:
+  edge:
+  backend:
+    internal: true
+  camera_control:
+    internal: true
+
+volumes:
+  postgres_data:
+  media_data:
+  caddy_data:
+  caddy_config:

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Workflow, Plus, Trash2, ArrowRight, Zap, Bell, Camera, Video, Shield, Waves, Volume2, Lightbulb, Speaker, Radio, Droplets } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { Workflow, Plus, Trash2, ArrowRight, Bell, Shield, FileCheck2, ClipboardList, UsersRound } from "lucide-react";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
@@ -26,16 +26,11 @@ const conditionFields = [
 const operators = ["==", "!=", ">", "<", ">=", "<=", "contains"];
 
 const actionOptions = [
-  { value: "Activate ultrasonic", icon: Waves },
-  { value: "Turn on siren", icon: Volume2 },
-  { value: "Flash lights", icon: Lightbulb },
-  { value: "Record video", icon: Video },
-  { value: "Notify operator", icon: Bell },
-  { value: "Camera track target", icon: Camera },
-  { value: "AI voice announcement", icon: Speaker },
-  { value: "Activate RF deterrent", icon: Radio },
-  { value: "Activate water sprinkler", icon: Droplets },
-  { value: "Escalate to next level", icon: Shield },
+  { value: "Create human-review task", icon: FileCheck2 },
+  { value: "Notify assigned field team", icon: UsersRound },
+  { value: "Add event to site timeline", icon: ClipboardList },
+  { value: "Notify duty operator", icon: Bell },
+  { value: "Escalate for ranger review", icon: Shield },
 ];
 
 export default function AutomationRules() {
@@ -51,7 +46,7 @@ export default function AutomationRules() {
   });
 
   const load = async () => {
-    const [r, s] = await Promise.all([base44.entities.AutomationRule.list("-priority"), base44.entities.Site.list()]);
+    const [r, s] = await Promise.all([api.entities.AutomationRule.list("-priority"), api.entities.Site.list()]);
     setRules(r); setSites(s); setLoading(false);
   };
 
@@ -66,8 +61,8 @@ export default function AutomationRules() {
   const create = async () => {
     if (!form.name || !form.site_id) { toast({ title: "Name and site required", variant: "destructive" }); return; }
     const site = sites.find(s => s.id === form.site_id);
-    await base44.entities.AutomationRule.create({ ...form, site_name: site?.name });
-    await base44.entities.AuditLog.create({ action: "create", entity_type: "AutomationRule", entity_name: form.name, user_name: "admin", details: `Created automation rule`, severity: "info", timestamp: new Date().toISOString() });
+    await api.entities.AutomationRule.create({ ...form, site_name: site?.name });
+    await api.entities.AuditLog.create({ action: "create", entity_type: "AutomationRule", entity_name: form.name, user_name: "admin", details: `Created automation rule`, severity: "info", timestamp: new Date().toISOString() });
     setShowModal(false);
     setForm({ name: "", site_id: "", description: "", conditions: [{ field: "detection_type", operator: "==", value: "monkey" }], actions: [], active: true, priority: 1 });
     toast({ title: "Automation rule created" });
@@ -75,18 +70,18 @@ export default function AutomationRules() {
   };
 
   const toggleActive = async (r) => {
-    await base44.entities.AutomationRule.update(r.id, { active: !r.active });
+    await api.entities.AutomationRule.update(r.id, { active: !r.active });
     load();
   };
 
   const remove = async (r) => {
-    await base44.entities.AutomationRule.delete(r.id);
+    await api.entities.AutomationRule.delete(r.id);
     load();
   };
 
   return (
     <div>
-      <PageHeader title="Automation Rules" description="Visual rule builder — configure intelligent responses without programming" icon={Workflow}
+      <PageHeader title="Automation Rules" description="Draft human-reviewed workflows for the Ward 21 pilot" icon={Workflow}
         actions={<Button onClick={() => setShowModal(true)} className="bg-emerald-600 hover:bg-emerald-700"><Plus className="w-4 h-4 mr-1" /> New Rule</Button>} />
 
       {loading ? (
@@ -134,6 +129,10 @@ export default function AutomationRules() {
           ))}
         </div>
       )}
+
+      <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        Pilot safeguard: rules are configuration drafts; no automation or notification worker is deployed yet. Physical deterrents and electrical devices are not controlled by this system.
+      </div>
 
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
-import { CheckCircle2, MessageSquare, Send } from "lucide-react";
+import { Send } from "lucide-react";
 
 const STATUS_FLOW = {
   incident: ["reported", "verified", "assigned", "in_progress", "resolved", "closed"],
@@ -22,7 +22,7 @@ export default function CaseTimeline({ caseType, caseId, currentStatus, onStatus
 
   const load = () => {
     setLoading(true);
-    base44.entities.ResponseAction.filter({ case_type: caseType, case_id: caseId }, "timestamp")
+    api.entities.ResponseAction.filter({ case_type: caseType, case_id: caseId }, "timestamp")
       .then(setActions)
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -33,8 +33,8 @@ export default function CaseTimeline({ caseType, caseId, currentStatus, onStatus
   const addAction = async (actionType, description, statusChange) => {
     setSubmitting(true);
     try {
-      const me = await base44.auth.me().catch(() => null);
-      await base44.entities.ResponseAction.create({
+      const me = await api.auth.me().catch(() => null);
+      await api.entities.ResponseAction.create({
         case_type: caseType,
         case_id: caseId,
         action_type: actionType,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Zap, Plus, Trash2, Volume2, Radio, Lightbulb, Waves, Crosshair, Droplets, Cpu, Bot as Drone, Speaker } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,7 @@ const statusConfig = {
   online: { label: "Online", color: "bg-emerald-50 text-emerald-600 border-emerald-200", dot: "bg-emerald-500" },
   offline: { label: "Offline", color: "bg-slate-50 text-slate-400 border-slate-200", dot: "bg-slate-300" },
   maintenance: { label: "Maintenance", color: "bg-amber-50 text-amber-600 border-amber-200", dot: "bg-amber-500" },
-  triggered: { label: "Triggered", color: "bg-red-50 text-red-600 border-red-200", dot: "bg-red-500 animate-pulse" },
+  triggered: { label: "Event reported", color: "bg-amber-50 text-amber-700 border-amber-200", dot: "bg-amber-500" },
 };
 
 const speciesOptions = ["monkey", "wild_boar", "elephant", "leopard", "bear", "livestock", "human", "bird"];
@@ -42,10 +42,10 @@ export default function Deterrents() {
   const [showModal, setShowModal] = useState(false);
   const [filterType, setFilterType] = useState("all");
   const { toast } = useToast();
-  const [form, setForm] = useState({ name: "", device_id: "", site_id: "", type: "siren", power_level: 100, intensity_levels: 3, supported_species: [], active: true });
+  const [form, setForm] = useState({ name: "", device_id: "", site_id: "", type: "siren", supported_species: [], active: true });
 
   const load = async () => {
-    const [d, s] = await Promise.all([base44.entities.DeterrentDevice.list(), base44.entities.Site.list()]);
+    const [d, s] = await Promise.all([api.entities.DeterrentDevice.list(), api.entities.Site.list()]);
     setDevices(d); setSites(s); setLoading(false);
   };
 
@@ -59,21 +59,21 @@ export default function Deterrents() {
     if (!form.name || !form.site_id) { toast({ title: "Name and site required", variant: "destructive" }); return; }
     const site = sites.find(s => s.id === form.site_id);
     const id = `DET-${Date.now().toString(36).toUpperCase()}`;
-    await base44.entities.DeterrentDevice.create({ ...form, device_id: id, site_name: site?.name });
-    await base44.entities.AuditLog.create({ action: "create", entity_type: "DeterrentDevice", entity_name: form.name, user_name: "admin", details: `Registered ${form.type} deterrent`, severity: "info", timestamp: new Date().toISOString() });
+    await api.entities.DeterrentDevice.create({ ...form, device_id: id, site_name: site?.name });
+    await api.entities.AuditLog.create({ action: "create", entity_type: "DeterrentDevice", entity_name: form.name, user_name: "admin", details: `Registered ${form.type} deterrent`, severity: "info", timestamp: new Date().toISOString() });
     setShowModal(false);
-    setForm({ name: "", device_id: "", site_id: "", type: "siren", power_level: 100, intensity_levels: 3, supported_species: [], active: true });
+    setForm({ name: "", device_id: "", site_id: "", type: "siren", supported_species: [], active: true });
     toast({ title: "Deterrent device registered" });
     load();
   };
 
   const toggleActive = async (d) => {
-    await base44.entities.DeterrentDevice.update(d.id, { active: !d.active });
+    await api.entities.DeterrentDevice.update(d.id, { active: !d.active });
     load();
   };
 
   const remove = async (d) => {
-    await base44.entities.DeterrentDevice.delete(d.id);
+    await api.entities.DeterrentDevice.delete(d.id);
     load();
   };
 
@@ -81,8 +81,12 @@ export default function Deterrents() {
 
   return (
     <div>
-      <PageHeader title="Deterrent Library" description="Intelligent deterrent device management with species-specific configuration" icon={Zap}
+      <PageHeader title="Device Inventory" description="Record installed or proposed devices. This app does not activate or control deterrents." icon={Zap}
         actions={<Button onClick={() => setShowModal(true)} className="bg-emerald-600 hover:bg-emerald-700"><Plus className="w-4 h-4 mr-1" /> Register Device</Button>} />
+
+      <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        Pilot safeguard: listed devices are inventory records only. Sirens, relays, high-voltage systems, lights, and other deterrents cannot be activated by this software.
+      </div>
 
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 mb-6">
         <button onClick={() => setFilterType("all")} className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition-colors ${filterType === "all" ? "border-emerald-400 bg-emerald-50" : "border-slate-200 bg-white hover:bg-slate-50"}`}>
@@ -126,20 +130,13 @@ export default function Deterrents() {
                   </div>
                 </div>
                 <div className="text-xs text-slate-500 mb-2">{typeCfg.label} · {d.site_name || "Unassigned"}</div>
-                <div className="flex items-center gap-3 text-xs text-slate-500 mb-3">
-                  <span>Power: {d.power_level ?? 100}%</span>
-                  <span>·</span>
-                  <span>{d.intensity_levels ?? 3} levels</span>
-                  <span>·</span>
-                  <span>{d.trigger_count || 0} triggers</span>
-                </div>
                 {(d.supported_species || []).length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-3">
                     {(d.supported_species || []).map((s, i) => <span key={i} className="text-[10px] bg-slate-50 text-slate-500 px-1.5 py-0.5 rounded border border-slate-100">{s}</span>)}
                   </div>
                 )}
                 <div className="flex items-center justify-between pt-2 border-t border-slate-50">
-                  <div className="flex items-center gap-2"><Switch checked={d.active} onCheckedChange={() => toggleActive(d)} /><span className="text-xs text-slate-400">{d.active ? "Enabled" : "Disabled"}</span></div>
+                  <div className="flex items-center gap-2"><Switch checked={d.active} onCheckedChange={() => toggleActive(d)} /><span className="text-xs text-slate-400">{d.active ? "In inventory" : "Archived"}</span></div>
                   <Button variant="ghost" size="icon" onClick={() => remove(d)}><Trash2 className="w-4 h-4 text-red-400" /></Button>
                 </div>
               </div>
@@ -166,10 +163,6 @@ export default function Deterrents() {
                   <SelectContent>{sites.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div><Label>Power Level (%)</Label><Input type="number" value={form.power_level} onChange={e => setForm({ ...form, power_level: parseInt(e.target.value) || 100 })} /></div>
-              <div><Label>Intensity Levels</Label><Input type="number" value={form.intensity_levels} onChange={e => setForm({ ...form, intensity_levels: parseInt(e.target.value) || 3 })} /></div>
             </div>
             <div>
               <Label>Supported Species</Label>

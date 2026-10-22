@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Search, Check, Leaf } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import { cn } from "@/lib/utils";
 
 // Searchable species picker for the verification game. Loads active species and
@@ -14,7 +14,7 @@ export default function SpeciesPicker({ value, onChange, disabled }) {
   const ref = useRef(null);
 
   useEffect(() => {
-    base44.entities.Species.filter({ active: true }, { limit: 200, fields: ["name", "scientific_name", "conservation_status"] })
+    api.entities.Species.filter({ active: true }, { limit: 200, fields: ["name", "scientific_name", "conservation_status"] })
       .then((page) => {
         const items = page.items || page || [];
         setSpecies(items);

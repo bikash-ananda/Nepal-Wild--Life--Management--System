@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Activity, Plus, Search, Battery, Signal } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
 import EmptyState from "@/components/EmptyState";
@@ -48,8 +48,8 @@ export default function Sensors() {
   const load = () => {
     setLoading(true);
     Promise.all([
-      base44.entities.Sensor.list("-created_date", 200),
-      base44.entities.Site.list()
+      api.entities.Sensor.list("-created_date", 200),
+      api.entities.Site.list()
     ]).then(([s, st]) => { setSensors(s); setSites(st); setLoading(false); })
       .catch(() => setLoading(false));
   };
@@ -66,7 +66,7 @@ export default function Sensors() {
     if (!form.name || !form.site_id) { toast({ title: "Name and site are required", variant: "destructive" }); return; }
     const site = sites.find(s => s.id === form.site_id);
     try {
-      await base44.entities.Sensor.create({
+      await api.entities.Sensor.create({
         ...form,
         device_id: "SEN-" + Date.now().toString(36).toUpperCase(),
         site_name: site?.name || "",

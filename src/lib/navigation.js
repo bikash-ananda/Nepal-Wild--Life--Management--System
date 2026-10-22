@@ -6,17 +6,18 @@ import {
 } from "lucide-react";
 
 const ALL_ROLES = [
+  "admin", "researcher", "reviewer", "field_officer", "field_worker", "community_reporter", "technician",
   "super_admin", "wildlife_admin", "government_officer",
   "technical_operator", "farm_owner", "farm_worker",
-  "admin", "user"
+  "user"
 ];
 
 const ADMIN_ROLES = [
-  "super_admin", "wildlife_admin", "government_officer", "admin"
+  "admin", "researcher", "super_admin", "wildlife_admin", "government_officer"
 ];
 
 const TECH_ROLES = [
-  "super_admin", "wildlife_admin", "technical_operator", "admin"
+  "admin", "researcher", "technician", "super_admin", "wildlife_admin", "technical_operator"
 ];
 
 export const navGroups = [
@@ -81,6 +82,7 @@ export const navGroups = [
   {
     label: "Team & Administration",
     items: [
+      { label: "Accounts & Site Access", path: "/accounts", icon: Users, roles: ["admin"] },
       { label: "Team", path: "/team", icon: Users, roles: ALL_ROLES },
       { label: "API & Integrations", path: "/api-integrations", icon: Cable, roles: ADMIN_ROLES },
       { label: "Reports", path: "/reports", icon: FileBarChart, roles: ["super_admin", "wildlife_admin", "government_officer", "admin", "user"] },
@@ -91,6 +93,13 @@ export const navGroups = [
 ];
 
 export const roleLabels = {
+  admin: "Administrator",
+  researcher: "Researcher",
+  reviewer: "Reviewer",
+  field_officer: "Field Officer",
+  field_worker: "Field Worker",
+  community_reporter: "Community Reporter",
+  technician: "Technician",
   super_admin: "Super Admin",
   wildlife_admin: "Wildlife Admin",
   government_officer: "Gov. Officer",
@@ -105,7 +114,7 @@ export function canAccessNav(userRole, allowedRoles) {
   if (!userRole) return true;
   if (allowedRoles.includes(userRole)) return true;
   // Legacy roles get full access for backward compatibility
-  if (userRole === "admin" || userRole === "user") return true;
+  if (userRole === "admin") return true;
   return false;
 }
 

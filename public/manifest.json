@@ -1,0 +1,13 @@
+{
+  "name": "Nepal Wildlife Management System",
+  "short_name": "Wildlife MS",
+  "description": "Mobile field capture and wildlife conflict research for Nepal.",
+  "start_url": "/field-capture",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#064e3b",
+  "icons": [
+    { "src": "/icons/wildlife.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

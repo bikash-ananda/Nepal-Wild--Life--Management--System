@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Target, Search, Zap, Filter, Download, Trash2, CheckCheck, CheckSquare, X } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { Target, Search, Zap, Download, Trash2, CheckCheck, CheckSquare, X } from "lucide-react";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
 import EmptyState from "@/components/EmptyState";
@@ -26,7 +26,7 @@ export default function Detections() {
   const [bulkLoading, setBulkLoading] = useState(false);
 
   useEffect(() => {
-    base44.entities.DetectionEvent.list("-detected_at", 200)
+    api.entities.DetectionEvent.list("-detected_at", 200)
       .then(setEvents)
       .finally(() => setLoading(false));
   }, []);
@@ -56,7 +56,7 @@ export default function Detections() {
     setBulkLoading(true);
     try {
       await Promise.all(selectedIds.map(id =>
-        base44.entities.DetectionEvent.update(id, { status: "confirmed" })
+        api.entities.DetectionEvent.update(id, { status: "confirmed" })
       ));
       setEvents(prev => prev.map(e => selectedIds.includes(e.id) ? { ...e, status: "confirmed" } : e));
       setSelectedIds([]);
@@ -69,7 +69,7 @@ export default function Detections() {
     if (!window.confirm(`Delete ${selectedIds.length} detection event(s)? This cannot be undone.`)) return;
     setBulkLoading(true);
     try {
-      await Promise.all(selectedIds.map(id => base44.entities.DetectionEvent.delete(id)));
+      await Promise.all(selectedIds.map(id => api.entities.DetectionEvent.delete(id)));
       setEvents(prev => prev.filter(e => !selectedIds.includes(e.id)));
       setSelectedIds([]);
     } finally {

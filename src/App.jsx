@@ -1,75 +1,93 @@
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { LanguageProvider } from '@/lib/LanguageContext';
-import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 import Layout from '@/components/Layout';
-import Home from '@/pages/Home';
-import Sites from '@/pages/Sites';
-import Cameras from '@/pages/Cameras';
-import CameraDetail from '@/pages/CameraDetail';
-import CameraLive from '@/pages/CameraLive';
-import Sensors from '@/pages/Sensors';
-import Detections from '@/pages/Detections';
-import DecisionEngine from '@/pages/DecisionEngine';
-import Reports from '@/pages/Reports';
-import MapView from '@/pages/MapView';
-import AIResponseEngine from '@/pages/AIResponseEngine';
-import Predictions from '@/pages/Predictions';
-import Deterrents from '@/pages/Deterrents';
-import AutomationRules from '@/pages/AutomationRules';
-import EdgeDevices from '@/pages/EdgeDevices';
-import DeviceManager from '@/pages/DeviceManager';
-import DeviceDetail from '@/pages/DeviceDetail';
-import DeviceDashboard from '@/pages/DeviceDashboard';
-import DeviceAdmin from '@/pages/DeviceAdmin';
-import DeviceSetupWizard from '@/pages/DeviceSetupWizard';
-import AIVerification from '@/pages/AIVerification';
-import AIModels from '@/pages/AIModels';
-import Notifications from '@/pages/Notifications';
-import VoiceBot from '@/pages/VoiceBot';
-import KnowledgeBase from '@/pages/KnowledgeBase';
-import Analytics from '@/pages/Analytics';
-import DatasetBuilder from '@/pages/DatasetBuilder';
-import SpeciesLearning from '@/pages/SpeciesLearning';
-import AISelfLearning from '@/pages/AISelfLearning';
-import DetectionReports from '@/pages/DetectionReports';
-import SiteComparison from '@/pages/SiteComparison';
-import DetectionTrends from '@/pages/DetectionTrends';
-import Team from '@/pages/Team';
-import TeamMemberDetail from '@/pages/TeamMemberDetail';
-import AddTeamMember from '@/pages/AddTeamMember';
-import ApiIntegrations from '@/pages/ApiIntegrations';
-import Incidents from '@/pages/Incidents';
-import IncidentDetail from '@/pages/IncidentDetail';
-import Hwc from '@/pages/Hwc';
-import HwcDetail from '@/pages/HwcDetail';
-import Sightings from '@/pages/Sightings';
-import Patrols from '@/pages/Patrols';
-import PatrolDetail from '@/pages/PatrolDetail';
-import Individuals from '@/pages/Individuals';
-import IndividualDetail from '@/pages/IndividualDetail';
-import SightingHistory from '@/pages/SightingHistory';
-import MovementMap from '@/pages/MovementMap';
-import FieldCapture from '@/pages/FieldCapture';
-import PublicCapture from '@/pages/PublicCapture';
-import NationalWildlife from '@/pages/NationalWildlife';
-import VerificationGame from '@/pages/VerificationGame';
-import Leaderboard from '@/pages/Leaderboard';
-import ExpertReview from '@/pages/ExpertReview';
+const Home = lazy(() => import('@/pages/Home'));
+const Sites = lazy(() => import('@/pages/Sites'));
+const Cameras = lazy(() => import('@/pages/Cameras'));
+const CameraDetail = lazy(() => import('@/pages/CameraDetail'));
+const CameraLive = lazy(() => import('@/pages/CameraLive'));
+const Sensors = lazy(() => import('@/pages/Sensors'));
+const Detections = lazy(() => import('@/pages/Detections'));
+const DecisionEngine = lazy(() => import('@/pages/DecisionEngine'));
+const Reports = lazy(() => import('@/pages/Reports'));
+const MapView = lazy(() => import('@/pages/MapView'));
+const AIResponseEngine = lazy(() => import('@/pages/AIResponseEngine'));
+const Predictions = lazy(() => import('@/pages/Predictions'));
+const Deterrents = lazy(() => import('@/pages/Deterrents'));
+const AutomationRules = lazy(() => import('@/pages/AutomationRules'));
+const EdgeDevices = lazy(() => import('@/pages/EdgeDevices'));
+const DeviceManager = lazy(() => import('@/pages/DeviceManager'));
+const DeviceDetail = lazy(() => import('@/pages/DeviceDetail'));
+const DeviceDashboard = lazy(() => import('@/pages/DeviceDashboard'));
+const DeviceAdmin = lazy(() => import('@/pages/DeviceAdmin'));
+const DeviceSetupWizard = lazy(() => import('@/pages/DeviceSetupWizard'));
+const AIVerification = lazy(() => import('@/pages/AIVerification'));
+const AIModels = lazy(() => import('@/pages/AIModels'));
+const Notifications = lazy(() => import('@/pages/Notifications'));
+const VoiceBot = lazy(() => import('@/pages/VoiceBot'));
+const KnowledgeBase = lazy(() => import('@/pages/KnowledgeBase'));
+const Analytics = lazy(() => import('@/pages/Analytics'));
+const DatasetBuilder = lazy(() => import('@/pages/DatasetBuilder'));
+const SpeciesLearning = lazy(() => import('@/pages/SpeciesLearning'));
+const AISelfLearning = lazy(() => import('@/pages/AISelfLearning'));
+const DetectionReports = lazy(() => import('@/pages/DetectionReports'));
+const SiteComparison = lazy(() => import('@/pages/SiteComparison'));
+const DetectionTrends = lazy(() => import('@/pages/DetectionTrends'));
+const Team = lazy(() => import('@/pages/Team'));
+const TeamMemberDetail = lazy(() => import('@/pages/TeamMemberDetail'));
+const AddTeamMember = lazy(() => import('@/pages/AddTeamMember'));
+const ApiIntegrations = lazy(() => import('@/pages/ApiIntegrations'));
+const Incidents = lazy(() => import('@/pages/Incidents'));
+const IncidentDetail = lazy(() => import('@/pages/IncidentDetail'));
+const Hwc = lazy(() => import('@/pages/Hwc'));
+const HwcDetail = lazy(() => import('@/pages/HwcDetail'));
+const Sightings = lazy(() => import('@/pages/Sightings'));
+const Patrols = lazy(() => import('@/pages/Patrols'));
+const PatrolDetail = lazy(() => import('@/pages/PatrolDetail'));
+const Individuals = lazy(() => import('@/pages/Individuals'));
+const IndividualDetail = lazy(() => import('@/pages/IndividualDetail'));
+const SightingHistory = lazy(() => import('@/pages/SightingHistory'));
+const MovementMap = lazy(() => import('@/pages/MovementMap'));
+const FieldCapture = lazy(() => import('@/pages/FieldCapture'));
+const PublicCapture = lazy(() => import('@/pages/PublicCapture'));
+const NationalWildlife = lazy(() => import('@/pages/NationalWildlife'));
+const VerificationGame = lazy(() => import('@/pages/VerificationGame'));
+const Leaderboard = lazy(() => import('@/pages/Leaderboard'));
+const ExpertReview = lazy(() => import('@/pages/ExpertReview'));
+const Login = lazy(() => import('@/pages/Login'));
+const Register = lazy(() => import('@/pages/Register'));
+const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
+const Accounts = lazy(() => import('@/pages/Accounts'));
 // Add page imports here
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isAuthenticated } = useAuth();
   const location = useLocation();
   const isPublicRoute = location.pathname === "/public-capture";
+  const isAuthRoute = ["/login", "/register", "/forgot-password", "/reset-password"].includes(location.pathname);
 
-  // Public routes bypass the auth gate entirely (no login required)
-  if (!isPublicRoute && (isLoadingPublicSettings || isLoadingAuth)) {
+  if (isPublicRoute) return <PublicCapture />;
+
+  if (isAuthRoute) {
+    return (
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+      </Routes>
+    );
+  }
+
+  if (isLoadingAuth) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
@@ -77,21 +95,14 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Handle authentication errors (skipped for public routes)
-  if (!isPublicRoute && authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
-      navigateToLogin();
-      return null;
-    }
+  if (!isAuthenticated) {
+    const returnTo = `${location.pathname}${location.search}${location.hash}`;
+    return <Navigate to={`/login?returnTo=${encodeURIComponent(returnTo)}`} replace />;
   }
 
   // Render the main app
   return (
     <Routes>
-      <Route path="/public-capture" element={<PublicCapture />} />
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/national-wildlife" element={<NationalWildlife />} />
@@ -130,6 +141,7 @@ const AuthenticatedApp = () => {
         <Route path="/site-comparison" element={<SiteComparison />} />
         <Route path="/detection-trends" element={<DetectionTrends />} />
         <Route path="/team" element={<Team />} />
+        <Route path="/accounts" element={<Accounts />} />
         <Route path="/team/add" element={<AddTeamMember />} />
         <Route path="/team/:id" element={<TeamMemberDetail />} />
         <Route path="/api-integrations" element={<ApiIntegrations />} />
@@ -160,7 +172,9 @@ function App() {
         <QueryClientProvider client={queryClientInstance}>
           <Router>
             <ScrollToTop />
-            <AuthenticatedApp />
+            <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center" role="status" aria-label="Loading page"><div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" /></div>}>
+              <AuthenticatedApp />
+            </Suspense>
           </Router>
           <Toaster />
         </QueryClientProvider>

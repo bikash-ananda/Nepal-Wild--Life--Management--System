@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Swords, Plus, Search, Loader2 } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import SeverityBadge from "@/components/SeverityBadge";
@@ -32,7 +32,7 @@ export default function Hwc() {
 
   const load = () => {
     setLoading(true);
-    base44.entities.HwcCase.list("-created_date", 200).then(setItems).catch(() => {}).finally(() => setLoading(false));
+    api.entities.HwcCase.list("-created_date", 200).then(setItems).catch(() => {}).finally(() => setLoading(false));
   };
   useEffect(() => { load(); }, []);
 
@@ -45,8 +45,8 @@ export default function Hwc() {
   const handleCreate = async () => {
     setCreating(true);
     try {
-      const me = await base44.auth.me().catch(() => null);
-      await base44.entities.HwcCase.create({
+      const me = await api.auth.me().catch(() => null);
+      await api.entities.HwcCase.create({
         case_id: "HWC-" + Date.now().toString(36).toUpperCase(),
         conflict_type: form.conflict_type,
         species: form.species,

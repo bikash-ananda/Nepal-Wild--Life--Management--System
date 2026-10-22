@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import {
   Satellite, Loader2, CheckCircle2, Leaf, ShieldCheck, Camera, RefreshCw, MapPin,
 } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import CameraViewfinder from "@/components/field/CameraViewfinder";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { Input } from "@/components/ui/input";
@@ -42,7 +42,7 @@ export default function PublicCapture() {
       try {
         const blob = await (await fetch(pendingPhoto)).blob();
         const file = new File([blob], "capture.jpg", { type: "image/jpeg" });
-        const up = await base44.integrations.Core.UploadPrivateFile({ file });
+        const up = await api.integrations.Core.UploadPublicFile({ file });
         photo_uri = up.file_uri;
       } catch (e) {
         toast({ title: "Photo upload failed", description: e.message, variant: "destructive" });
@@ -50,10 +50,11 @@ export default function PublicCapture() {
         return;
       }
 
-      const res = await base44.functions.invoke("publicCapture", {
+      const res = await api.functions.invoke("publicCapture", {
         photo_uri,
         latitude: coords?.latitude ?? null,
         longitude: coords?.longitude ?? null,
+        accuracy: coords?.accuracy ?? null,
         location_name: locationName,
         province,
         district,
@@ -168,7 +169,7 @@ export default function PublicCapture() {
             {submitting ? (
               <><Loader2 className="w-5 h-5 animate-spin" /> Analyzing your photo…</>
             ) : (
-              <><Camera className="w-5 h-5" /> Submit report</>
+              <><Camera className="w-5 h-5" /> Submit report for review</>
             )}
           </button>
         )}

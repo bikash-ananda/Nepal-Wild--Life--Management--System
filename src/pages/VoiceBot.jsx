@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Phone, Play, Square, Loader2, Volume2, Languages, PhoneCall, CheckCircle2, XCircle } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import React, { useState, useEffect } from "react";
+import { Phone, Loader2, Volume2, Languages, PhoneCall, CheckCircle2, XCircle } from "lucide-react";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,10 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 
 const templates = {
-  critical_monkey_ne: "नमस्ते। यो नेपाल कृषि AI सुरक्षा प्रणाली हो। तपाईंको खेतमा बाँदरको समूह देखिएको छ। स्वचालित रोकथाम प्रणाली सक्रिय भइसकेको छ। कृपया मोबाइल एपबाट लाइभ क्यामेरा हेर्नुहोस्।",
-  critical_monkey_en: "Hello. This is the Nepal Agro AI Protection System. A monkey troop has been detected at your farm. Automatic deterrents have already been activated. Please check the live camera through the mobile application.",
-  warning_elephant_ne: "सावधान। तपाईंको खेत नजिक हात्ती देखिएको छ। कृपया तुरुन्त सुरक्षित स्थानमा जानुहोस्।",
-  warning_elephant_en: "Attention. An elephant has been detected near your farm. Please move to a safe location immediately.",
+  critical_monkey_ne: "नमस्ते। तपाईंको क्षेत्रमा बाँदर देखिएको हुन सक्ने अपुष्ट रिपोर्ट आएको छ। कृपया सुरक्षित दूरीमा रहनुहोस् र स्थानीय फिल्ड टोलीलाई जानकारी दिनुहोस्।",
+  critical_monkey_en: "Hello. An unverified report of possible monkey activity has been received near your area. Please keep a safe distance and contact the local field team.",
+  warning_elephant_ne: "सावधान। तपाईंको क्षेत्रमा हात्ती देखिएको हुन सक्ने अपुष्ट रिपोर्ट आएको छ। कृपया सुरक्षित स्थानमा रहनुहोस् र स्थानीय टोलीलाई जानकारी दिनुहोस्।",
+  warning_elephant_en: "Attention. An unverified report of possible elephant activity has been received near your area. Stay in a safe place and contact the local field team.",
   device_offline_ne: "सूचना। तपाईंको क्यामेरा अफलाइन भएको छ। कृपया जाँच गर्नुहोस्।",
   device_offline_en: "Notice. Your camera has gone offline. Please check the device.",
 };
@@ -26,12 +26,10 @@ export default function VoiceBot() {
   const [siteName, setSiteName] = useState("Kaskikot Strawberry Farm");
   const [eta, setEta] = useState("2 minutes");
   const [testing, setTesting] = useState(false);
-  const [audioUrl, setAudioUrl] = useState(null);
-  const audioRef = useRef(null);
   const { toast } = useToast();
 
   const load = async () => {
-    const l = await base44.entities.VoiceCallLog.list("-initiated_at", 20);
+    const l = await api.entities.VoiceCallLog.list("-initiated_at", 20);
     setLogs(l); setLoading(false);
   };
 
@@ -44,26 +42,21 @@ export default function VoiceBot() {
 
   const testCall = async () => {
     setTesting(true);
-    setAudioUrl(null);
     try {
-      const result = await base44.integrations.Core.GenerateSpeech({
-        text: message,
-        voice: "storm",
-        language_code: language,
-      });
-      setAudioUrl(result.url);
-      await base44.entities.VoiceCallLog.create({
-        contact_name: "Test Call", phone: "N/A", trigger: "Manual Test",
-        message, language, status: "answered", duration_seconds: 0,
-        acknowledged: true, initiated_at: new Date().toISOString(),
-      });
-      toast({ title: "Voice message generated", description: "Playing audio preview..." });
-      setTimeout(() => audioRef.current?.play(), 500);
-      load();
-    } catch {
-      toast({ title: "Voice generation failed", variant: "destructive" });
+      if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
+        throw new Error("Voice preview is not supported in this browser.");
+      }
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(message);
+      utterance.lang = language === "ne" ? "ne-NP" : "en-US";
+      utterance.rate = 0.95;
+      window.speechSynthesis.speak(utterance);
+      toast({ title: "Playing local preview", description: "This plays on this device only; no phone call or alert was sent." });
+    } catch (error) {
+      toast({ title: "Voice preview unavailable", description: error.message, variant: "destructive" });
+    } finally {
+      setTesting(false);
     }
-    setTesting(false);
   };
 
   const statusIcons = {
@@ -76,7 +69,7 @@ export default function VoiceBot() {
 
   return (
     <div>
-      <PageHeader title="AI Voice Call Bot" description="Automatic voice notifications in Nepali and English for critical wildlife events" icon={Phone} />
+      <PageHeader title="Voice Message Preview" description="Preview safety wording in Nepali or English on this device. No calls are placed." icon={Phone} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-white rounded-2xl border border-slate-200 p-5">
@@ -107,20 +100,14 @@ export default function VoiceBot() {
           <div className="mt-4 flex items-center gap-2">
             <Button onClick={testCall} disabled={testing} className="bg-emerald-600 hover:bg-emerald-700 flex-1">
               {testing ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Volume2 className="w-4 h-4 mr-1" />}
-              {testing ? "Generating..." : "Test Voice Message"}
+              {testing ? "Preparing preview…" : "Play voice preview"}
             </Button>
           </div>
-
-          {audioUrl && (
-            <div className="mt-3 bg-emerald-50 rounded-xl p-3">
-              <div className="text-xs text-emerald-600 font-medium mb-2 flex items-center gap-1"><Play className="w-3 h-3" /> Audio Preview</div>
-              <audio ref={audioRef} controls src={audioUrl} className="w-full" />
-            </div>
-          )}
+          <p className="mt-3 text-xs text-slate-500">Browser voice availability and Nepali pronunciation depend on the phone's installed voices. This is a local preview, not an emergency alert channel.</p>
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <div className="flex items-center gap-2 mb-4"><PhoneCall className="w-5 h-5 text-blue-600" /><div className="text-sm font-semibold text-slate-700">Call History</div></div>
+          <div className="flex items-center gap-2 mb-4"><PhoneCall className="w-5 h-5 text-blue-600" /><div className="text-sm font-semibold text-slate-700">Connected call records</div></div>
           {loading ? <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 text-emerald-500 animate-spin" /></div> : logs.length === 0 ? (
             <div className="py-8 text-center text-sm text-slate-400">No calls yet</div>
           ) : (

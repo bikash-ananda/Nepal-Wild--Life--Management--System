@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import {
   Cable, Key, Webhook, Link2, Code2, Copy, Plus, Check,
-  Shield, Activity, Globe, Zap, RefreshCw, Lock
+  Shield, Activity, Globe, Zap, Lock
 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { useToast } from "@/components/ui/use-toast";

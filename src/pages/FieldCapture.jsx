@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Satellite, WifiOff, Wifi, MapPin, Loader2, NotebookPen, Camera, History, Info } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import CameraViewfinder from "@/components/field/CameraViewfinder";
 import CaptureResultCard from "@/components/field/CaptureResultCard";
@@ -11,6 +11,7 @@ import { useCaptureQueue } from "@/hooks/useCaptureQueue";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
 
 export default function FieldCapture() {
@@ -21,13 +22,22 @@ export default function FieldCapture() {
   const [manualLat, setManualLat] = useState("");
   const [manualLng, setManualLng] = useState("");
   const [lastCaptureAt, setLastCaptureAt] = useState(null);
+  const [sites, setSites] = useState([]);
+  const [siteId, setSiteId] = useState("");
 
-  const { queue, enqueue, removeItem, flush, syncing } = useCaptureQueue(online, () => {});
+  useEffect(() => {
+    api.entities.Site.list().then((availableSites) => {
+      setSites(availableSites);
+      if (availableSites.length === 1) setSiteId(String(availableSites[0].id));
+    }).catch(() => setSites([]));
+  }, []);
+
+  const { queue, enqueue, removeItem, flush, syncing, loadingQueue, storageError } = useCaptureQueue(online, () => {});
 
   const effectiveLat = coords?.latitude ?? (manualLat ? Number(manualLat) : null);
   const effectiveLng = coords?.longitude ?? (manualLng ? Number(manualLng) : null);
 
-  const handleCapture = (photoDataUrl) => {
+  const handleCapture = async (photoDataUrl) => {
     if (effectiveLat == null || effectiveLng == null) {
       toast({
         title: "No GPS coordinates",
@@ -35,14 +45,21 @@ export default function FieldCapture() {
         variant: "destructive",
       });
     }
-    enqueue({
-      photoDataUrl,
-      latitude: effectiveLat,
-      longitude: effectiveLng,
-      location_name: locationName,
-      notes,
-      captured_at: new Date().toISOString(),
-    });
+    try {
+      await enqueue({
+        photoDataUrl,
+        latitude: effectiveLat,
+        longitude: effectiveLng,
+        accuracy: coords?.accuracy ?? null,
+        site_id: siteId,
+        location_name: locationName,
+        notes,
+        captured_at: new Date().toISOString(),
+      });
+    } catch (error) {
+      toast({ title: "Capture could not be saved", description: error.message, variant: "destructive" });
+      return;
+    }
     setLastCaptureAt(Date.now());
     setNotes("");
     if (online) flush();
@@ -95,12 +112,23 @@ export default function FieldCapture() {
         </div>
       </div>
 
+      {storageError && <div role="alert" className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+        Offline-safe storage is unavailable in this browser. Captures are disabled to avoid losing field evidence. {storageError}
+      </div>}
+
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
         {/* Capture column */}
         <div className="lg:col-span-3 space-y-4">
-          <CameraViewfinder onCapture={handleCapture} disabled={syncing && online} />
+          <CameraViewfinder onCapture={handleCapture} disabled={Boolean(storageError) || loadingQueue || (syncing && online)} />
 
           <div className="space-y-3">
+            {sites.length > 0 && <div className="space-y-1.5">
+              <Label className="text-xs text-slate-500">Research site (optional)</Label>
+              <Select value={siteId} onValueChange={setSiteId}>
+                <SelectTrigger><SelectValue placeholder="Choose an assigned site" /></SelectTrigger>
+                <SelectContent>{sites.map((site) => <SelectItem key={site.id} value={String(site.id)}>{site.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>}
             <div className="space-y-1.5">
               <Label className="text-xs text-slate-500">Location / Area name (optional)</Label>
               <Input
@@ -131,9 +159,9 @@ export default function FieldCapture() {
               <History className="w-4 h-4" /> Captures
               <span className="text-xs font-normal text-slate-400">({queue.length})</span>
             </h3>
-            {syncing && (
+            {(syncing || loadingQueue) && (
               <span className="flex items-center gap-1.5 text-xs text-sky-600">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Syncing
+                <Loader2 className="w-3.5 h-3.5 animate-spin" /> {loadingQueue ? "Loading saved captures" : "Syncing"}
               </span>
             )}
           </div>
@@ -160,8 +188,7 @@ export default function FieldCapture() {
           <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 flex gap-2">
             <Info className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
             <p className="text-[11px] text-slate-500 leading-relaxed">
-              Each capture is classified by AI, stored as a wildlife observation, and — for flagship species —
-              auto-triggers an alert and individual match. View results in{" "}
+              Captures upload securely when online and are stored as unverified observations for human review. AI-assisted classification will be enabled after the Ward 21 image set is reviewed. View records in{" "}
               <Link to="/sighting-history" className="text-emerald-600 font-medium underline">Sighting History</Link>.
             </p>
           </div>

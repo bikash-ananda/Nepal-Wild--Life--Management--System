@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { MapPin, Plus, Search, Building2 } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
 import EmptyState from "@/components/EmptyState";
@@ -24,7 +24,7 @@ export default function Sites() {
 
   const load = () => {
     setLoading(true);
-    base44.entities.Site.list("-created_date", 200)
+    api.entities.Site.list("-created_date", 200)
       .then(setSites)
       .finally(() => setLoading(false));
   };
@@ -39,7 +39,7 @@ export default function Sites() {
   const handleCreate = async () => {
     if (!form.name) { toast({ title: "Name is required", variant: "destructive" }); return; }
     try {
-      await base44.entities.Site.create({
+      await api.entities.Site.create({
         ...form,
         latitude: form.latitude ? parseFloat(form.latitude) : null,
         longitude: form.longitude ? parseFloat(form.longitude) : null,

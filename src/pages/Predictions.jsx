@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Brain, TrendingUp, Clock, Navigation, AlertCircle, Sparkles, RefreshCw } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { Brain, TrendingUp, Clock, Navigation, AlertCircle } from "lucide-react";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import RiskMeter from "@/components/RiskMeter";
 import EmptyState from "@/components/EmptyState";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const animalLabels = {
@@ -31,7 +30,7 @@ export default function Predictions() {
   const [filter, setFilter] = useState("active");
 
   const load = async () => {
-    const p = await base44.entities.Prediction.list("-predicted_at", 50);
+    const p = await api.entities.Prediction.list("-predicted_at", 50);
     setPredictions(p); setLoading(false);
   };
 
@@ -42,40 +41,13 @@ export default function Predictions() {
   const avgRisk = active.length > 0 ? Math.round(active.reduce((s, p) => s + (p.risk_score || 0), 0) / active.length) : 0;
   const highRisk = active.filter(p => p.risk_score >= 75).length;
 
-  const generatePrediction = async () => {
-    const sites = await base44.entities.Site.list();
-    if (sites.length === 0) return;
-    const site = sites[Math.floor(Math.random() * sites.length)];
-    const animals = ["monkey", "wild_boar", "elephant", "leopard"];
-    const animal = animals[Math.floor(Math.random() * animals.length)];
-    const dirs = ["east", "west", "north", "south", "northeast", "southwest"];
-    const prob = 0.5 + Math.random() * 0.45;
-    const arrival = Math.floor(3 + Math.random() * 20);
-    const risk = Math.round(30 + Math.random() * 65);
-    const count = Math.floor(1 + Math.random() * 12);
-    const routes = ["through eastern tree line", "along river bank", "via northern ridge", "through crop field edge"];
-    const actions = [
-      "Activate ultrasonic deterrent on eastern perimeter",
-      "Deploy flash lights and low-volume siren",
-      "Notify operator and begin camera tracking",
-      "Initiate Level 2 prevention protocol",
-    ];
-    await base44.entities.Prediction.create({
-      site_id: site.id, site_name: site.name, animal_type: animal, animal_count: count,
-      probability: parseFloat(prob.toFixed(2)), estimated_arrival_minutes: arrival,
-      direction: dirs[Math.floor(Math.random() * dirs.length)], speed_kmh: parseFloat((2 + Math.random() * 8).toFixed(1)),
-      route_description: routes[Math.floor(Math.random() * routes.length)],
-      risk_score: risk, crop_damage_probability: parseFloat((Math.random() * 0.6).toFixed(2)),
-      recommended_action: actions[Math.floor(Math.random() * actions.length)],
-      status: "active", predicted_at: new Date().toISOString(),
-    });
-    load();
-  };
-
   return (
     <div>
-      <PageHeader title="AI Predictions" description="Predictive threat analysis with probability, arrival time, and risk scoring" icon={Brain}
-        actions={<Button onClick={generatePrediction} variant="outline"><Sparkles className="w-4 h-4 mr-1" /> Generate Prediction</Button>} />
+      <PageHeader title="Predictions" description="Forecasts from configured and evaluated models only" icon={Brain} />
+
+      <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        No validated Ward 21 forecasting model is connected yet. This page will show model outputs only; it will not create simulated predictions or recommend physical deterrents.
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <div className="bg-white rounded-xl border border-slate-200 p-4">
@@ -111,7 +83,7 @@ export default function Predictions() {
       {loading ? (
         <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin" /></div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-200"><EmptyState icon={Brain} title="No predictions" description="Generate AI predictions to see threat forecasts." /></div>
+        <div className="bg-white rounded-2xl border border-slate-200"><EmptyState icon={Brain} title="No model predictions" description="Predictions will appear here after a model is trained and evaluated on approved local research data." /></div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {filtered.map(p => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Loader2, ScanFace, CheckCircle2, UserPlus } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -21,7 +21,7 @@ export default function IdentifyIndividualModal({ open, onOpenChange, onConfirme
   const [registerOpen, setRegisterOpen] = useState(false);
 
   useEffect(() => {
-    base44.entities.Species.filter({ category: "wildlife" }, { limit: 200 })
+    api.entities.Species.filter({ category: "wildlife" }, { limit: 200 })
       .then((res) => setSpeciesList(res.items || res || []))
       .catch(() => {});
   }, []);
@@ -46,7 +46,7 @@ export default function IdentifyIndividualModal({ open, onOpenChange, onConfirme
     setAnalyzing(true);
     setResult(null);
     try {
-      const res = await base44.functions.invoke("individualId", {
+      const res = await api.functions.invoke("individualId", {
         action: "identifySighting",
         species_id: speciesId,
         sighting_photo: photo[0],
@@ -62,7 +62,7 @@ export default function IdentifyIndividualModal({ open, onOpenChange, onConfirme
   const confirmMatch = async (c) => {
     setConfirmingId(c.individual_id);
     try {
-      await base44.functions.invoke("individualId", {
+      await api.functions.invoke("individualId", {
         action: "confirmMatch",
         individual_id: c.individual_id,
         confidence: c.confidence,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Loader2, Trophy, Gamepad2, Award } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import { useToast } from "@/components/ui/use-toast";
 import LeaderboardList from "@/components/game/LeaderboardList";
@@ -15,8 +15,8 @@ export default function Leaderboard() {
   const load = async () => {
     try {
       const [lb, st] = await Promise.all([
-        base44.functions.invoke("verificationGame", { action: "getLeaderboard" }),
-        base44.functions.invoke("verificationGame", { action: "getPlayerStats" }),
+        api.functions.invoke("verificationGame", { action: "getLeaderboard" }),
+        api.functions.invoke("verificationGame", { action: "getPlayerStats" }),
       ]);
       setLeaderboard(lb.leaderboard || []);
       setStats(st.stats || null);

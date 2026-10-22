@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { Eye, Plus, Search, Loader2, MapPin, Calendar } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import StatusBadge from "@/components/StatusBadge";
@@ -30,7 +29,7 @@ export default function Sightings() {
 
   const load = () => {
     setLoading(true);
-    base44.entities.WildlifeObservation.list("-created_date", 200).then(setItems).catch(() => {}).finally(() => setLoading(false));
+    api.entities.WildlifeObservation.list("-created_date", 200).then(setItems).catch(() => {}).finally(() => setLoading(false));
   };
   useEffect(() => { load(); }, []);
 
@@ -40,8 +39,8 @@ export default function Sightings() {
     if (!form.species) { toast({ title: "Species is required", variant: "destructive" }); return; }
     setCreating(true);
     try {
-      const me = await base44.auth.me().catch(() => null);
-      await base44.entities.WildlifeObservation.create({
+      const me = await api.auth.me().catch(() => null);
+      await api.entities.WildlifeObservation.create({
         observation_id: "OBS-" + Date.now().toString(36).toUpperCase(),
         species: form.species,
         species_name: form.species,

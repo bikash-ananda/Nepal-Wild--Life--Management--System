@@ -1,24 +1,22 @@
-import React, { useState, useEffect } from "react";
+import React, { lazy, Suspense, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Camera, Target, AlertTriangle, TrendingUp, Zap, Cpu,
   Brain, ChevronRight, AlertOctagon, Users, Leaf
 } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import StatCard from "@/components/StatCard";
 import StatusBadge from "@/components/StatusBadge";
 import SeverityBadge from "@/components/SeverityBadge";
-import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import LiveMapPreview from "@/components/LiveMapPreview";
 import ObservationIncidentMap from "@/components/ObservationIncidentMap";
-import DemoBadge from "@/components/DemoBadge";
 import LocationSelector from "@/components/LocationSelector";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { StaggerContainer, StaggerItem, FadeIn } from "@/components/motion/MotionKit";
-import WildlifeHero3D from "@/components/3d/WildlifeHero3D";
+const WildlifeHero3D = lazy(() => import("@/components/3d/WildlifeHero3D"));
 
 const detectionTypeColors = {
   monkey: "#10b981",
@@ -80,17 +78,17 @@ export default function Home() {
 
   useEffect(() => {
     Promise.all([
-      base44.entities.Camera.list("-created_date", 200),
-      base44.entities.Sensor.list("-created_date", 200),
-      base44.entities.EdgeDevice.list("-created_date", 200),
-      base44.entities.Device.list("-created_date", 200),
-      base44.entities.DetectionEvent.list("-detected_at", 100),
-      base44.entities.Alert.filter({ acknowledged: false }, "-triggered_at", 50),
-      base44.entities.Site.list("-created_date", 200),
-      base44.entities.AIModel.filter({ status: "active" }),
-      base44.entities.TeamMember.list("-created_date", 200),
-      base44.entities.WildlifeObservation.list("-observed_at", 80),
-      base44.entities.HwcCase.list("-occurred_at", 80),
+      api.entities.Camera.list("-created_date", 200),
+      api.entities.Sensor.list("-created_date", 200),
+      api.entities.EdgeDevice.list("-created_date", 200),
+      api.entities.Device.list("-created_date", 200),
+      api.entities.DetectionEvent.list("-detected_at", 100),
+      api.entities.Alert.filter({ acknowledged: false }, "-triggered_at", 50),
+      api.entities.Site.list("-created_date", 200),
+      api.entities.AIModel.filter({ status: "active" }),
+      api.entities.TeamMember.list("-created_date", 200),
+      api.entities.WildlifeObservation.list("-observed_at", 80),
+      api.entities.HwcCase.list("-occurred_at", 80),
     ]).then(([cameras, sensors, edgeDevices, devices, events, alerts, siteList, aiModels, teamMembers, obsList, hwcList]) => {
       const now = new Date();
       const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -185,7 +183,9 @@ export default function Home() {
       <FadeIn className="mb-6">
         <div className="relative overflow-hidden rounded-3xl border border-emerald-900/40 bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900">
           <div className="absolute inset-0 opacity-70">
-            <WildlifeHero3D />
+            <Suspense fallback={null}>
+              <WildlifeHero3D />
+            </Suspense>
           </div>
           <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 lg:p-8">
             <div className="flex items-start gap-3">

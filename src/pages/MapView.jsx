@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, Circle } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { MapPin, Camera, Activity, Target } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
 import EmptyState from "@/components/EmptyState";
@@ -42,10 +42,10 @@ export default function MapView() {
 
   useEffect(() => {
     Promise.all([
-      base44.entities.Site.list(),
-      base44.entities.Camera.list(),
-      base44.entities.Sensor.list(),
-      base44.entities.DetectionEvent.list("-detected_at", 50),
+      api.entities.Site.list(),
+      api.entities.Camera.list(),
+      api.entities.Sensor.list(),
+      api.entities.DetectionEvent.list("-detected_at", 50),
     ]).then(([s, c, sen, e]) => {
       setSites(s); setCameras(c); setSensors(sen); setEvents(e);
       setLoading(false);

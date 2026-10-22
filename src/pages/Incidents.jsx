@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ShieldAlert, Plus, Search, Loader2 } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import SeverityBadge from "@/components/SeverityBadge";
@@ -32,7 +32,7 @@ export default function Incidents() {
 
   const load = () => {
     setLoading(true);
-    base44.entities.Incident.list("-created_date", 200).then(setItems).catch(() => {}).finally(() => setLoading(false));
+    api.entities.Incident.list("-created_date", 200).then(setItems).catch(() => {}).finally(() => setLoading(false));
   };
   useEffect(() => { load(); }, []);
 
@@ -53,8 +53,8 @@ export default function Incidents() {
     if (!form.type) { toast({ title: "Incident type is required", variant: "destructive" }); return; }
     setCreating(true);
     try {
-      const me = await base44.auth.me().catch(() => null);
-      await base44.entities.Incident.create({
+      const me = await api.auth.me().catch(() => null);
+      await api.entities.Incident.create({
         incident_id: "INC-" + Date.now().toString(36).toUpperCase(),
         type: form.type,
         severity: form.severity,

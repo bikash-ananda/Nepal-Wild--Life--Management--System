@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Footprints, Plus, Search, Loader2, MapPin, Clock, Users } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import StatusBadge from "@/components/StatusBadge";
@@ -29,8 +29,8 @@ export default function Patrols() {
   const load = () => {
     setLoading(true);
     Promise.all([
-      base44.entities.Patrol.list("-created_date", 200),
-      base44.entities.Site.list(),
+      api.entities.Patrol.list("-created_date", 200),
+      api.entities.Site.list(),
     ]).then(([p, s]) => { setItems(p); setSites(s); setLoading(false); }).catch(() => setLoading(false));
   };
   useEffect(() => { load(); }, []);
@@ -45,9 +45,9 @@ export default function Patrols() {
     if (!form.name || !form.sector) { toast({ title: "Patrol name and sector are required", variant: "destructive" }); return; }
     setCreating(true);
     try {
-      const me = await base44.auth.me().catch(() => null);
+      const me = await api.auth.me().catch(() => null);
       const site = sites.find((s) => s.id === form.park_id);
-      await base44.entities.Patrol.create({
+      await api.entities.Patrol.create({
         patrol_id: "PAT-" + Date.now().toString(36).toUpperCase(),
         name: form.name,
         sector: form.sector,

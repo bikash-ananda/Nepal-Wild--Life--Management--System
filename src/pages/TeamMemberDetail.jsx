@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   Users, ArrowLeft, Phone, Mail, MapPin, Briefcase, Building2,
-  Cpu, AlertTriangle, Target, Activity, Shield, CheckCircle2, Calendar
+  Cpu, AlertTriangle, Target, Activity, Shield, CheckCircle2
 } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import DemoBadge from "@/components/DemoBadge";
 import EmptyState from "@/components/EmptyState";
 
@@ -17,9 +17,9 @@ export default function TeamMemberDetail() {
 
   useEffect(() => {
     Promise.all([
-      base44.entities.TeamMember.get(id).catch(() => null),
-      base44.entities.DetectionEvent.list("-detected_at", 10).catch(() => []),
-      base44.entities.Alert.list("-triggered_at", 10).catch(() => []),
+      api.entities.TeamMember.get(id).catch(() => null),
+      api.entities.DetectionEvent.list("-detected_at", 10).catch(() => []),
+      api.entities.Alert.list("-triggered_at", 10).catch(() => []),
     ]).then(([m, evs, alts]) => {
       setMember(m);
       setEvents(evs);

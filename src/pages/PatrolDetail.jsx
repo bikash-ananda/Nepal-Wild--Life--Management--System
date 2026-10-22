@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Footprints, MapPin, Clock, Users, Target, Play, Square, Loader2 } from "lucide-react";
 import { MapContainer, TileLayer, Polyline, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import StatusBadge from "@/components/StatusBadge";
 import DemoBadge from "@/components/DemoBadge";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ export default function PatrolDetail() {
   const [loading, setLoading] = useState(true);
 
   const load = () => {
-    base44.entities.Patrol.get(id).then(setPatrol).catch(() => {}).finally(() => setLoading(false));
+    api.entities.Patrol.get(id).then(setPatrol).catch(() => {}).finally(() => setLoading(false));
   };
   useEffect(() => { load(); }, [id]);
 
@@ -36,7 +36,7 @@ export default function PatrolDetail() {
           updates.duration_hours = Number(((new Date(updates.end_time) - new Date(patrol.start_time)) / 3600000).toFixed(2));
         }
       }
-      await base44.entities.Patrol.update(patrol.id, updates);
+      await api.entities.Patrol.update(patrol.id, updates);
       setPatrol({ ...patrol, ...updates });
       toast({ title: `Patrol ${status}`, variant: "success" });
     } catch {

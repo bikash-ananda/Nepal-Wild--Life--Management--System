@@ -51,7 +51,7 @@ export default function CameraViewfinder({ onCapture, disabled }) {
   useEffect(() => {
     start(facing);
     return () => stop();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [facing]);
 
   const capture = () => {

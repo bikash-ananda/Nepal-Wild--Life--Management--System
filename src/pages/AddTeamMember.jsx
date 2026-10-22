@@ -4,7 +4,7 @@ import {
   UserPlus, Check, ChevronRight, ChevronLeft, Upload, User,
   Mail, Phone, Briefcase, MapPin, Shield, X
 } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import { useToast } from "@/components/ui/use-toast";
 
 const STEPS = [
@@ -81,7 +81,7 @@ export default function AddTeamMember() {
   const handleImageUpload = async (file) => {
     if (!file) return;
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await api.integrations.Core.UploadFile({ file });
       update("profile_image_url", file_url);
       toast({ title: "Profile image uploaded" });
     } catch (e) {
@@ -102,7 +102,7 @@ export default function AddTeamMember() {
     }
     setSaving(true);
     try {
-      await base44.entities.TeamMember.create({
+      await api.entities.TeamMember.create({
         ...form,
         assigned_farm_ids: [],
       });

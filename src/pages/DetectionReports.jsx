@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Mail, FileSpreadsheet, Send, Calendar, TrendingUp, Target, Shield, AlertCircle, CheckCircle2, Loader2, Download } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { Mail, FileSpreadsheet, Send, Calendar, TrendingUp, Target, AlertCircle, CheckCircle2, Loader2, Download } from "lucide-react";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,8 +22,8 @@ export default function DetectionReports() {
 
   useEffect(() => {
     Promise.all([
-      base44.entities.DetectionEvent.list("-detected_at", 500),
-      base44.auth.me().catch(() => null),
+      api.entities.DetectionEvent.list("-detected_at", 500),
+      api.auth.me().catch(() => null),
     ]).then(([e, user]) => {
       setEvents(e);
       if (user?.email) setUserEmail(user.email);
@@ -102,7 +102,7 @@ export default function DetectionReports() {
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
       const file = new File([blob], fileName, { type: "text/csv" });
 
-      const uploadResult = await base44.integrations.Core.UploadFile({ file });
+      const uploadResult = await api.integrations.Core.UploadFile({ file });
       const fileUrl = uploadResult.file_url;
       setLastDownloadUrl(fileUrl);
 
@@ -133,7 +133,7 @@ The file is in CSV format and opens directly in Excel, Google Sheets, or Apple N
 Wildlife MS Admin Portal | Agentic AI Wildlife Protection Platform
 `.trim();
 
-      await base44.integrations.Core.SendEmail({
+      await api.integrations.Core.SendEmail({
         to: userEmail,
         subject: `Wildlife Detection Trends Report - ${new Date().toLocaleDateString()}`,
         body: emailBody,

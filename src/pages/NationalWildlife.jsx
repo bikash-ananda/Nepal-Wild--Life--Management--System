@@ -3,9 +3,8 @@ import { Link } from "react-router-dom";
 import {
   Globe2, PawPrint, Fingerprint, MapPin, Route, Activity, ArrowRight, Footprints,
 } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
-import EmptyState from "@/components/EmptyState";
 import { FadeIn } from "@/components/motion/MotionKit";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapContainer, TileLayer, CircleMarker, Tooltip, Polyline } from "react-leaflet";
@@ -26,19 +25,19 @@ export default function NationalWildlife() {
     (async () => {
       try {
         const [obsCount, indCount, regAgg, spAgg, geoPage, indPage] = await Promise.all([
-          base44.entities.WildlifeObservation.count({}),
-          base44.entities.AnimalIndividual.count({ active: true }),
-          base44.entities.WildlifeObservation.aggregate({
+          api.entities.WildlifeObservation.count({}),
+          api.entities.AnimalIndividual.count({ active: true }),
+          api.entities.WildlifeObservation.aggregate({
             groupBy: "location_name", sum: ["count"], sort: "-sum_count", limit: 50,
           }),
-          base44.entities.WildlifeObservation.aggregate({
+          api.entities.WildlifeObservation.aggregate({
             groupBy: "species_name", sum: ["count"], sort: "-sum_count", limit: 50,
           }),
-          base44.entities.WildlifeObservation.filter(
+          api.entities.WildlifeObservation.filter(
             { latitude: { $ne: null } },
             { sort: "-observed_at", limit: 200, fields: ["latitude", "longitude", "species_name", "location_name", "count", "observed_at"] }
           ),
-          base44.entities.AnimalIndividual.filter({ active: true }, { sort: "-last_seen_at", limit: 200 }),
+          api.entities.AnimalIndividual.filter({ active: true }, { sort: "-last_seen_at", limit: 200 }),
         ]);
         const regItems = regAgg.rows || [];
         const spItems = spAgg.rows || [];
@@ -66,11 +65,11 @@ export default function NationalWildlife() {
     }
     setIndLoading(true);
     Promise.all([
-      base44.entities.WildlifeObservation.filter(
+      api.entities.WildlifeObservation.filter(
         { individual_id: selectedInd },
         { sort: "-observed_at", limit: 100, fields: ["latitude", "longitude", "location_name", "observed_at"] }
       ),
-      base44.entities.DetectionEvent.filter(
+      api.entities.DetectionEvent.filter(
         { individual_id: selectedInd },
         { sort: "-detected_at", limit: 100, fields: ["latitude", "longitude", "site_name", "detected_at"] }
       ),

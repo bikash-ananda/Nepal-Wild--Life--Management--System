@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ImageOff } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import { cn } from "@/lib/utils";
 
 // Module-level cache so repeated renders of the same private file reuse the signed URL.
@@ -33,7 +33,7 @@ export default function PrivateImage({ fileUri, alt = "", className, fallbackCla
     }
     let cancelled = false;
     setLoading(true);
-    base44.integrations.Core.CreateFileSignedUrl({ file_uri: fileUri })
+    api.integrations.Core.CreateFileSignedUrl({ file_uri: fileUri })
       .then((res) => {
         const url = res?.signed_url || res?.file_url || null;
         if (url) signedCache.set(fileUri, url);

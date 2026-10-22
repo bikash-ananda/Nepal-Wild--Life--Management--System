@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Users, UserPlus, Search, Phone, Mail, MapPin, MoreVertical,
-  Eye, Pencil, Power, MessageSquare, Filter
+  Eye, Pencil, Power
 } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import DemoBadge from "@/components/DemoBadge";
@@ -46,7 +46,7 @@ export default function Team() {
 
   const loadMembers = async () => {
     try {
-      const list = await base44.entities.TeamMember.list("-created_date", 200);
+      const list = await api.entities.TeamMember.list("-created_date", 200);
       setMembers(list);
     } catch (e) {
       // empty
@@ -57,7 +57,7 @@ export default function Team() {
   const toggleStatus = async (member) => {
     const newStatus = member.status === "active" ? "disabled" : "active";
     try {
-      await base44.entities.TeamMember.update(member.id, { status: newStatus });
+      await api.entities.TeamMember.update(member.id, { status: newStatus });
       toast({ title: `${member.full_name} ${newStatus === "active" ? "enabled" : "disabled"}` });
       loadMembers();
     } catch (e) {

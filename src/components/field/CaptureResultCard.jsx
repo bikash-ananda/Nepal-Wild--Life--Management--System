@@ -1,11 +1,11 @@
 import React from "react";
-import { MapPin, Clock, Loader2, CheckCircle2, AlertTriangle, RefreshCw, Trash2, Fingerprint, Bell } from "lucide-react";
+import { MapPin, Clock, Loader2, RefreshCw, Trash2, Fingerprint, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const STATUS = {
   pending: { label: "Queued", tone: "bg-amber-100 text-amber-700", dot: "bg-amber-500" },
   processing: { label: "Processing", tone: "bg-sky-100 text-sky-700", dot: "bg-sky-500 animate-pulse" },
-  processed: { label: "Classified", tone: "bg-emerald-100 text-emerald-700", dot: "bg-emerald-500" },
+  processed: { label: "Submitted · review pending", tone: "bg-emerald-100 text-emerald-700", dot: "bg-emerald-500" },
   failed: { label: "Failed", tone: "bg-rose-100 text-rose-700", dot: "bg-rose-500" },
 };
 
@@ -24,8 +24,8 @@ export default function CaptureResultCard({ item, onRetry, onRemove }) {
     <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
       <div className="flex gap-3 p-3">
         <div className="w-24 h-24 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0">
-          {item.photoDataUrl ? (
-            <img src={item.photoDataUrl} alt="capture" className="w-full h-full object-cover" />
+          {item.photoPreview ? (
+            <img src={item.photoPreview} alt="wildlife capture" className="w-full h-full object-cover" />
           ) : null}
         </div>
 

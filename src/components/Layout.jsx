@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 import { Bell, Menu, X, Leaf } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import LanguageToggle from "@/components/LanguageToggle";
@@ -22,9 +22,10 @@ export default function Layout() {
   const { t } = useLanguage();
 
   useEffect(() => {
-    base44.entities.Alert.list("-triggered_at", 20)
-      .then(setAlerts)
-      .catch(() => {});
+    const loadAlerts = () => api.entities.Alert.list("-triggered_at", 20).then(setAlerts).catch(() => {});
+    loadAlerts();
+    const interval = window.setInterval(loadAlerts, 30000);
+    return () => window.clearInterval(interval);
   }, []);
 
   const unackCount = alerts.filter((a) => !a.acknowledged).length;

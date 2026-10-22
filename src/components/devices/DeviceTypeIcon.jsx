@@ -1,8 +1,7 @@
 import {
   Cpu, Camera, Video, Wifi, Thermometer, Droplets, CloudRain,
   Activity, Radio, Waves, Sun, MapPin, ToggleRight, Volume2,
-  Lightbulb, Speaker, Cog, Zap, Satellite, HardDrive, Network,
-  Battery, Signal, Router, Usb, Bluetooth, ScanLine, Server
+  Lightbulb, Speaker, Cog, Satellite, Network, Router, Bluetooth, Server
 } from "lucide-react";
 
 export const iconMap = {

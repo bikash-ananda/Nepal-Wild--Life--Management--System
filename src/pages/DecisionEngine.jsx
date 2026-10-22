@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Zap, Plus, Search, Trash2, Power } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
@@ -12,18 +12,15 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { toast } from "@/components/ui/use-toast";
 
 const deterrentTypes = [
-  { value: "siren", label: "Siren" },
-  { value: "ultrasonic_speaker", label: "Ultrasonic Speaker" },
-  { value: "flash_light", label: "Flash Light" },
-  { value: "rf_generator", label: "RF Generator" },
-  { value: "laser", label: "Laser" },
-  { value: "smart_relay", label: "Smart Relay" },
-  { value: "custom", label: "Custom" },
+  { value: "human_review", label: "Create human-review task" },
+  { value: "notification_only", label: "Dashboard notification" },
+  { value: "incident_draft", label: "Prepare incident draft" },
+  { value: "researcher_escalation", label: "Escalate to researcher" },
 ];
+const safeRuleTypes = new Set(deterrentTypes.map((type) => type.value));
 
 export default function DecisionEngine() {
   const [rules, setRules] = useState([]);
@@ -33,15 +30,15 @@ export default function DecisionEngine() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     name: "", site_id: "", detection_type: "monkey", min_confidence: 0.6,
-    require_ultrasonic: true, require_pir: false, max_distance_m: 10,
-    deterrent_type: "siren", escalation_sequence: "flash -> siren -> audio", priority: 1
+    require_ultrasonic: false, require_pir: false, max_distance_m: 10,
+    deterrent_type: "human_review", escalation_sequence: "review -> notify assigned team", priority: 1
   });
 
   const load = () => {
     setLoading(true);
     Promise.all([
-      base44.entities.DeterrentRule.list("-priority", 200),
-      base44.entities.Site.list()
+      api.entities.DeterrentRule.list("-priority", 200),
+      api.entities.Site.list()
     ]).then(([r, st]) => { setRules(r); setSites(st); setLoading(false); })
       .catch(() => setLoading(false));
   };
@@ -54,7 +51,7 @@ export default function DecisionEngine() {
     if (!form.name || !form.site_id) { toast({ title: "Name and site are required", variant: "destructive" }); return; }
     const site = sites.find(s => s.id === form.site_id);
     try {
-      await base44.entities.DeterrentRule.create({
+      await api.entities.DeterrentRule.create({
         ...form,
         site_name: site?.name || "",
         min_confidence: parseFloat(form.min_confidence) || 0.6,
@@ -64,7 +61,7 @@ export default function DecisionEngine() {
       });
       toast({ title: "Rule created" });
       setOpen(false);
-      setForm({ name: "", site_id: "", detection_type: "monkey", min_confidence: 0.6, require_ultrasonic: true, require_pir: false, max_distance_m: 10, deterrent_type: "siren", escalation_sequence: "flash -> siren -> audio", priority: 1 });
+      setForm({ name: "", site_id: "", detection_type: "monkey", min_confidence: 0.6, require_ultrasonic: false, require_pir: false, max_distance_m: 10, deterrent_type: "human_review", escalation_sequence: "review -> notify assigned team", priority: 1 });
       load();
     } catch (e) {
       toast({ title: "Failed to create rule", variant: "destructive" });
@@ -72,8 +69,12 @@ export default function DecisionEngine() {
   };
 
   const toggleActive = async (rule) => {
+    if (!rule.active && !safeRuleTypes.has(rule.deterrent_type)) {
+      toast({ title: "Legacy physical action blocked", description: "Only review and notification actions are allowed in this pilot.", variant: "destructive" });
+      return;
+    }
     try {
-      await base44.entities.DeterrentRule.update(rule.id, { active: !rule.active });
+      await api.entities.DeterrentRule.update(rule.id, { active: !rule.active });
       load();
     } catch (e) {
       toast({ title: "Failed to update rule", variant: "destructive" });
@@ -82,7 +83,7 @@ export default function DecisionEngine() {
 
   const deleteRule = async (rule) => {
     try {
-      await base44.entities.DeterrentRule.delete(rule.id);
+      await api.entities.DeterrentRule.delete(rule.id);
       toast({ title: "Rule deleted" });
       load();
     } catch (e) {
@@ -93,8 +94,8 @@ export default function DecisionEngine() {
   return (
     <div>
       <PageHeader
-        title="Decision Engine"
-        description="Configure sensor-fusion rules that trigger deterrents on confirmed detections"
+        title="Response Rules"
+        description="Configure review and notification rules; physical actions are disabled during the pilot"
         icon={Zap}
         actions={
           <Dialog open={open} onOpenChange={setOpen}>
@@ -104,7 +105,7 @@ export default function DecisionEngine() {
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-              <DialogHeader><DialogTitle>Create Deterrent Rule</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>Create Review Rule</DialogTitle></DialogHeader>
               <div className="grid grid-cols-2 gap-4 py-2">
                 <div className="col-span-2 space-y-1.5">
                   <Label>Rule Name *</Label>
@@ -132,7 +133,7 @@ export default function DecisionEngine() {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Deterrent Type</Label>
+                  <Label>Safe software action</Label>
                   <Select value={form.deterrent_type} onValueChange={v => setForm({ ...form, deterrent_type: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -149,16 +150,8 @@ export default function DecisionEngine() {
                   <Input type="number" value={form.max_distance_m} onChange={e => setForm({ ...form, max_distance_m: e.target.value })} />
                 </div>
                 <div className="col-span-2 space-y-1.5">
-                  <Label>Escalation Sequence</Label>
-                  <Input value={form.escalation_sequence} onChange={e => setForm({ ...form, escalation_sequence: e.target.value })} placeholder="flash -> siren -> audio" />
-                </div>
-                <div className="flex items-center justify-between rounded-lg border border-slate-200 p-3">
-                  <div><div className="text-sm font-medium">Require Ultrasonic</div><div className="text-xs text-slate-400">Confirm proximity via ultrasonic</div></div>
-                  <Switch checked={form.require_ultrasonic} onCheckedChange={v => setForm({ ...form, require_ultrasonic: v })} />
-                </div>
-                <div className="flex items-center justify-between rounded-lg border border-slate-200 p-3">
-                  <div><div className="text-sm font-medium">Require PIR</div><div className="text-xs text-slate-400">Confirm motion via PIR sensor</div></div>
-                  <Switch checked={form.require_pir} onCheckedChange={v => setForm({ ...form, require_pir: v })} />
+                  <Label>Follow-up note</Label>
+                  <Input value={form.escalation_sequence} onChange={e => setForm({ ...form, escalation_sequence: e.target.value })} placeholder="review -> notify assigned team" />
                 </div>
               </div>
               <DialogFooter>
@@ -170,10 +163,10 @@ export default function DecisionEngine() {
         }
       />
 
-      <div className="mb-6 bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-start gap-3">
+      <div className="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
         <Zap className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-        <div className="text-sm text-emerald-800">
-          <span className="font-semibold">How it works:</span> When the edge AI detects a target, the Decision Engine cross-checks sensor data (ultrasonic distance, PIR motion) before triggering a deterrent. This two-factor confirmation dramatically reduces false alarms.
+        <div className="text-sm text-amber-900">
+          <span className="font-semibold">Ward 21 pilot safeguard:</span> The current app records review rules only. It does not have an automation worker and cannot activate sirens, relays, high-voltage equipment, or other deterrents.
         </div>
       </div>
 
@@ -186,7 +179,7 @@ export default function DecisionEngine() {
         <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin" /></div>
       ) : filtered.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200">
-          <EmptyState icon={Zap} title="No rules configured" description="Create deterrent rules to automate the system's response to detections." />
+          <EmptyState icon={Zap} title="No rules configured" description="Create review and dashboard-notification rules for the research team." />
         </div>
       ) : (
         <div className="space-y-3">
@@ -208,7 +201,11 @@ export default function DecisionEngine() {
                       <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md">Distance ≤ {rule.max_distance_m || 10}m</span>
                       {rule.require_ultrasonic && <span className="bg-purple-50 text-purple-700 px-2 py-1 rounded-md">Ultrasonic ✓</span>}
                       {rule.require_pir && <span className="bg-purple-50 text-purple-700 px-2 py-1 rounded-md">PIR ✓</span>}
-                      <span className="bg-amber-50 text-amber-700 px-2 py-1 rounded-md capitalize">→ {rule.deterrent_type?.replace(/_/g, " ")}</span>
+                      {safeRuleTypes.has(rule.deterrent_type) ? (
+                        <span className="bg-amber-50 text-amber-700 px-2 py-1 rounded-md capitalize">→ {rule.deterrent_type?.replace(/_/g, " ")}</span>
+                      ) : (
+                        <span className="bg-rose-50 text-rose-700 px-2 py-1 rounded-md">Legacy physical action blocked</span>
+                      )}
                     </div>
                     {rule.escalation_sequence && (
                       <div className="mt-2 text-xs text-slate-500">Escalation: {rule.escalation_sequence}</div>
@@ -216,7 +213,7 @@ export default function DecisionEngine() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <Button variant="ghost" size="sm" onClick={() => toggleActive(rule)} className="h-8 px-2">
+                  <Button variant="ghost" size="sm" onClick={() => toggleActive(rule)} className="h-8 px-2" aria-label={rule.active ? "Disable rule" : "Enable rule"}>
                     <Power className={`w-4 h-4 ${rule.active ? "text-emerald-600" : "text-slate-400"}`} />
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => deleteRule(rule)} className="h-8 px-2 text-red-500 hover:text-red-600">

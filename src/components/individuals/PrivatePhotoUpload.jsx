@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { X, Loader2, ImagePlus } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import { cn } from "@/lib/utils";
 import PrivateImage from "@/components/PrivateImage";
 
@@ -16,7 +16,7 @@ export default function PrivatePhotoUpload({ value = [], onChange, label = "Refe
     const uris = [];
     for (const file of Array.from(files).slice(0, remaining)) {
       try {
-        const res = await base44.integrations.Core.UploadPrivateFile({ file });
+        const res = await api.integrations.Core.UploadPrivateFile({ file });
         if (res.file_uri) uris.push(res.file_uri);
       } catch {
         /* skip failed file */

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { FileBarChart, Download, Calendar, TrendingUp, Target, Camera, Activity } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { FileBarChart, Download, TrendingUp, Target, Camera, Activity } from "lucide-react";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import StatCard from "@/components/StatCard";
 import {
@@ -21,9 +21,9 @@ export default function Reports() {
 
   useEffect(() => {
     Promise.all([
-      base44.entities.DetectionEvent.list("-detected_at", 500),
-      base44.entities.Camera.list(),
-      base44.entities.Sensor.list(),
+      api.entities.DetectionEvent.list("-detected_at", 500),
+      api.entities.Camera.list(),
+      api.entities.Sensor.list(),
     ]).then(([e, c, s]) => {
       setEvents(e); setCameras(c); setSensors(s); setLoading(false);
     }).catch(() => setLoading(false));

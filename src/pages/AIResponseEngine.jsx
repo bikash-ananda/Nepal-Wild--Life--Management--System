@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Shield, Activity, AlertTriangle, Zap, Bell, Plus, Trash2, ChevronRight } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { Shield, Bell, Plus, Trash2, ChevronRight } from "lucide-react";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import ResponseLevelBadge, { levelConfig } from "@/components/ResponseLevelBadge";
 import EmptyState from "@/components/EmptyState";
@@ -14,13 +14,13 @@ import { useToast } from "@/components/ui/use-toast";
 
 const levelActions = {
   0: ["Device health monitoring", "AI standby", "Environmental monitoring"],
-  1: ["Push notification", "Dashboard alert", "Camera auto-tracking", "Begin event recording", "Show predicted route", "Calculate risk score"],
-  2: ["AI voice announcement", "Low-volume siren", "Flashing lights", "Ultrasonic deterrent", "Camera follows target", "Live operator notification"],
-  3: ["High-power siren", "High-intensity flashing lights", "Ultrasonic activation", "RF deterrent", "Water sprinkler", "Mechanical deterrent", "Relay control", "Phone notification", "AI voice call", "SMS", "Email", "Event recording"],
-  4: ["Notify multiple stakeholders", "Municipality control room", "Forest authority", "Live video streaming", "Continuous recording", "GPS tracking", "Incident report generation"],
+  1: ["Dashboard alert", "Create human-review task", "Record observation metadata", "Calculate review priority"],
+  2: ["Notify duty operator", "Notify assigned field team", "Request a second review"],
+  3: ["Escalate to ranger review", "Create incident draft", "Request researcher review"],
+  4: ["Prepare multi-agency report", "Generate research summary", "Request administrator approval"],
 };
 
-const notificationChannels = ["Push", "Dashboard", "SMS", "Email", "Phone Call", "AI Voice", "Control Room"];
+const notificationChannels = ["Dashboard"];
 
 export default function AIResponseEngine() {
   const [protocols, setProtocols] = useState([]);
@@ -36,8 +36,8 @@ export default function AIResponseEngine() {
 
   const load = async () => {
     const [p, s] = await Promise.all([
-      base44.entities.ResponseProtocol.list("-level"),
-      base44.entities.Site.list(),
+      api.entities.ResponseProtocol.list("-level"),
+      api.entities.Site.list(),
     ]);
     setProtocols(p); setSites(s); setLoading(false);
   };
@@ -66,8 +66,8 @@ export default function AIResponseEngine() {
   const create = async () => {
     if (!form.name || !form.site_id) { toast({ title: "Name and site required", variant: "destructive" }); return; }
     const site = sites.find(s => s.id === form.site_id);
-    await base44.entities.ResponseProtocol.create({ ...form, site_name: site?.name });
-    await base44.entities.AuditLog.create({ action: "create", entity_type: "ResponseProtocol", entity_name: form.name, user_name: "admin", details: `Created L${form.level} protocol`, severity: "info", timestamp: new Date().toISOString() });
+    await api.entities.ResponseProtocol.create({ ...form, site_name: site?.name });
+    await api.entities.AuditLog.create({ action: "create", entity_type: "ResponseProtocol", entity_name: form.name, user_name: "admin", details: `Created L${form.level} protocol`, severity: "info", timestamp: new Date().toISOString() });
     setShowModal(false);
     setForm({ name: "", level: 1, level_name: "Early Warning", site_id: "", detection_type: "monkey", trigger_conditions: "", actions: [], notification_channels: [], auto_escalate_after_seconds: 0, active: true });
     toast({ title: "Protocol created" });
@@ -75,13 +75,13 @@ export default function AIResponseEngine() {
   };
 
   const toggleActive = async (p) => {
-    await base44.entities.ResponseProtocol.update(p.id, { active: !p.active });
+    await api.entities.ResponseProtocol.update(p.id, { active: !p.active });
     load();
   };
 
   const remove = async (p) => {
-    await base44.entities.ResponseProtocol.delete(p.id);
-    await base44.entities.AuditLog.create({ action: "delete", entity_type: "ResponseProtocol", entity_name: p.name, user_name: "admin", details: `Deleted ${p.name}`, severity: "warning", timestamp: new Date().toISOString() });
+    await api.entities.ResponseProtocol.delete(p.id);
+    await api.entities.AuditLog.create({ action: "delete", entity_type: "ResponseProtocol", entity_name: p.name, user_name: "admin", details: `Deleted ${p.name}`, severity: "warning", timestamp: new Date().toISOString() });
     load();
   };
 
@@ -90,7 +90,7 @@ export default function AIResponseEngine() {
 
   return (
     <div>
-      <PageHeader title="AI Response Engine" description="Five-level intelligent response system with automated escalation" icon={Shield}
+      <PageHeader title="Response Protocols" description="Draft five-level review workflows. No automation worker or deterrent control is connected." icon={Shield}
         actions={<Button onClick={() => setShowModal(true)} className="bg-emerald-600 hover:bg-emerald-700"><Plus className="w-4 h-4 mr-1" /> New Protocol</Button>} />
 
       {/* Level overview */}

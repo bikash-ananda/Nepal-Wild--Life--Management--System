@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Swords, MapPin, User, Clock, Loader2 } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import SeverityBadge from "@/components/SeverityBadge";
 import StatusBadge from "@/components/StatusBadge";
 import DemoBadge from "@/components/DemoBadge";
@@ -14,7 +14,7 @@ export default function HwcDetail() {
   const [loading, setLoading] = useState(true);
 
   const load = () => {
-    base44.entities.HwcCase.get(id).then(setItem).catch(() => {}).finally(() => setLoading(false));
+    api.entities.HwcCase.get(id).then(setItem).catch(() => {}).finally(() => setLoading(false));
   };
   useEffect(() => { load(); }, [id]);
 
@@ -22,7 +22,7 @@ export default function HwcDetail() {
   if (!item) return <div className="text-center py-20 text-slate-500">Case not found. <Link to="/hwc" className="text-emerald-600">Back</Link></div>;
 
   const updateStatus = async (status) => {
-    await base44.entities.HwcCase.update(item.id, { status });
+    await api.entities.HwcCase.update(item.id, { status });
     setItem({ ...item, status });
   };
 

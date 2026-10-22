@@ -1,0 +1,28 @@
+logLevel: info
+
+# Keep the control API on the private camera_control Docker network only.
+api: true
+apiAddress: :9997
+
+# Viewers must present a short-lived application-issued token. MediaMTX asks
+# the API to validate both the token and the user's site permission.
+authMethod: http
+authHTTPAddress: http://api:3000/api/cameras/media-auth
+authHTTPExclude: []
+
+# Cameras are pulled as RTSP/RTSPS sources and delivered to browsers via WHEP.
+rtsp: false
+rtmp: false
+hls: false
+webrtc: true
+webrtcAddress: :8889
+webrtcAllowOrigins:
+  - https://bikasheng.com.np
+webrtcLocalUDPAddress: :8189
+webrtcLocalTCPAddress: ""
+webrtcAdditionalHosts:
+  - 169.58.25.131
+  - bikasheng.com.np
+  - 2a02:c207:2364:8298::1
+
+paths: {}

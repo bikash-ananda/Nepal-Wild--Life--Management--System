@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
-  BarChart3, Download, FileText, Loader2, Filter, RefreshCw, AlertTriangle,
+  BarChart3, Download, Loader2, Filter, RefreshCw, AlertTriangle,
   Camera, UserCheck, Clock, PawPrint, MapPin, TrendingUp, Database, Brain, ShieldCheck,
 } from "lucide-react";
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
+  XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from "recharts";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import EmptyState from "@/components/EmptyState";
@@ -101,8 +101,8 @@ export default function Analytics() {
     (async () => {
       try {
         const [{ items: provs }, { items: specs }] = await Promise.all([
-          base44.entities.WildlifeObservation.filter({}, { distinct: "province", limit: 100 }),
-          base44.entities.WildlifeObservation.filter({}, { distinct: "species_name", limit: 100 }),
+          api.entities.WildlifeObservation.filter({}, { distinct: "province", limit: 100 }),
+          api.entities.WildlifeObservation.filter({}, { distinct: "species_name", limit: 100 }),
         ]);
         setProvinces(provs.filter(Boolean).sort());
         setSpeciesOptions(specs.filter(Boolean).sort());
@@ -119,26 +119,26 @@ export default function Analytics() {
     const query = buildQuery();
     try {
       const [srcAgg, vCount, pCount, tAgg, spAgg, regAgg, total] = await Promise.all([
-        base44.entities.WildlifeObservation.aggregate({ query, groupBy: "source" }),
-        base44.entities.WildlifeObservation.count({ ...query, verified: true }),
-        base44.entities.WildlifeObservation.count({ ...query, verified: false }),
-        base44.entities.WildlifeObservation.aggregate({
+        api.entities.WildlifeObservation.aggregate({ query, groupBy: "source" }),
+        api.entities.WildlifeObservation.count({ ...query, verified: true }),
+        api.entities.WildlifeObservation.count({ ...query, verified: false }),
+        api.entities.WildlifeObservation.aggregate({
           query,
           dateBucket: { field: "observed_at", unit: bucketUnit },
         }),
-        base44.entities.WildlifeObservation.aggregate({
+        api.entities.WildlifeObservation.aggregate({
           query,
           groupBy: "species_name",
           sort: "-count",
           limit: 12,
         }),
-        base44.entities.WildlifeObservation.aggregate({
+        api.entities.WildlifeObservation.aggregate({
           query,
           groupBy: "province",
           sort: "-count",
           limit: 20,
         }),
-        base44.entities.WildlifeObservation.count(query),
+        api.entities.WildlifeObservation.count(query),
       ]);
 
       setSourceRows(srcAgg.rows || []);

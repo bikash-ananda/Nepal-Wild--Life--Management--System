@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Scale, Check, MapPin, Activity, Camera, Zap, Battery, Signal, TrendingUp } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { Scale, Check, MapPin, Activity, Camera, Battery, Signal } from "lucide-react";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import { cn } from "@/lib/utils";
@@ -50,10 +50,10 @@ export default function SiteComparison() {
 
   useEffect(() => {
     Promise.all([
-      base44.entities.Site.list("-created_date", 200),
-      base44.entities.DetectionEvent.list("-detected_at", 500),
-      base44.entities.Sensor.list("-created_date", 200),
-      base44.entities.Camera.list("-created_date", 200),
+      api.entities.Site.list("-created_date", 200),
+      api.entities.DetectionEvent.list("-detected_at", 500),
+      api.entities.Sensor.list("-created_date", 200),
+      api.entities.Camera.list("-created_date", 200),
     ]).then(([siteList, eventList, sensorList, cameraList]) => {
       setSites(siteList);
       setEvents(eventList);

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Upload, X, Loader2, ImagePlus } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { X, Loader2, ImagePlus } from "lucide-react";
+import { api } from "@/api/apiClient";
 import { cn } from "@/lib/utils";
 
 export default function PhotoUpload({ value = [], onChange, label = "Photos", multiple = true }) {
@@ -12,7 +12,7 @@ export default function PhotoUpload({ value = [], onChange, label = "Photos", mu
     const urls = [];
     for (const file of Array.from(files)) {
       try {
-        const res = await base44.integrations.Core.UploadFile({ file });
+        const res = await api.integrations.Core.UploadFile({ file });
         if (res.file_url) urls.push(res.file_url);
       } catch {}
     }

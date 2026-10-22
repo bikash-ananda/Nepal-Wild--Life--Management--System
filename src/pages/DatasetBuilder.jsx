@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Database, Loader2, Search, Filter, GitBranch, Image as ImageIcon, CheckCircle2, XCircle, Clock, MapPin, Camera, Cloud } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { Database, Loader2, Search, Filter, GitBranch, CheckCircle2, XCircle, Clock, MapPin, Camera, Cloud } from "lucide-react";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -26,7 +25,7 @@ export default function DatasetBuilder() {
   const { toast } = useToast();
 
   const load = async () => {
-    const r = await base44.entities.DatasetRecord.list("-created_date", 200);
+    const r = await api.entities.DatasetRecord.list("-created_date", 200);
     setRecords(r); setLoading(false);
   };
 

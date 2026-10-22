@@ -1,77 +1,36 @@
-# Base44 Project
+# Nepal Wildlife Management System
 
-Use this repository to run and edit the app locally, then publish changes back through Base44.
+Self-hosted field-research platform for wildlife observations and human–wildlife conflict, beginning with monkey crop-raiding in Pokhara Metropolitan City, Ward 21. The browser app uses a local REST API, PostgreSQL, private file storage, and a camera media relay. The field workflow supports personal mobile cameras, GPS, offline capture, and a separate connection profile for every farm camera.
 
-Any change pushed to the repo will also be reflected in the Base44 Builder.
+## Local development
 
-## Prerequisites
+Requirements: Node.js 24 LTS and PostgreSQL 16 or newer.
 
-1. Clone the repository using the project's Git URL.
-2. Navigate to the project directory.
-3. Install dependencies: `npm install`.
-4. Install the Base44 CLI: `npm install -g base44@latest`.
+1. Install the frontend packages: `npm install`.
+2. Install API packages: `npm install --prefix server`.
+3. Start PostgreSQL and create an empty `nepal_wildlife` database.
+4. Set API variables in your shell: `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`, `JWT_SECRET`, `APP_ORIGIN`, `BOOTSTRAP_ADMIN_EMAIL`, and `BOOTSTRAP_ADMIN_PASSWORD`.
+5. Start the API with `npm run dev --prefix server`.
+6. In a second terminal, run `npm run dev` and open the Vite URL.
 
-See the [Base44 CLI docs](https://docs.base44.com/developers/references/cli/get-started/overview) if you want to run Base44 commands directly.
+The first API start creates the schema and bootstraps one administrator if the database has no users. Use a unique password of at least 12 characters. In development, the API allows Vite on localhost; production origins come from `APP_ORIGIN`.
 
-## Run Locally
+## Contabo deployment
 
-Run the full local development environment from the project root:
+Docker Compose runs the web app, API, PostgreSQL, MediaMTX, and Caddy HTTPS proxy. Copy `.env.example` to `.env`, set unique secrets, and follow [docs/DEPLOY_CONTABO.md](docs/DEPLOY_CONTABO.md). Publish TCP 80/443, UDP 443, and UDP 8189 for browser WebRTC media. PostgreSQL, the API, and MediaMTX control API stay on private Docker networks.
 
-```bash
-base44 dev
-```
+The provided DNS records are `bikasheng.com.np A 169.58.25.131` and `AAAA 2a02:c207:2364:8298::1`. Caddy will request and renew HTTPS certificates after DNS resolves to the VPS and ports 80/443 are reachable. Open UDP 8189 for WebRTC media; see the deployment guide.
 
-`base44 dev` starts the local Base44 development backend and, when this app is configured for it, also starts the frontend dev server for you. Use the frontend URL printed by the command.
+## Pilot behavior and current limits
 
-For example, when the Base44 project config includes a `serveCommand`, `base44 dev` can launch the frontend too:
+- Mobile photo + GPS capture works online and queues captures in IndexedDB while offline.
+- Captures upload to private server storage and become unverified observations with a human-review task.
+- Optional browser push can notify users assigned to the site's account list after a reviewer confirms a monkey label. Push omits precise coordinates; VAPID keys and user opt-in are required.
+- SMS, WhatsApp, phone calls, and generic automation rules are not connected to delivery providers/workers.
+- AI labeling, model training, SMS/push delivery, and physical deterrent activation are not configured. The app must not present these as completed actions.
+- Public capture is rate-limited and creates an unverified review item.
+- Registration is closed by default; the first admin creates accounts.
+- Camera setup accepts individual RTSP/RTSPS and HLS routes, tests each stream from the VPS, encrypts camera passwords at rest, and configures a private MediaMTX path. Site-authorized users can open a short-lived WebRTC view. Router forwarding, VPN reachability, firewall rules, and the exact camera stream path still require deployment-time verification. Automatic event subscription, snapshot ingestion, monkey detection, and camera response controls are not implemented by this live-stream connector.
+- Use real records with `is_demo: false`; keep research labels human-confirmed and record capture effort/outages.
 
-```json5
-{
-  "site": {
-    "serveCommand": "npm run dev"
-  }
-}
-```
-
-In a Base44 project this lives in `base44/config.jsonc`.
-
-## Run Only The Frontend
-
-If you only want to work on the frontend against the hosted Base44 backend, run:
-
-```bash
-npm run dev
-```
-
-Open the local URL printed by Vite.
-
-## Use The Hosted Backend
-
-For frontend-only development, create or update `.env.local` in the project root:
-
-```bash
-VITE_BASE44_APP_ID=your_app_id
-VITE_BASE44_APP_BASE_URL=https://your-app.base44.app
-```
-
-`VITE_BASE44_APP_ID` identifies the Base44 app.
-
-`VITE_BASE44_APP_BASE_URL` tells the Base44 Vite plugin where to send local `/api` requests. Point it at your deployed Base44 app URL when you want the local frontend to use the hosted backend.
-
-When you use `base44 dev`, the command injects the local Base44 values for you, so `.env.local` is mainly needed for frontend-only workflows.
-
-## Publish Your Changes
-
-After pushing your changes to git, open the Base44 dashboard and publish the app:
-
-```bash
-base44 dashboard open
-```
-
-## Docs & Support
-
-Documentation: [https://docs.base44.com/Integrations/Using-GitHub](https://docs.base44.com/Integrations/Using-GitHub)
-
-Base44 CLI command reference: [https://docs.base44.com/developers/references/cli/commands/introduction](https://docs.base44.com/developers/references/cli/commands/introduction)
-
-Support: [https://app.base44.com/support](https://app.base44.com/support)
+See [docs/BUILD_PLAN.md](docs/BUILD_PLAN.md) for research design and architecture, [docs/PHASED_ROADMAP.md](docs/PHASED_ROADMAP.md) for the staged product plan, and [docs/CAMERA_DIRECT_CONNECTION.md](docs/CAMERA_DIRECT_CONNECTION.md) for camera routing and firmware limitations.

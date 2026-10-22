@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Loader2, Sparkles } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,7 @@ export default function RegisterIndividualModal({ open, onOpenChange, onCreated,
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    base44.entities.Species.filter({ category: "wildlife" }, { limit: 200 })
+    api.entities.Species.filter({ category: "wildlife" }, { limit: 200 })
       .then((res) => setSpeciesList(res.items || res || []))
       .catch(() => {});
   }, []);
@@ -40,7 +40,7 @@ export default function RegisterIndividualModal({ open, onOpenChange, onCreated,
     }
     setSaving(true);
     try {
-      const res = await base44.functions.invoke("individualId", {
+      const res = await api.functions.invoke("individualId", {
         action: "registerIndividual",
         species_id: form.species_id,
         nickname: form.nickname,

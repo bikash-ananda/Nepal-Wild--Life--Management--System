@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Globe, Plus, Trash2, Loader2, CheckCircle2, TrendingUp, MapPin, Calendar, Zap, Brain, Share2 } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { Globe, Trash2, Loader2, CheckCircle2, TrendingUp, MapPin, Calendar, Zap, Brain, Share2 } from "lucide-react";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
@@ -22,20 +22,20 @@ export default function KnowledgeBase() {
   const { toast } = useToast();
 
   const load = async () => {
-    const e = await base44.entities.KnowledgeBase.list("-created_at", 50);
+    const e = await api.entities.KnowledgeBase.list("-created_at", 50);
     setEntries(e); setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
 
   const toggleShare = async (entry) => {
-    await base44.entities.KnowledgeBase.update(entry.id, { shared: !entry.shared });
+    await api.entities.KnowledgeBase.update(entry.id, { shared: !entry.shared });
     toast({ title: entry.shared ? "Data unshared" : "Data shared with central knowledge base" });
     load();
   };
 
   const remove = async (entry) => {
-    await base44.entities.KnowledgeBase.delete(entry.id);
+    await api.entities.KnowledgeBase.delete(entry.id);
     load();
   };
 

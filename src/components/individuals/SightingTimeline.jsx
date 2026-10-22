@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { Calendar, MapPin, Target, Eye, Fingerprint, ImageOff, Clock, Route } from "lucide-react";
 import PrivateImage from "@/components/PrivateImage";

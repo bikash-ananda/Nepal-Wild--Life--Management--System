@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Loader2, Send, MessageSquarePlus, X, Trophy, ListOrdered, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,7 @@ export default function VerificationGame() {
 
   const serveNext = useCallback(async () => {
     try {
-      const res = await base44.functions.invoke("verificationGame", { action: "serveNext" });
+      const res = await api.functions.invoke("verificationGame", { action: "serveNext" });
       setSample(res.sample || null);
       setStats(res.playerStats || null);
       setQueueCount(res.queueCount || 0);
@@ -48,14 +48,14 @@ export default function VerificationGame() {
     serveNext();
     // Poll for fresh queue count + new samples every 20s while idle
     pollRef.current = setInterval(() => {
-      base44.functions.invoke("verificationGame", { action: "serveNext" }).then((res) => {
+      api.functions.invoke("verificationGame", { action: "serveNext" }).then((res) => {
         setQueueCount(res.queueCount || 0);
         setStats(res.playerStats || null);
         if (!sample && res.sample) setSample(res.sample);
       }).catch(() => {});
     }, 20000);
     return () => clearInterval(pollRef.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, []);
 
   const handleSubmit = async () => {
@@ -63,7 +63,7 @@ export default function VerificationGame() {
     setSubmitting(true);
     setFeedback("voting");
     try {
-      const res = await base44.functions.invoke("verificationGame", {
+      const res = await api.functions.invoke("verificationGame", {
         action: "submitVote",
         sample_id: sample.id,
         voted_label: label,
@@ -74,14 +74,14 @@ export default function VerificationGame() {
         setFeedbackMsg(`+${res.pointsAwarded} points — consensus reached!`);
         setSessionPoints((p) => p + (res.pointsAwarded || 0));
         // Trigger retraining check (best-effort, mirrors AI Verification)
-        base44.functions.invoke("yoloRetrain", { action: "checkThreshold" }).catch(() => {});
+        api.functions.invoke("yoloRetrain", { action: "checkThreshold" }).catch(() => {});
       } else if (res.consensus && res.consensus.needsExpert) {
         setFeedback("needsExpert");
       } else {
         setFeedback("waiting");
       }
       // Refresh stats
-      const st = await base44.functions.invoke("verificationGame", { action: "getPlayerStats" });
+      const st = await api.functions.invoke("verificationGame", { action: "getPlayerStats" });
       setStats(st.stats || null);
       // After a short pause, advance to the next image
       setTimeout(() => serveNext(), res.confirmed ? 2200 : 2600);

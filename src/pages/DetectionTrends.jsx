@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { TrendingUp, Filter, Loader2, Target } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 
@@ -48,8 +48,8 @@ export default function DetectionTrends() {
 
   useEffect(() => {
     Promise.all([
-      base44.entities.DetectionEvent.list("-detected_at", 500),
-      base44.entities.Site.list("-created_date", 200),
+      api.entities.DetectionEvent.list("-detected_at", 500),
+      api.entities.Site.list("-created_date", 200),
     ]).then(([d, s]) => {
       setDetections(d);
       setSites(s);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Fingerprint, MapPin, Calendar, Eye, Target, ScanFace, ImageOff } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/apiClient";
 import StatusBadge from "@/components/StatusBadge";
 import PrivateImage from "@/components/PrivateImage";
 import EmptyState from "@/components/EmptyState";
@@ -41,9 +41,9 @@ export default function IndividualDetail() {
   const load = () => {
     setLoading(true);
     Promise.all([
-      base44.entities.AnimalIndividual.get(id).catch(() => null),
-      base44.entities.DetectionEvent.filter({ individual_id: id }, { sort: "-detected_at", limit: 50 }),
-      base44.entities.WildlifeObservation.filter({ individual_id: id }, { sort: "-observed_at", limit: 50 }),
+      api.entities.AnimalIndividual.get(id).catch(() => null),
+      api.entities.DetectionEvent.filter({ individual_id: id }, { sort: "-detected_at", limit: 50 }),
+      api.entities.WildlifeObservation.filter({ individual_id: id }, { sort: "-observed_at", limit: 50 }),
     ]).then(([ind, dRes, oRes]) => {
       setIndividual(ind);
       const dItems = (dRes.items || dRes || []).map((d) => ({
