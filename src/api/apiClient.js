@@ -102,6 +102,10 @@ export const api = {
     remove: (id) => request(`/api/cameras/${encodeURIComponent(id)}/connection`, { method: "DELETE" }),
     viewToken: (id) => request(`/api/cameras/${encodeURIComponent(id)}/view-token`, { method: "POST" }),
   },
+  ai: {
+    status: () => request("/api/ai/status"),
+    analyze: (payload) => request("/api/ai/analyze", { method: "POST", body: JSON.stringify(payload) }),
+  },
   integrations: {
     Core: {
       UploadFile: ({ file }) => upload("/api/uploads", { file }),

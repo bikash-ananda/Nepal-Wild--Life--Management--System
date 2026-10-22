@@ -3,19 +3,17 @@ import { cn } from "@/lib/utils";
 
 export default function BoundingBoxEditor({ imageUrl, initialBoxes = [], onChange, className }) {
   const canvasRef = useRef(null);
-  const containerRef = useRef(null);
   const [boxes, setBoxes] = useState(initialBoxes);
   const [drawing, setDrawing] = useState(null);
-  const [selectedIdx, setSelectedIdx] = useState(null);
   const [imgLoaded, setImgLoaded] = useState(false);
   const imgRef = useRef(new Image());
-  const scaleRef = useRef({ x: 1, y: 1 });
 
   useEffect(() => {
     const img = imgRef.current;
     img.onload = () => setImgLoaded(true);
     img.src = imageUrl;
-  }, [imageUrl]);
+    setBoxes(initialBoxes || []);
+  }, [imageUrl, initialBoxes]);
 
   const getCanvasCoords = useCallback((e) => {
     const canvas = canvasRef.current;
@@ -56,7 +54,6 @@ export default function BoundingBoxEditor({ imageUrl, initialBoxes = [], onChang
     if (e.button !== 0) return;
     const { x, y } = getCanvasCoords(e);
     setDrawing({ x, y, w: 0, h: 0, label: "Unknown" });
-    setSelectedIdx(null);
   };
 
   const handleMove = (e) => {
@@ -74,7 +71,13 @@ export default function BoundingBoxEditor({ imageUrl, initialBoxes = [], onChang
         h: Math.abs(drawing.h),
         label: drawing.label || "Unknown",
       };
-      const newBoxes = [...boxes, normalized];
+      const newBoxes = [...boxes, {
+        ...normalized,
+        x_norm: normalized.x / canvasRef.current.width,
+        y_norm: normalized.y / canvasRef.current.height,
+        width_norm: normalized.w / canvasRef.current.width,
+        height_norm: normalized.h / canvasRef.current.height,
+      }];
       setBoxes(newBoxes);
       onChange?.(newBoxes);
     }
@@ -93,20 +96,13 @@ export default function BoundingBoxEditor({ imageUrl, initialBoxes = [], onChang
     onChange?.(newBoxes);
   };
 
-  const canvasSize = () => {
-    if (!containerRef.current) return { w: 640, h: 360 };
-    const w = containerRef.current.clientWidth;
-    return { w, h: Math.round(w * 0.5625) };
-  };
-  const cs = canvasSize();
-
   return (
     <div className={cn("space-y-2", className)}>
-      <div ref={containerRef} className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
+      <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
         <canvas
           ref={canvasRef}
-          width={cs.w}
-          height={cs.h}
+          width={640}
+          height={360}
           className="w-full cursor-crosshair touch-none"
           onMouseDown={handleDown}
           onMouseMove={handleMove}

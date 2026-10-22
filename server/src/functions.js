@@ -4,6 +4,37 @@ import { enqueueSitePush } from "./notifications.js";
 
 const monkeyLabels = new Set(["monkey", "macaque", "rhesus macaque", "rhesus monkey"]);
 
+function normalizeReviewBoxes(boxes, label) {
+  if (String(label).toLowerCase() === "false detection" || !Array.isArray(boxes)) return [];
+  return boxes.slice(0, 200).flatMap((box) => {
+    if (!box || typeof box !== "object" || Array.isArray(box)) return [];
+    const x = Number(box.x_norm ?? box.x_min ?? Number(box.x || 0) / 640);
+    const y = Number(box.y_norm ?? box.y_min ?? Number(box.y || 0) / 360);
+    const width = Number(box.width_norm ?? (box.x_max != null ? Number(box.x_max) - x : Number(box.w || 0) / 640));
+    const height = Number(box.height_norm ?? (box.y_max != null ? Number(box.y_max) - y : Number(box.h || 0) / 360));
+    if (![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0) return [];
+    const left = Math.max(0, Math.min(1, x));
+    const top = Math.max(0, Math.min(1, y));
+    const right = Math.max(left, Math.min(1, x + width));
+    const bottom = Math.max(top, Math.min(1, y + height));
+    if (right <= left || bottom <= top) return [];
+    const candidateLabel = String(box.label || "").trim();
+    const genericLabel = !candidateLabel || /^unknown$|^animal(?:\s*\(\d+%\))?$/i.test(candidateLabel);
+    return [{
+      ...box,
+      label: genericLabel ? label : candidateLabel,
+      x_norm: left,
+      y_norm: top,
+      width_norm: right - left,
+      height_norm: bottom - top,
+      x_min: left,
+      y_min: top,
+      x_max: right,
+      y_max: bottom,
+    }];
+  });
+}
+
 async function notifyVerifiedMonkey(pool, sample, observation, label, user) {
   if (!observation?.site_id || !monkeyLabels.has(String(label).trim().toLowerCase())) return null;
   let alert;
@@ -202,9 +233,42 @@ async function handleVerification(pool, body, user) {
     if (!canReadSite(user, sample)) throw Object.assign(new Error("Review sample not found."), { statusCode: 404 });
     const label = String(body.label || sample.consensus_label || "").trim().slice(0, 120);
     if (!label) throw Object.assign(new Error("A review label is required. Choose a consensus label or use the override action."), { statusCode: 400 });
+    const reviewedAt = new Date().toISOString();
+    const boundingBoxes = normalizeReviewBoxes(body.bounding_boxes || sample.bounding_boxes, label);
+    const datasetPayload = {
+      image_url: sample.image_url || "",
+      image_uri: sample.image_uri || "",
+      media_id: sample.media_id || "",
+      video_url: sample.video_url || "",
+      correct_label: label,
+      species: label,
+      bounding_boxes: boundingBoxes,
+      site_id: sample.site_id || "",
+      site_name: sample.site_name || "",
+      latitude: sample.latitude ?? null,
+      longitude: sample.longitude ?? null,
+      captured_at: sample.captured_at || sample.created_date || reviewedAt,
+      verified_by: user.id,
+      verified_at: reviewedAt,
+      status: "verified",
+      source_sample_id: sampleId,
+      ai_prediction: sample.ai_prediction || null,
+      ai_confidence: sample.ai_confidence !== null && sample.ai_confidence !== undefined && Number.isFinite(Number(sample.ai_confidence))
+        ? Number(sample.ai_confidence) : null,
+      ai_model_version: sample.ai_model_version || null,
+      queued_for_training: false,
+      is_demo: false,
+    };
+    const priorDataset = await pool.query(
+      "SELECT id FROM app_records WHERE entity = 'DatasetRecord' AND data->>'source_sample_id' = $1 LIMIT 1",
+      [sampleId]
+    );
+    const datasetRecord = priorDataset.rowCount
+      ? await updateRecord(pool, "DatasetRecord", priorDataset.rows[0].id, datasetPayload, user.id)
+      : await createRecord(pool, "DatasetRecord", datasetPayload, user.id);
     const updated = await updateRecord(pool, "VerificationSample", sampleId, {
       status: "verified", verified: true, verified_by: user.id,
-      verified_at: new Date().toISOString(), verified_label: label,
+      verified_at: reviewedAt, verified_label: label, bounding_boxes: boundingBoxes,
     }, user.id);
     await updateRecord(pool, "WildlifeObservation", String(sample.observation_id), {
       verified: true, review_status: "verified", species_name: label,
@@ -213,7 +277,7 @@ async function handleVerification(pool, body, user) {
       ? await getRecord(pool, "WildlifeObservation", String(sample.observation_id))
       : null;
     const alert = await notifyVerifiedMonkey(pool, sample, observation, label, user);
-    return { sample: updated, success: true, alert };
+    return { sample: updated, dataset_record: datasetRecord, success: true, alert };
   }
   throw Object.assign(new Error("Unsupported verification action."), { statusCode: 400 });
 }

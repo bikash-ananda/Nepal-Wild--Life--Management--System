@@ -49,7 +49,7 @@ export default function ExpertReview() {
     setBusy(true);
     try {
       await api.functions.invoke("verificationGame", { action: "confirmLabel", sample_id: selected.id, label });
-      toast({ title: "Label confirmed", description: `Saved as ${label}. Model training is not configured.` });
+      toast({ title: "Label confirmed", description: `Saved as ${label} in the reviewed dataset. Model training is not configured.` });
       refreshAfter();
     } catch (e) {
       setBusy(false);
@@ -62,7 +62,7 @@ export default function ExpertReview() {
     setBusy(true);
     try {
       await api.functions.invoke("verificationGame", { action: "overrideLabel", sample_id: selected.id, label });
-      toast({ title: "Label overridden", description: `Saved as ${label}. Model training is not configured.` });
+      toast({ title: "Label overridden", description: `Saved as ${label} in the reviewed dataset. Model training is not configured.` });
       refreshAfter();
     } catch (e) {
       setBusy(false);

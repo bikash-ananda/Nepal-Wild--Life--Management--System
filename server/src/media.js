@@ -83,7 +83,7 @@ export function registerMediaRoutes(app, pool, requireAuth) {
   });
 }
 
-async function canAccessMedia(pool, user, id, uploadedBy) {
+export async function canAccessMedia(pool, user, id, uploadedBy) {
   if (String(uploadedBy || "") === String(user.id)) return true;
   const uri = "media://" + id;
   const url = "/api/media/" + id;

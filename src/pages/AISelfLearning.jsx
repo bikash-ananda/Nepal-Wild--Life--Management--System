@@ -16,7 +16,7 @@ export default function AISelfLearning() {
       .catch((error) => setState((current) => ({ ...current, loading: false, error: error.message })));
   }, []);
 
-  const verified = state.records.filter((record) => record.status === "verified" && record.correct_label);
+  const verified = state.records.filter((record) => ["verified", "human_reviewed"].includes(record.status) && record.correct_label);
   const activeModels = state.models.filter((model) => model.status === "active");
   const latestJob = state.jobs[0];
 
@@ -26,7 +26,7 @@ export default function AISelfLearning() {
 
       <section className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
         <h2 className="font-semibold">Training and automatic model updates are not connected</h2>
-        <p className="mt-1">This page reports stored research data only. It does not train a model, estimate accuracy, activate a detector, or send commands to field equipment.</p>
+        <p className="mt-1">Reviewed labels are saved for curation. Model training, accuracy estimates, automatic model updates, and field equipment commands are not connected.</p>
       </section>
 
       {state.error && <p role="alert" className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">Could not load AI readiness data: {state.error}</p>}
@@ -41,7 +41,7 @@ export default function AISelfLearning() {
         <h2 className="font-semibold text-slate-800">Pokhara 21 training gate</h2>
         <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-slate-600">
           <li>Collect consented field photos with site, time, and GPS accuracy.</li>
-          <li>Have trained reviewers label monkey, human, livestock, other wildlife, and uncertain cases.</li>
+          <li>Have trained reviewers label monkey, human, livestock, other wildlife, and false detections; draw boxes around each animal.</li>
           <li>Keep all images from one encounter or camera session in the same train, validation, or test split.</li>
           <li>Measure recall, false alerts per camera-hour, and performance by lighting and weather before any pilot inference.</li>
           <li>Require researcher approval and a rollback plan before enabling a version in the field.</li>
@@ -55,7 +55,7 @@ export default function AISelfLearning() {
             <ReadinessRow label="Verified labeled samples" value={verified.length ? `${verified.length} recorded` : "None recorded yet"} />
             <ReadinessRow label="Active model metadata" value={activeModels.length ? `${activeModels.length} registry item(s); inference is still disabled` : "No active model"} />
             <ReadinessRow label="Latest training job" value={latestJob ? `${latestJob.name || "Unnamed job"} · ${latestJob.status || "unknown status"}` : "No training job recorded"} />
-            <p className="rounded-lg bg-slate-50 p-3 text-xs text-slate-600">Next AI phase: export only consented, reviewer-approved samples, evaluate a small YOLO model against a site-separated test set, then consider an SLM for summarizing verified events. An SLM or RAG system must not decide whether a live alert is true.</p>
+            <p className="rounded-lg bg-slate-50 p-3 text-xs text-slate-600">Recommended sequence: use self-supervised image embeddings to group duplicate frames and surface diverse review examples; train a detector on researcher-approved boxes; compare it on camera- and encounter-separated test data. Human corrections are supervised labels, not RLHF. Use preference feedback later to tune alert wording and operator workload. An SLM or RAG system can summarize verified records but must not decide whether a live animal alert is true.</p>
           </div>
         )}
       </section>

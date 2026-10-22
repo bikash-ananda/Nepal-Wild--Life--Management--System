@@ -27,10 +27,10 @@ The provided DNS records are `bikasheng.com.np A 169.58.25.131` and `AAAA 2a02:c
 - Captures upload to private server storage and become unverified observations with a human-review task.
 - Optional browser push can notify users assigned to the site's account list after a reviewer confirms a monkey label. Push omits precise coordinates; VAPID keys and user opt-in are required.
 - SMS, WhatsApp, phone calls, and generic automation rules are not connected to delivery providers/workers.
-- AI labeling, model training, SMS/push delivery, and physical deterrent activation are not configured. The app must not present these as completed actions.
+- Optional general animal detection can be enabled as a private service; it does not identify monkeys. Reviewer-confirmed labels enter the dataset, while model training and automatic model updates remain disconnected. SMS, WhatsApp, phone calls, and physical deterrent activation are not configured.
 - Public capture is rate-limited and creates an unverified review item.
 - Registration is closed by default; the first admin creates accounts.
 - Camera setup accepts individual RTSP/RTSPS and HLS routes, tests each stream from the VPS, encrypts camera passwords at rest, and configures a private MediaMTX path. Site-authorized users can open a short-lived WebRTC view. Router forwarding, VPN reachability, firewall rules, and the exact camera stream path still require deployment-time verification. Automatic event subscription, snapshot ingestion, monkey detection, and camera response controls are not implemented by this live-stream connector.
 - Use real records with `is_demo: false`; keep research labels human-confirmed and record capture effort/outages.
 
-See [docs/BUILD_PLAN.md](docs/BUILD_PLAN.md) for research design and architecture, [docs/PHASED_ROADMAP.md](docs/PHASED_ROADMAP.md) for the staged product plan, and [docs/CAMERA_DIRECT_CONNECTION.md](docs/CAMERA_DIRECT_CONNECTION.md) for camera routing and firmware limitations.
+See [docs/BUILD_PLAN.md](docs/BUILD_PLAN.md) for research design and architecture, [docs/PHASED_ROADMAP.md](docs/PHASED_ROADMAP.md) for the staged product plan, [docs/ai-engine.md](docs/ai-engine.md) for the pretrained detector and learning strategy, and [docs/CAMERA_DIRECT_CONNECTION.md](docs/CAMERA_DIRECT_CONNECTION.md) for camera routing and firmware limitations.

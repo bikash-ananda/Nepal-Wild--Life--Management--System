@@ -13,6 +13,7 @@ import { registerMediaRoutes } from "./media.js";
 import { processPushOutbox, registerNotificationRoutes } from "./notifications.js";
 import { registerRecordRoutes } from "./records.js";
 import { registerCameraRoutes, startCameraEngine } from "./cameras.js";
+import { registerAiRoutes } from "./ai.js";
 
 const production = process.env.NODE_ENV === "production";
 const jwtSecret = process.env.JWT_SECRET || (!production ? "local-development-secret-change-before-deploy" : "");
@@ -82,6 +83,7 @@ registerMediaRoutes(app, pool, requireAuth);
 registerNotificationRoutes(app, pool, requireAuth, checkOrigin);
 registerFunctionRoutes(app, pool, requireAuth, checkOrigin);
 registerCameraRoutes(app, pool, requireAuth, checkOrigin);
+registerAiRoutes(app, pool, requireAuth, checkOrigin);
 
 app.post("/api/integrations/send-email", { preHandler: requireAuth, config: { rateLimit: { max: 10, timeWindow: "1 hour" } } }, async (request, reply) => {
   if (!checkOrigin(request, reply)) return;

@@ -36,32 +36,17 @@ export default function AIVerification() {
   useEffect(() => { load(); }, []);
 
   const handleVerify = async (sample, label, boundingBoxes) => {
+    if (label !== "False Detection" && !(boundingBoxes || []).length) {
+      toast({ title: "Draw an object box first", description: "Add a box around the animal or object so this reviewed image can support detection training later.", variant: "destructive" });
+      return;
+    }
     setSaving(true);
     try {
       await api.functions.invoke("verificationGame", {
         action: "overrideLabel",
         sample_id: sample.id,
         label,
-      });
-      await api.entities.DatasetRecord.create({
-        image_url: sample.image_url,
-        video_url: sample.video_url || "",
-        correct_label: label,
-        species: label,
         bounding_boxes: boundingBoxes || [],
-        site_id: sample.site_id || "",
-        site_name: sample.site_name || "",
-        latitude: sample.latitude ?? null,
-        longitude: sample.longitude ?? null,
-        captured_at: sample.captured_at || sample.created_date,
-        verified_by: user?.id || null,
-        verified_at: new Date().toISOString(),
-        status: "human_reviewed",
-        ai_prediction: null,
-        ai_confidence: null,
-        ai_model_version: null,
-        queued_for_training: false,
-        is_demo: false,
       });
       toast({ title: `Verified as ${label}`, description: "Human-reviewed label saved. Model training remains disabled until the dataset is approved." });
       await load();
@@ -90,10 +75,10 @@ export default function AIVerification() {
 
   return (
     <div>
-      <PageHeader title="Human Verification" description="Review mobile and community submissions. Every label remains a human judgment; no monkey classifier is connected." icon={Brain} />
+      <PageHeader title="Human Verification" description="Review field submissions and general animal detector candidates. Confirmed labels are saved for dataset curation." icon={Brain} />
 
       <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-        AI inference and model training are not configured. Verified samples are saved for later dataset curation, not automatically used to train or deploy a model.
+        Detector output is only an animal candidate and may be wrong or miss an animal. Researchers must confirm every label; saved corrections do not automatically train or deploy a model.
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
@@ -121,7 +106,7 @@ export default function AIVerification() {
           </div>
           {saving ? (
             <div className="flex flex-col items-center py-20"><Loader2 className="w-8 h-8 text-emerald-500 animate-spin mb-2" /><div className="text-sm text-slate-500">Saving human review…</div></div>
-          ) : <VerificationCard sample={currentSample} onVerify={handleVerify} />}
+          ) : <VerificationCard key={currentSample.id} sample={currentSample} onVerify={handleVerify} />}
         </div>
       )}
 
