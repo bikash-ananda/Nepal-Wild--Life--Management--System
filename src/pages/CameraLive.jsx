@@ -137,34 +137,54 @@ export default function CameraLive() {
 
   useEffect(() => {
     if (!id) return undefined;
-    const stream = new EventSource(api.cameras.eventFeedUrl(id));
-    stream.onopen = () => setEventFeedStatus((current) => current === "not_configured" ? current : "connected");
-    stream.onerror = () => setEventFeedStatus((current) => current === "not_configured" ? current : "reconnecting");
-    const onReady = (event) => {
-      try {
-        const payload = JSON.parse(event.data || "{}");
-        if (payload.status) setEventFeedStatus(payload.status);
-      } catch {}
+    const feedUrl = new URL(api.cameras.eventFeedUrl(id), window.location.origin);
+    feedUrl.protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    let disposed = false;
+    let retryTimer;
+    let retryDelay = 1000;
+    let activeSocket;
+    const connect = () => {
+      if (disposed) return;
+      const stream = new WebSocket(feedUrl);
+      activeSocket = stream;
+      stream.onopen = () => {
+        retryDelay = 1000;
+        setEventFeedStatus((current) => current === "not_configured" ? current : "connected");
+      };
+      stream.onerror = () => setEventFeedStatus((current) => current === "not_configured" ? current : "reconnecting");
+      stream.onclose = (event) => {
+        if (disposed) return;
+        if (event.code === 1008) {
+          setEventFeedStatus("session_expired");
+          return;
+        }
+        setEventFeedStatus((current) => current === "not_configured" ? current : "reconnecting");
+        retryTimer = window.setTimeout(connect, retryDelay);
+        retryDelay = Math.min(retryDelay * 2, 30000);
+      };
+      stream.onmessage = (message) => {
+        try {
+          const messageData = JSON.parse(message.data || "{}");
+          const payload = messageData.data || {};
+          if (messageData.type === "ready") {
+            if (payload.status) setEventFeedStatus(payload.status);
+          } else if (messageData.type === "camera-event") {
+            setEvents((current) => [payload, ...current.filter((item) => item.id !== payload.id)].slice(0, 30));
+            setEventFeedStatus("streaming");
+            toast({ title: "Camera event received", description: `${payload.camera_name || "Camera"} · ${formatEventType(payload.event_code)}` });
+          } else if (messageData.type === "camera-status") {
+            setEventFeedStatus(payload.status || "unknown");
+            setEventFeedError(payload.last_error || "");
+          }
+        } catch { /* Ignore malformed or unsupported feed messages. */ }
+      };
     };
-    const onCameraEvent = (event) => {
-      try {
-        const payload = JSON.parse(event.data);
-        setEvents((current) => [payload, ...current.filter((item) => item.id !== payload.id)].slice(0, 30));
-        setEventFeedStatus("streaming");
-        toast({ title: "Camera event received", description: `${payload.camera_name || "Camera"} · ${formatEventType(payload.event_code)}` });
-      } catch {}
+    connect();
+    return () => {
+      disposed = true;
+      window.clearTimeout(retryTimer);
+      activeSocket?.close(1000, "Camera page closed");
     };
-    const onCameraStatus = (event) => {
-      try {
-        const payload = JSON.parse(event.data || "{}");
-        setEventFeedStatus(payload.status || "unknown");
-        setEventFeedError(payload.last_error || "");
-      } catch {}
-    };
-    stream.addEventListener("ready", onReady);
-    stream.addEventListener("camera-event", onCameraEvent);
-    stream.addEventListener("camera-status", onCameraStatus);
-    return () => { stream.removeEventListener("ready", onReady); stream.removeEventListener("camera-event", onCameraEvent); stream.removeEventListener("camera-status", onCameraStatus); stream.close(); };
   }, [id]);
 
   useEffect(() => {

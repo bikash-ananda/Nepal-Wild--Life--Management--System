@@ -5,7 +5,7 @@ The app uses direct camera protocols and does not use a camera-vendor cloud SDK:
 1. RTSP/RTSPS feeds enter MediaMTX. The browser receives a short-lived, site-authorized WHEP/WebRTC stream through the app's `/media/` route.
 2. The API uses HTTP Digest authentication for Dahua CGI event, snapshot, PTZ, siren, and light requests.
 3. Camera events are stored as `CameraEvent` records. JPEGs stay in the private media volume and are removed after `CAMERA_SNAPSHOT_RETENTION_DAYS` (default 30). Camera-event ingestion is limited to one saved event per camera every 30 seconds.
-4. SSE sends events and connection state to authenticated camera viewers. PTZ and manual deterrence actions use authenticated, role-checked REST requests in the other direction.
+4. Authenticated WebSockets send events and connection state to authorized camera viewers. The legacy SSE endpoint remains available for compatible clients. PTZ and manual deterrence actions use authenticated, role-checked REST requests in the other direction.
 
 ## Network requirements
 

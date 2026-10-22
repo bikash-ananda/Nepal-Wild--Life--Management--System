@@ -5,6 +5,7 @@ import helmet from "@fastify/helmet";
 import jwt from "@fastify/jwt";
 import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
+import websocket from "@fastify/websocket";
 import nodemailer from "nodemailer";
 import { addAudit, migrate, pool } from "./db.js";
 import { checkOrigin, registerAuthRoutes, requireAuth, seedAdmin } from "./auth.js";
@@ -52,6 +53,7 @@ await app.register(cors, {
 await app.register(helmet, { contentSecurityPolicy: false });
 await app.register(jwt, { secret: jwtSecret });
 await app.register(rateLimit, { max: 180, timeWindow: "1 minute" });
+await app.register(websocket, { options: { maxPayload: 64 * 1024, perMessageDeflate: false } });
 await app.register(multipart, {
   limits: { fileSize: Number(process.env.MAX_UPLOAD_BYTES || 20 * 1024 * 1024), files: 1, fields: 12 },
 });

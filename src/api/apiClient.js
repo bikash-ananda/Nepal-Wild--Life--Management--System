@@ -103,7 +103,7 @@ export const api = {
     viewToken: (id) => request(`/api/cameras/${encodeURIComponent(id)}/view-token`, { method: "POST" }),
     events: (id, limit = 30) => request(`/api/cameras/${encodeURIComponent(id)}/events?limit=${encodeURIComponent(limit)}`),
     eventStatus: (id) => request(`/api/cameras/${encodeURIComponent(id)}/events/status`),
-    eventFeedUrl: (id) => `/api/cameras/${encodeURIComponent(id)}/events/live`,
+    eventFeedUrl: (id) => `/api/cameras/${encodeURIComponent(id)}/events/ws`,
     ptz: (id, payload) => request(`/api/cameras/${encodeURIComponent(id)}/control/ptz`, { method: "POST", body: JSON.stringify(payload) }),
     deterrence: (id, payload) => request(`/api/cameras/${encodeURIComponent(id)}/control/deterrence`, { method: "POST", body: JSON.stringify(payload) }),
   },

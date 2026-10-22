@@ -369,12 +369,14 @@ async function validatedVpnCameraAddress(host) {
 }
 
 const cameraEventSubscribers = new Map();
+const cameraEventWebSocketSubscribers = new Map();
 const cameraEventState = new Map();
 const eventWorkers = new Map();
 const lastEventCaptureAt = new Map();
 const sirenSafetyTimers = new Map();
 
 function publishCameraEvent(cameraId, event) {
+  publishCameraWebSocket(cameraId, "camera-event", event);
   const subscribers = cameraEventSubscribers.get(String(cameraId));
   if (!subscribers) return;
   const message = `event: camera-event\ndata: ${JSON.stringify(event)}\n\n`;
@@ -383,10 +385,25 @@ function publishCameraEvent(cameraId, event) {
   }
 }
 
+function publishCameraWebSocket(cameraId, type, data) {
+  const subscribers = cameraEventWebSocketSubscribers.get(String(cameraId));
+  if (!subscribers) return;
+  const message = JSON.stringify({ type, data });
+  for (const socket of subscribers) {
+    if (socket.readyState !== 1) {
+      subscribers.delete(socket);
+      continue;
+    }
+    try { socket.send(message); } catch { subscribers.delete(socket); }
+  }
+  if (!subscribers.size) cameraEventWebSocketSubscribers.delete(String(cameraId));
+}
+
 function setCameraEventStatus(cameraId, nextState) {
   const key = String(cameraId);
   const value = { ...cameraEventState.get(key), ...nextState };
   cameraEventState.set(key, value);
+  publishCameraWebSocket(key, "camera-status", value);
   const subscribers = cameraEventSubscribers.get(key);
   if (subscribers) {
     const message = `event: camera-status\ndata: ${JSON.stringify(value)}\n\n`;
@@ -703,6 +720,55 @@ export function registerCameraRoutes(app, pool, requireAuth, checkOrigin) {
     if (!viewerRoles.has(request.user.role)) return reply.code(403).send({ error: "Your role cannot view camera events." });
     await authorizedCamera(pool, request.user, request.params.id);
     return cameraEventState.get(String(request.params.id)) || { status: "not_configured", last_event_at: null, last_error: "" };
+  });
+
+  app.get("/api/cameras/:id/events/ws", {
+    websocket: true,
+    config: { rateLimit: { max: 20, timeWindow: "1 minute" } },
+    preHandler: [requireAuth, async (request, reply) => {
+      if (!request.headers.origin) return reply.code(403).send({ error: "Camera event WebSocket connections require an approved browser origin." });
+      if (!checkOrigin(request, reply)) return;
+      if (!viewerRoles.has(request.user.role)) return reply.code(403).send({ error: "Your role cannot view camera events." });
+      request.cameraRecord = await authorizedCamera(pool, request.user, request.params.id);
+    }],
+  }, (socket, request) => {
+    const cameraId = String(request.params.id);
+    const camera = request.cameraRecord;
+    const sessionToken = request.cookies?.nws_session || "";
+    const subscribers = cameraEventWebSocketSubscribers.get(cameraId) || new Set();
+    subscribers.add(socket);
+    cameraEventWebSocketSubscribers.set(cameraId, subscribers);
+    socket.send(JSON.stringify({ type: "ready", data: { camera_id: cameraId, status: cameraEventState.get(cameraId)?.status || "unknown" } }));
+
+    let checkingSession = false;
+    const cleanup = () => {
+      clearInterval(heartbeat);
+      subscribers.delete(socket);
+      if (!subscribers.size) cameraEventWebSocketSubscribers.delete(cameraId);
+    };
+    const heartbeat = setInterval(async () => {
+      if (checkingSession) return;
+      checkingSession = true;
+      try {
+        const claims = request.server.jwt.verify(sessionToken);
+        const current = await pool.query("SELECT id,role,status,site_ids,session_version FROM app_users WHERE id=$1", [request.user.id]);
+        const row = current.rows[0];
+        const user = row ? { ...request.user, ...row } : null;
+        if (String(claims.sub) !== String(request.user.id) || !row || row.status !== "active" || Number(claims.sv || 0) !== Number(row.session_version || 0) || !viewerRoles.has(row.role) || !canReadSite(user, camera)) {
+          socket.close(1008, "Session or camera access expired");
+          cleanup();
+          return;
+        }
+        if (socket.readyState === 1) socket.ping();
+      } catch {
+        socket.close(1008, "Session validation failed");
+        cleanup();
+      } finally {
+        checkingSession = false;
+      }
+    }, 20000);
+    socket.on("close", cleanup);
+    socket.on("error", cleanup);
   });
 
   app.get("/api/cameras/:id/events/live", {
@@ -1189,6 +1255,8 @@ export function startCameraEngine(app, pool) {
     eventWorkers.clear();
     for (const subscribers of cameraEventSubscribers.values()) for (const response of subscribers) response.end();
     cameraEventSubscribers.clear();
+    for (const subscribers of cameraEventWebSocketSubscribers.values()) for (const socket of subscribers) socket.close(1001, "Camera service is restarting");
+    cameraEventWebSocketSubscribers.clear();
     const sirenOffCommands = [];
     for (const safety of sirenSafetyTimers.values()) {
       clearTimeout(safety.timer);
