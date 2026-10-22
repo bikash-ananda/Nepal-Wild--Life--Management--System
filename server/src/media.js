@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { createReadStream, createWriteStream } from "node:fs";
-import { mkdir, readFile, stat, unlink } from "node:fs/promises";
+import { mkdir, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pipeline } from "node:stream/promises";
 import { addAudit, mediaRoot } from "./db.js";
@@ -48,6 +48,57 @@ async function saveUpload(request, pool, visibility, actorId) {
     }
     throw error;
   }
+}
+
+/** Store a camera-triggered JPEG using the same private media path as field uploads. */
+export async function saveCameraSnapshot(pool, buffer) {
+  if (!Buffer.isBuffer(buffer) || buffer.length < 4 || buffer.length > 8 * 1024 * 1024 ||
+      buffer[0] !== 0xff || buffer[1] !== 0xd8 || buffer[2] !== 0xff) {
+    throw Object.assign(new Error("The camera response was not a valid JPEG snapshot."), { statusCode: 502 });
+  }
+  const id = randomUUID();
+  const storageKey = `${id}.jpg`;
+  const destination = path.join(mediaRoot, storageKey);
+  await mkdir(mediaRoot, { recursive: true });
+  try {
+    await writeFile(destination, buffer, { flag: "wx" });
+    await pool.query(
+      "INSERT INTO media_assets (id, storage_key, original_name, content_type, size_bytes, sha256, visibility, uploaded_by) VALUES ($1,$2,$3,'image/jpeg',$4,$5,'private',NULL)",
+      [id, storageKey, `camera-event-${id}.jpg`, buffer.length, createHash("sha256").update(buffer).digest("hex")]
+    );
+  } catch (error) {
+    await unlink(destination).catch(() => {});
+    throw error;
+  }
+  return { id, file_uri: `media://${id}`, file_url: `/api/media/${id}`, size_bytes: buffer.length };
+}
+
+export async function deleteCameraSnapshot(pool, id) {
+  const result = await pool.query("SELECT storage_key FROM media_assets WHERE id=$1", [id]);
+  if (!result.rowCount) return;
+  await unlink(path.join(mediaRoot, path.basename(result.rows[0].storage_key))).catch(() => {});
+  await pool.query("DELETE FROM media_assets WHERE id=$1", [id]);
+}
+
+export async function pruneCameraSnapshots(pool, retentionDays = 30) {
+  const requestedDays = Number(retentionDays);
+  const days = Number.isFinite(requestedDays) ? Math.max(1, Math.min(365, requestedDays)) : 30;
+  const result = await pool.query(
+    `SELECT r.id AS event_id, r.data, m.id AS media_id, m.storage_key
+     FROM app_records r JOIN media_assets m ON m.id::text = r.data->>'snapshot_asset_id'
+     WHERE r.entity='CameraEvent' AND r.created_at < now() - make_interval(days => $1::int)`, [days]
+  );
+  for (const row of result.rows) {
+    await unlink(path.join(mediaRoot, path.basename(row.storage_key))).catch(() => {});
+    await pool.query("DELETE FROM media_assets WHERE id=$1", [row.media_id]);
+    await pool.query(
+      `UPDATE app_records SET data=jsonb_set(
+         data - 'photo_uri' - 'image_uri' - 'photo_url' - 'snapshot_asset_id',
+         '{snapshot_retention_expired}', 'true'::jsonb, true), updated_at=now()
+       WHERE entity='CameraEvent' AND id=$1`, [row.event_id]
+    );
+  }
+  return result.rowCount;
 }
 
 export function registerMediaRoutes(app, pool, requireAuth) {

@@ -4,7 +4,6 @@ import { Bell, Menu, X, Leaf } from "lucide-react";
 import { api } from "@/api/apiClient";
 import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
-import LanguageToggle from "@/components/LanguageToggle";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { getFilteredNavGroups, mobileNavItems, roleLabels } from "@/lib/navigation";
@@ -116,7 +115,6 @@ export default function Layout() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <LanguageToggle />
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}

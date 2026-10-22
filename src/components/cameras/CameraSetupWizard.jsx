@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/components/ui/use-toast";
 
 const blankCamera = { name: "", camera_id: "", brand: "Dahua", model: "DH-P31-PV", serial_number: "", site_id: "", ward: "21", latitude: "", longitude: "", installation_description: "" };
-const blankConnection = { network_mode: "public_forward", network_label: "Farm router 1", protocol: "rtsp", host: "", port: "554", stream_path: "", username: "", password: "", rtsp_transport: "tcp" };
+const blankConnection = { network_mode: "public_forward", network_label: "Farm router 1", protocol: "rtsp", host: "", port: "554", stream_path: "", username: "", password: "", rtsp_transport: "tcp", ptz_enabled: false, event_listener_enabled: false, audio_enabled: false, siren_control_enabled: false, light_control_enabled: false, control_port: "80" };
 
 const steps = ["Camera", "Network route", "Stream & test"];
 
@@ -22,6 +22,7 @@ export default function CameraSetupWizard({ open, onOpenChange, sites = [], onCr
   const [busy, setBusy] = useState(false);
   const [hasSavedPassword, setHasSavedPassword] = useState(false);
   const [noAuth, setNoAuth] = useState(false);
+  const [locationBusy, setLocationBusy] = useState(false);
   const isEditing = Boolean(camera);
 
   useEffect(() => {
@@ -46,6 +47,11 @@ export default function CameraSetupWizard({ open, onOpenChange, sites = [], onCr
           protocol: saved.protocol || "rtsp", host: saved.host || "", port: String(saved.port || 554),
           stream_path: saved.stream_path || "", username: saved.username || "", password: "",
           rtsp_transport: saved.rtsp_transport || "tcp",
+          ptz_enabled: saved.ptz_enabled === true, control_port: String(saved.control_port || 80),
+          event_listener_enabled: saved.event_listener_enabled === true,
+          audio_enabled: saved.audio_enabled === true,
+          siren_control_enabled: saved.siren_control_enabled === true,
+          light_control_enabled: saved.light_control_enabled === true,
         });
         setHasSavedPassword(Boolean(saved.has_password));
         setNoAuth(!saved.has_password);
@@ -57,12 +63,38 @@ export default function CameraSetupWizard({ open, onOpenChange, sites = [], onCr
   }, [open, camera]);
 
   const site = useMemo(() => sites.find((item) => String(item.id) === String(form.site_id)), [sites, form.site_id]);
-  const setCameraField = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+  const setCameraField = (key, value) => {
+    setForm((current) => ({ ...current, [key]: value }));
+    if (key === "brand" || key === "model") {
+      const nextIdentity = { ...form, [key]: value };
+      if (!/dahua/i.test(`${nextIdentity.brand} ${nextIdentity.model}`)) setConnectionField("ptz_enabled", false);
+    }
+  };
   const setConnectionField = (key, value) => {
     setConnection((current) => ({ ...current, [key]: value }));
     if (key === "password" && value) setNoAuth(false);
     setTestState("idle");
     setTestMessage("");
+  };
+
+  const useCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast({ title: "Location is not supported", description: "Enter the camera installation coordinates manually.", variant: "destructive" });
+      return;
+    }
+    setLocationBusy(true);
+    navigator.geolocation.getCurrentPosition((position) => {
+      setCameraField("latitude", String(position.coords.latitude));
+      setCameraField("longitude", String(position.coords.longitude));
+      toast({ title: "Installation coordinates captured", description: `GPS accuracy is about ±${Math.round(position.coords.accuracy)} m.` });
+      setLocationBusy(false);
+    }, (error) => {
+      const message = error.code === 1 ? "Allow location access in your browser settings."
+        : error.code === 3 ? "GPS timed out. Try outdoors or enter coordinates manually."
+          : "The device could not determine its location. Try outdoors or enter coordinates manually.";
+      toast({ title: "Could not get camera location", description: message, variant: "destructive" });
+      setLocationBusy(false);
+    }, { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
   };
 
   const validateIdentity = () => {
@@ -193,6 +225,8 @@ export default function CameraSetupWizard({ open, onOpenChange, sites = [], onCr
   };
 
   const streamPortHint = { rtsp: "554", rtsps: "322", http: "80", https: "443" }[connection.protocol] || "554";
+  const privateAddressWarning = connection.network_mode === "public_forward" && isPrivateCameraAddress(connection.host);
+  const dahuaCamera = /dahua/i.test(`${form.brand} ${form.model}`);
 
   return <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="max-h-[92vh] max-w-3xl overflow-y-auto">
@@ -220,20 +254,22 @@ export default function CameraSetupWizard({ open, onOpenChange, sites = [], onCr
           <Field label="Farm camera label"><Input value={form.camera_id} onChange={(event) => setCameraField("camera_id", event.target.value)} placeholder="CAM-POK21-NORTH (optional)" /></Field>
           <Field label="Serial number"><Input value={form.serial_number} onChange={(event) => setCameraField("serial_number", event.target.value)} placeholder="Optional" /></Field>
           <Field label="Ward"><Input value={form.ward} onChange={(event) => setCameraField("ward", event.target.value)} placeholder="21" /></Field>
-          <Field label="GPS coordinates"><div className="grid grid-cols-2 gap-2"><Input aria-label="Latitude" inputMode="decimal" value={form.latitude} onChange={(event) => setCameraField("latitude", event.target.value)} placeholder="Latitude" /><Input aria-label="Longitude" inputMode="decimal" value={form.longitude} onChange={(event) => setCameraField("longitude", event.target.value)} placeholder="Longitude" /></div></Field>
+          <Field label="GPS coordinates"><div className="space-y-2"><div className="grid grid-cols-2 gap-2"><Input aria-label="Latitude" inputMode="decimal" value={form.latitude} onChange={(event) => setCameraField("latitude", event.target.value)} placeholder="Latitude" /><Input aria-label="Longitude" inputMode="decimal" value={form.longitude} onChange={(event) => setCameraField("longitude", event.target.value)} placeholder="Longitude" /></div><Button type="button" variant="outline" size="sm" onClick={useCurrentLocation} disabled={locationBusy}>{locationBusy ? <><Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />Getting location…</> : <><MapPin className="mr-2 h-3.5 w-3.5" />Use current location</>}</Button><p className="text-[11px] text-slate-500">Allow browser location access. GPS works on HTTPS or localhost.</p></div></Field>
         </div>
         <Field label="Installation note"><Input value={form.installation_description} onChange={(event) => setCameraField("installation_description", event.target.value)} placeholder="Facing the crop boundary; mounted on the east pole" /></Field>
       </section>}
 
       {(isEditing || step === 2) && <section className="space-y-4">
-        <div className="flex items-start gap-3 rounded-xl border border-sky-200 bg-sky-50 p-3 text-sm text-sky-950"><Network className="mt-0.5 h-4 w-4 shrink-0" /><p>Describe how <strong>this camera</strong> reaches the VPS. Different cameras can use different routers and routes; enter the public/DDNS address and mapped port for this camera only.</p></div>
+        <div className="flex items-start gap-3 rounded-xl border border-sky-200 bg-sky-50 p-3 text-sm text-sky-950"><Network className="mt-0.5 h-4 w-4 shrink-0" /><p>This camera may be behind a different router from this PC. Each camera gets its own route profile, and the <strong>VPS</strong> tests the route. A local address that works on this Wi-Fi is not automatically reachable from another network.</p></div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Connection route" required><Select value={connection.network_mode} onValueChange={(value) => setConnectionField("network_mode", value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="public_forward">Router port forward / DDNS</SelectItem><SelectItem value="vpn_routed">Private network through VPN</SelectItem></SelectContent></Select></Field>
-          <Field label="Router or network name" required><Input value={connection.network_label} onChange={(event) => setConnectionField("network_label", event.target.value)} placeholder="Farm North / Router 1" /></Field>
-          <Field label={connection.network_mode === "public_forward" ? "Public IP or DDNS host" : "Camera IP on the VPN network"} required><Input value={connection.host} onChange={(event) => setConnectionField("host", event.target.value)} placeholder={connection.network_mode === "public_forward" ? "farm-north.example.net" : "10.20.1.25"} autoCapitalize="none" autoCorrect="off" /></Field>
-          <Field label="Forwarded / camera port" required><Input inputMode="numeric" value={connection.port} onChange={(event) => setConnectionField("port", event.target.value)} placeholder={streamPortHint} /></Field>
+          <Field label="How will the VPS reach this camera?" required><Select value={connection.network_mode} onValueChange={(value) => { setConnection((current) => ({ ...current, network_mode: value, ...(value !== "vpn_routed" ? { ptz_enabled: false, event_listener_enabled: false, siren_control_enabled: false, light_control_enabled: false } : {}) })); setTestState("idle"); setTestMessage(""); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="public_forward">Router public address with port mapping</SelectItem><SelectItem value="vpn_routed">Private camera address through VPN</SelectItem></SelectContent></Select></Field>
+          <Field label="Farm router / VPN route name" required><Input value={connection.network_label} onChange={(event) => setConnectionField("network_label", event.target.value)} placeholder="Pokhara farm / Router 1" /><p className="text-[11px] text-slate-500">Use a distinct name for every router or tunnel.</p></Field>
+          <Field label={connection.network_mode === "public_forward" ? "Router's public IP or DDNS host" : "Camera IP reachable through VPN"} required><Input value={connection.host} onChange={(event) => setConnectionField("host", event.target.value)} placeholder={connection.network_mode === "public_forward" ? "farm-north.example.net" : "10.20.1.25"} autoCapitalize="none" autoCorrect="off" /></Field>
+          <Field label={connection.network_mode === "public_forward" ? "External mapped stream port" : "Camera stream port"} required><Input inputMode="numeric" value={connection.port} onChange={(event) => setConnectionField("port", event.target.value)} placeholder={streamPortHint} /><p className="text-[11px] text-slate-500">This is the port the VPS connects to; it may differ from the camera's internal port.</p></Field>
         </div>
-        {connection.network_mode === "public_forward" ? <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-950"><strong>Router safety:</strong> forward only the camera's stream port and allowlist the VPS source IP <code>169.58.25.131</code> on the router if supported. Do not expose the camera's admin web interface. If cameras share one public address, assign each its own external port.</div> : <div className="rounded-xl border border-violet-200 bg-violet-50 p-3 text-xs leading-5 text-violet-950">The server must already have a site-to-site VPN route to this farm. Its address range also needs to be allowed in <code>CAMERA_VPN_CIDRS</code> on the VPS.</div>}
+        {privateAddressWarning && <div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs leading-5 text-amber-950"><strong>This address is local to the farm network.</strong> A VPS cannot reach it over the public internet. Use the VPN route only after the VPS has a route into this farm, or enter the router's public/DDNS address and its dedicated stream port mapping.</div>}
+        {connection.network_mode === "public_forward" ? <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-950"><strong>Configure the router separately:</strong> reserve a stable LAN address for this camera, then map one unique external TCP stream port (for example, 15554) to the camera's RTSP port (often 554). Enter the router's public/DDNS host and the external port above. If cameras share a router, each needs its own external port. Restrict the mapping to the VPS source IP where supported; never expose the camera's admin page.</div> : <div className="rounded-xl border border-violet-200 bg-violet-50 p-3 text-xs leading-5 text-violet-950"><strong>VPN route:</strong> the VPS must already have a route to this farm's camera subnet, and the subnet must be allowed in <code>CAMERA_VPN_CIDRS</code>. Enter the camera's VPN-reachable private address; no public port mapping is needed.</div>}
+        <p className="text-[11px] text-slate-500">If the router or internet provider changes, update this camera's route and run the VPS connection test again. The camera's site and identity stay separate from its changing network address.</p>
       </section>}
 
       {(isEditing || step === 3) && <section className="space-y-4">
@@ -246,7 +282,18 @@ export default function CameraSetupWizard({ open, onOpenChange, sites = [], onCr
           <Field label={isEditing && hasSavedPassword ? "Camera password (optional)" : "Camera password"}><Input type="password" value={connection.password} onChange={(event) => setConnectionField("password", event.target.value)} placeholder={isEditing && hasSavedPassword ? "Leave blank to keep the saved password" : "Enter the camera account password"} autoComplete="new-password" disabled={noAuth} /></Field>
         </div>
         <label className="flex cursor-pointer items-start gap-2 text-xs text-slate-600"><input type="checkbox" checked={noAuth} onChange={(event) => { setNoAuth(event.target.checked); if (event.target.checked) setConnectionField("password", ""); }} className="mt-0.5 rounded border-slate-300" /><span>This stream has no camera password. Use this only if the camera does not require a login.</span></label>
-        <div className="flex items-start gap-2 text-xs text-slate-500"><LockKeyhole className="mt-0.5 h-3.5 w-3.5 shrink-0" /><p>Use a camera account with stream viewing permission only. Never paste a full RTSP URL containing the username or password.</p></div>
+        <div className="flex items-start gap-2 text-xs text-slate-500"><LockKeyhole className="mt-0.5 h-3.5 w-3.5 shrink-0" /><p>Use a dedicated camera account with {connection.ptz_enabled ? "stream viewing and PTZ permission" : "stream viewing permission only"}. Never paste a full RTSP URL containing the username or password.</p></div>
+        <p className="text-[11px] text-slate-500">A device safety/reset code is not the stream account password. Leave it out of this form.</p>
+        {dahuaCamera ? <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <div className="space-y-3">
+            <ControlOption checked={connection.ptz_enabled} disabled={connection.network_mode !== "vpn_routed"} onChange={(checked) => { setConnectionField("ptz_enabled", checked); setConnectionField("control_port", "80"); }} title="Manual pan and tilt" description="Authorized technicians can move the camera. Movement stops automatically after a short safety timeout." />
+            <ControlOption checked={connection.event_listener_enabled} disabled={connection.network_mode !== "vpn_routed"} onChange={(checked) => setConnectionField("event_listener_enabled", checked)} title="Live camera events and private snapshots" description="Listen for supported Dahua motion/person/vehicle events. Save an event snapshot privately for a human review; this does not identify monkeys." />
+            <ControlOption checked={connection.audio_enabled} onChange={(checked) => setConnectionField("audio_enabled", checked)} title="Allow camera audio in live view" description="Audio is opt-in and starts muted in the browser. Audio is not recorded by this feature." />
+            <ControlOption checked={connection.siren_control_enabled} disabled={connection.network_mode !== "vpn_routed"} onChange={(checked) => setConnectionField("siren_control_enabled", checked)} title="Allow manual siren button" description="Admin/technician click only. It is never triggered by AI or an event rule and has a 10-second server safety timeout." />
+            <ControlOption checked={connection.light_control_enabled} disabled={connection.network_mode !== "vpn_routed"} onChange={(checked) => setConnectionField("light_control_enabled", checked)} title="Allow manual warning light button" description="Admin/technician click only. It is never triggered automatically by a detection." />
+          </div>
+          {connection.network_mode !== "vpn_routed" ? <p className="mt-2 text-xs text-amber-800">Remote control and camera event listening require a private VPN route. This app will not ask you to expose the camera's web control port to the internet.</p> : <p className="mt-2 text-xs text-slate-500">The server uses camera HTTP port 80 through the VPN. The camera login needs permissions for each feature you enable. Exact CGI support can depend on camera firmware and must be confirmed during the post-deploy connection check.</p>}
+        </div> : <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600">Manual camera controls are not enabled for this manufacturer yet. The stream can still be added; a supported camera-control adapter must be selected for this model.</div>}
         {testMessage && <div role="status" className={`flex items-start gap-2 rounded-xl p-3 text-sm ${testState === "success" ? "bg-emerald-50 text-emerald-900" : testState === "error" ? "bg-rose-50 text-rose-900" : "bg-sky-50 text-sky-900"}`}>{testState === "success" ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /> : testState === "testing" ? <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin" /> : <CircleHelp className="mt-0.5 h-4 w-4 shrink-0" />}<p>{testMessage}</p></div>}
         <Button type="button" variant="outline" className="w-full" onClick={testConnection} disabled={busy}>{busy && testState === "testing" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Testing from VPS…</> : "Test this camera from the VPS"}</Button>
       </section>}
@@ -269,4 +316,21 @@ export default function CameraSetupWizard({ open, onOpenChange, sites = [], onCr
 function Field({ label, required, children }) {
   const id = React.useId();
   return <div className="space-y-1.5"><Label htmlFor={id}>{label}{required && <span className="ml-1 text-rose-600" aria-label="required">*</span>}</Label>{React.cloneElement(children, { id: children.props.id || id })}</div>;
+}
+
+function ControlOption({ checked, disabled = false, onChange, title, description }) {
+  return <label className={`flex items-start gap-2 text-sm ${disabled ? "text-slate-500" : "cursor-pointer text-slate-800"}`}>
+    <input type="checkbox" checked={checked} disabled={disabled} onChange={(event) => onChange(event.target.checked)} className="mt-0.5 rounded border-slate-300" />
+    <span><strong>{title}</strong><span className="mt-1 block text-xs font-normal text-slate-600">{description}</span></span>
+  </label>;
+}
+
+function isPrivateCameraAddress(value) {
+  const host = String(value || "").trim().replace(/^\[|\]$/g, "").toLowerCase();
+  if (!host) return false;
+  if (host === "localhost" || host.endsWith(".local") || host === "::1" || host.startsWith("fe80:")) return true;
+  const parts = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (!parts) return false;
+  const [first, second] = parts.slice(1).map(Number);
+  return first === 10 || first === 127 || first === 169 && second === 254 || first === 192 && second === 168 || first === 172 && second >= 16 && second <= 31;
 }

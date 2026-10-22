@@ -1,8 +1,9 @@
-import { createCipheriv, createDecipheriv, randomUUID, timingSafeEqual } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import dns from "node:dns/promises";
 import net from "node:net";
 import { addAudit } from "./db.js";
-import { canReadSite, getRecord } from "./records.js";
+import { canReadSite, createRecord, getRecord } from "./records.js";
+import { deleteCameraSnapshot, pruneCameraSnapshots, saveCameraSnapshot } from "./media.js";
 
 const managerRoles = new Set(["admin", "technician"]);
 const viewerRoles = new Set(["admin", "researcher", "reviewer", "technician"]);
@@ -14,6 +15,18 @@ function httpError(statusCode, message) {
 
 function requireManager(user) {
   if (!managerRoles.has(user.role)) throw httpError(403, "Administrator or technician access is required.");
+}
+
+function requireSupportedPtzAdapter(camera, enabled) {
+  if (enabled && !/dahua/i.test(`${camera?.brand || ""} ${camera?.model || ""}`)) {
+    throw httpError(400, "This manual PTZ adapter currently supports Dahua cameras only. Keep controls off for other manufacturers.");
+  }
+}
+
+function requireSupportedDahuaCamera(camera, enabled, feature) {
+  if (enabled && !/dahua/i.test(`${camera?.brand || ""} ${camera?.model || ""}`)) {
+    throw httpError(400, `The ${feature} adapter currently supports Dahua cameras only.`);
+  }
 }
 
 function encryptionKey() {
@@ -140,6 +153,18 @@ function normalizeConnection(value) {
   }
   const transport = String(input.rtsp_transport || "tcp").toLowerCase();
   if (!new Set(["tcp", "udp"]).has(transport)) throw httpError(400, "Choose TCP or UDP transport.");
+  const ptzEnabled = input.ptz_enabled === true;
+  const eventListenerEnabled = input.event_listener_enabled === true;
+  const sirenControlEnabled = input.siren_control_enabled === true;
+  const lightControlEnabled = input.light_control_enabled === true;
+  const audioEnabled = input.audio_enabled === true;
+  const controlPort = Number(input.control_port || 80);
+  if (controlPort !== 80) {
+    throw httpError(400, "Dahua camera control currently uses private HTTP port 80 through the VPN route.");
+  }
+  if ((ptzEnabled || eventListenerEnabled || sirenControlEnabled || lightControlEnabled) && networkMode !== "vpn_routed") {
+    throw httpError(400, "Camera controls and event listening require a private VPN route. Do not expose the camera control service to the public internet.");
+  }
   const networkLabel = String(input.network_label || "").trim();
   if (!networkLabel || networkLabel.length > 120) throw httpError(400, "Name this camera's router or network route (for example, Farm North / Router 1).");
 
@@ -154,6 +179,12 @@ function normalizeConnection(value) {
     password,
     allow_no_auth: input.allow_no_auth === true,
     rtsp_transport: transport,
+    ptz_enabled: ptzEnabled,
+    event_listener_enabled: eventListenerEnabled,
+    audio_enabled: audioEnabled,
+    siren_control_enabled: sirenControlEnabled,
+    light_control_enabled: lightControlEnabled,
+    control_port: controlPort,
   };
 }
 
@@ -231,6 +262,296 @@ async function probeWithMediaMTX(connection) {
   }
 }
 
+function parseDigestChallenge(header) {
+  if (!header || !/^Digest\s/i.test(header)) return null;
+  const values = {};
+  const body = header.replace(/^Digest\s+/i, "");
+  const pattern = /([a-z0-9_-]+)=(?:"((?:\\.|[^"])*)"|([^,\s]+))/gi;
+  for (const match of body.matchAll(pattern)) values[match[1].toLowerCase()] = (match[2] ?? match[3] ?? "").replace(/\\([\\"])/g, "$1");
+  return values.realm && values.nonce ? values : null;
+}
+
+function md5(value) {
+  return createHash("md5").update(value).digest("hex");
+}
+
+function digestAuthorization(challenge, method, requestTarget, username, password) {
+  const algorithm = String(challenge.algorithm || "MD5").toUpperCase();
+  if (!new Set(["MD5", "MD5-SESS"]).has(algorithm)) throw httpError(502, "This camera uses an unsupported HTTP digest algorithm for pan/tilt control.");
+  const offeredQop = String(challenge.qop || "").split(",").map((value) => value.trim().toLowerCase());
+  if (offeredQop.length && !offeredQop.includes("auth")) throw httpError(502, "This camera's digest challenge does not support the required authentication mode.");
+  const qop = offeredQop.length ? "auth" : "";
+  const cnonce = randomUUID().replaceAll("-", "");
+  const nc = "00000001";
+  const baseHa1 = md5(`${username}:${challenge.realm}:${password}`);
+  const ha1 = algorithm === "MD5-SESS" ? md5(`${baseHa1}:${challenge.nonce}:${cnonce}`) : baseHa1;
+  const ha2 = md5(`${method}:${requestTarget}`);
+  const response = qop
+    ? md5(`${ha1}:${challenge.nonce}:${nc}:${cnonce}:${qop}:${ha2}`)
+    : md5(`${ha1}:${challenge.nonce}:${ha2}`);
+  const quote = (value) => `"${String(value).replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`;
+  return `Digest username=${quote(username)}, realm=${quote(challenge.realm)}, nonce=${quote(challenge.nonce)}, uri=${quote(requestTarget)}, response=${quote(response)}, algorithm=${algorithm}${qop ? `, qop=${qop}, nc=${nc}, cnonce=${quote(cnonce)}` : ""}${challenge.opaque ? `, opaque=${quote(challenge.opaque)}` : ""}`;
+}
+
+async function cameraPtzRequest(connection, password, action, direction, speed) {
+  const path = `/cgi-bin/ptz.cgi?action=${action}&channel=0&code=${encodeURIComponent(direction)}&arg1=0&arg2=${speed}&arg3=0&arg4=0`;
+  const response = await dahuaGet(connection, password, path, 2500);
+  const responseText = await response.text().catch(() => "");
+  if (!response.ok || /(^|\b)(error|failed|failure)(\b|$)/i.test(responseText)) {
+    throw httpError(502, "The camera did not accept the pan/tilt command. Check its firmware, PTZ permission, and control port.");
+  }
+  return { success: true };
+}
+
+async function cameraPresetRequest(connection, password, presetId) {
+  const requestPath = `/cgi-bin/ptz.cgi?action=start&channel=0&code=GotoPreset&arg1=0&arg2=${presetId}&arg3=0`;
+  const response = await dahuaGet(connection, password, requestPath, 3000);
+  const responseText = await response.text().catch(() => "");
+  if (/(^|\b)(error|failed|failure)(\b|$)/i.test(responseText)) {
+    throw httpError(502, "The camera did not accept the preset command. Save the preset on the camera and verify firmware support.");
+  }
+  return { success: true };
+}
+
+async function dahuaGet(connection, password, requestPath, timeoutMs = 5000, signal = undefined, accept = "*/*") {
+  const controlHost = await validatedVpnCameraAddress(connection.host);
+  const urlHost = net.isIPv6(controlHost) ? `[${controlHost}]` : controlHost;
+  const url = new URL(requestPath, `http://${urlHost}:${connection.control_port || 80}`);
+  const timeoutController = new AbortController();
+  const requestSignal = signal ? AbortSignal.any([signal, timeoutController.signal]) : timeoutController.signal;
+  const timeout = setTimeout(() => timeoutController.abort(), timeoutMs);
+  const request = (authorization = "") => fetch(url, {
+    method: "GET",
+    redirect: "manual",
+    headers: { Accept: accept, ...(authorization ? { Authorization: authorization } : {}) },
+      signal: requestSignal,
+  });
+
+  let response;
+  try {
+    response = await request();
+    if (response.status === 401) {
+      const challenge = parseDigestChallenge(response.headers.get("www-authenticate"));
+      await response.body?.cancel().catch(() => {});
+      if (!challenge || !connection.username || !password) throw httpError(502, "The camera rejected access. Check the dedicated camera account and its permissions.");
+      response = await request(digestAuthorization(challenge, "GET", `${url.pathname}${url.search}`, connection.username, password));
+    }
+  } catch (error) {
+    clearTimeout(timeout);
+    if (error.statusCode) throw error;
+    throw httpError(502, "The VPS could not reach the camera service over its private VPN route.");
+  }
+  clearTimeout(timeout);
+  if (response.status >= 300 && response.status < 400) {
+    await response.body?.cancel().catch(() => {});
+    throw httpError(502, "The camera redirected the control request; HTTP camera redirects are disabled for security.");
+  }
+  if (!response.ok) {
+    await response.body?.cancel().catch(() => {});
+    throw httpError(502, "The camera rejected the request. Check its firmware, account permissions, and enabled services.");
+  }
+  return response;
+}
+
+async function validatedVpnCameraAddress(host) {
+  const normalized = normalizeHost(host);
+  let addresses;
+  try {
+    addresses = net.isIP(normalized) ? [{ address: normalized, family: net.isIP(normalized) }] : await dns.lookup(normalized, { all: true, verbatim: true });
+  } catch {
+    throw httpError(502, "The camera control host could not be resolved through the VPN route.");
+  }
+  const allowedCidrs = String(process.env.CAMERA_VPN_CIDRS || "").split(",").map((entry) => entry.trim()).filter(Boolean);
+  if (!addresses.length || !allowedCidrs.length || addresses.some(({ address, family }) => family !== 4 || !allowedCidrs.some((cidr) => inCidrV4(address, cidr)))) {
+    throw httpError(403, "Camera control is allowed only for camera addresses inside the server's configured VPN networks.");
+  }
+  return addresses[0].address;
+}
+
+const cameraEventSubscribers = new Map();
+const cameraEventState = new Map();
+const eventWorkers = new Map();
+const lastEventCaptureAt = new Map();
+const sirenSafetyTimers = new Map();
+
+function publishCameraEvent(cameraId, event) {
+  const subscribers = cameraEventSubscribers.get(String(cameraId));
+  if (!subscribers) return;
+  const message = `event: camera-event\ndata: ${JSON.stringify(event)}\n\n`;
+  for (const response of subscribers) {
+    try { response.write(message); } catch { subscribers.delete(response); }
+  }
+}
+
+function setCameraEventStatus(cameraId, nextState) {
+  const key = String(cameraId);
+  const value = { ...cameraEventState.get(key), ...nextState };
+  cameraEventState.set(key, value);
+  const subscribers = cameraEventSubscribers.get(key);
+  if (subscribers) {
+    const message = `event: camera-status\ndata: ${JSON.stringify(value)}\n\n`;
+    for (const response of subscribers) {
+      try { response.write(message); } catch { subscribers.delete(response); }
+    }
+  }
+}
+
+async function readBoundedBody(response, limit = 8 * 1024 * 1024) {
+  const expected = Number(response.headers.get("content-length") || 0);
+  if (expected > limit) throw httpError(502, "The camera snapshot exceeded the 8 MB safety limit.");
+  const reader = response.body?.getReader();
+  if (!reader) throw httpError(502, "The camera did not return a snapshot body.");
+  const chunks = [];
+  let size = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > limit) {
+        await reader.cancel().catch(() => {});
+        throw httpError(502, "The camera snapshot exceeded the 8 MB safety limit.");
+      }
+      chunks.push(Buffer.from(value));
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  return Buffer.concat(chunks, size);
+}
+
+async function recordCameraEvent(app, pool, camera, connection, code) {
+  const key = String(camera.id);
+  const now = Date.now();
+  if (now - (lastEventCaptureAt.get(key) || 0) < 30000) return;
+  lastEventCaptureAt.set(key, now);
+  let snapshot = null;
+  let snapshotError = "";
+  try {
+    const response = await dahuaGet(connection, decryptPassword(connection), "/cgi-bin/snapshot.cgi?channel=0", 7000, undefined, "image/jpeg");
+    const contentType = String(response.headers.get("content-type") || "").toLowerCase();
+    if (!contentType.includes("image/jpeg") && !contentType.includes("image/jpg")) throw httpError(502, "The camera snapshot endpoint did not return a JPEG image.");
+    snapshot = await saveCameraSnapshot(pool, await readBoundedBody(response));
+  } catch (error) {
+    snapshotError = String(error.message || "Snapshot unavailable").slice(0, 200);
+  }
+  let event;
+  try {
+    event = await createRecord(pool, "CameraEvent", {
+      camera_id: String(camera.id),
+      camera_name: String(camera.name || camera.camera_id || "Camera").slice(0, 120),
+      site_id: String(camera.site_id),
+      site_name: String(camera.site_name || "Research site").slice(0, 120),
+      event_code: code,
+      event_source: "dahua_camera",
+      detection_type: code === "SmartMotionHuman" ? "camera_person" : code === "SmartMotionVehicle" ? "camera_vehicle" : "motion",
+      species: "unclassified",
+      status: "pending_review",
+      detected_at: new Date(now).toISOString(),
+      photo_uri: snapshot?.file_uri || null,
+      image_uri: snapshot?.file_uri || null,
+      photo_url: snapshot?.file_url || null,
+      snapshot_asset_id: snapshot?.id || null,
+      snapshot_error: snapshotError,
+      confidence: null,
+      automated_deterrence_triggered: false,
+    });
+  } catch (error) {
+    if (snapshot?.id) await deleteCameraSnapshot(pool, snapshot.id).catch(() => {});
+    throw error;
+  }
+  setCameraEventStatus(camera.id, { status: "streaming", last_event_at: event.detected_at, last_error: "" });
+  publishCameraEvent(camera.id, event);
+  app.log.info({ cameraId: camera.id, eventId: event.id, eventCode: code, snapshotSaved: Boolean(snapshot) }, "Camera event received");
+}
+
+function parseCameraEventPart(part) {
+  const code = part.match(/(?:^|[;\r\n])\s*Code\s*=\s*([^;\r\n]+)/i)?.[1]?.trim();
+  const action = part.match(/(?:^|[;\r\n])\s*action\s*=\s*([^;\r\n]+)/i)?.[1]?.trim().toLowerCase();
+  if (code && action === "start" && ["VideoMotion", "SmartMotionHuman", "SmartMotionVehicle"].includes(code)) return code;
+  return null;
+}
+
+function waitForStreamRead(reader, timeoutMs, signal) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("Camera event stream heartbeat timed out.")), timeoutMs);
+    const abort = () => reject(signal.reason || new Error("Camera event listener stopped."));
+    signal.addEventListener("abort", abort, { once: true });
+    reader.read().then(resolve, reject).finally(() => {
+      clearTimeout(timer);
+      signal.removeEventListener("abort", abort);
+    });
+  });
+}
+
+async function runCameraEventListener(app, pool, camera, savedConnection, signal) {
+  const cameraId = String(camera.id);
+  const connection = { ...savedConnection, password: decryptPassword(savedConnection) };
+  while (!signal.aborted) {
+    let reader;
+    let requestController;
+    let abortRequest;
+    try {
+      setCameraEventStatus(cameraId, { status: "connecting", last_event_at: cameraEventState.get(cameraId)?.last_event_at || null, last_error: "" });
+      requestController = new AbortController();
+      abortRequest = () => requestController.abort();
+      signal.addEventListener("abort", abortRequest, { once: true });
+      const url = new URL("/cgi-bin/eventManager.cgi", `http://${net.isIPv6(connection.host) ? `[${connection.host}]` : connection.host}:${connection.control_port || 80}`);
+      url.searchParams.set("action", "attach");
+      url.searchParams.set("codes", "[VideoMotion,SmartMotionHuman,SmartMotionVehicle]");
+      url.searchParams.set("heartbeat", "5");
+      const response = await dahuaGet(connection, connection.password, `${url.pathname}${url.search}`, 10000, requestController.signal, "multipart/x-mixed-replace, */*");
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.toLowerCase().includes("multipart")) throw new Error("Camera event API did not return a multipart event stream. Check CGI/event support in its firmware.");
+      const boundary = (contentType.match(/boundary\s*=\s*"?([^;"\s]+)"?/i)?.[1] || "myboundary").replace(/^--/, "");
+      if (!response.body) throw new Error("Camera event stream returned an empty response.");
+      reader = response.body.getReader();
+      setCameraEventStatus(cameraId, { status: "streaming", last_event_at: cameraEventState.get(cameraId)?.last_event_at || null, last_error: "" });
+      let buffer = "";
+      const delimiter = `--${boundary}`;
+      const decoder = new TextDecoder();
+      while (!signal.aborted) {
+        const { done, value } = await waitForStreamRead(reader, 40000, signal);
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        let delimiterAt = buffer.indexOf(delimiter);
+        while (delimiterAt >= 0) {
+          const nextDelimiterAt = buffer.indexOf(delimiter, delimiterAt + delimiter.length);
+          if (nextDelimiterAt < 0) {
+            buffer = buffer.slice(delimiterAt);
+            break;
+          }
+          const part = buffer.slice(delimiterAt + delimiter.length, nextDelimiterAt);
+          const eventCode = parseCameraEventPart(part);
+          if (eventCode) await recordCameraEvent(app, pool, camera, connection, eventCode);
+          buffer = buffer.slice(nextDelimiterAt);
+          delimiterAt = buffer.indexOf(delimiter, delimiter.length);
+        }
+        if (buffer.length > 64 * 1024) buffer = buffer.slice(-16 * 1024);
+      }
+      signal.removeEventListener("abort", abortRequest);
+      if (!signal.aborted) throw new Error("Camera event stream closed; reconnecting.");
+    } catch (error) {
+      if (requestController) requestController.abort();
+      if (!signal.aborted) {
+        setCameraEventStatus(cameraId, { status: "reconnecting", last_event_at: cameraEventState.get(cameraId)?.last_event_at || null, last_error: String(error.message || "Camera event connection failed").slice(0, 200) });
+        app.log.warn({ cameraId, message: String(error.message || "Camera event connection failed").slice(0, 200) }, "Camera event listener will reconnect");
+        await new Promise((resolve) => {
+          const finish = () => { clearTimeout(timer); signal.removeEventListener("abort", finish); resolve(); };
+          const timer = setTimeout(finish, 5000);
+          timer.unref?.();
+          signal.addEventListener("abort", finish, { once: true });
+        });
+      }
+    } finally {
+      if (abortRequest) signal.removeEventListener("abort", abortRequest);
+      await reader?.cancel().catch(() => {});
+      reader?.releaseLock();
+    }
+  }
+  setCameraEventStatus(cameraId, { status: "stopped", last_event_at: cameraEventState.get(cameraId)?.last_event_at || null, last_error: "" });
+}
+
 function safeConnection(row, online = null) {
   return {
     configured: Boolean(row),
@@ -242,6 +563,12 @@ function safeConnection(row, online = null) {
     stream_path: row?.stream_path || "",
     username: row?.username || "",
     rtsp_transport: row?.rtsp_transport || "tcp",
+    ptz_enabled: row?.ptz_enabled === true,
+    event_listener_enabled: row?.event_listener_enabled === true,
+    audio_enabled: row?.audio_enabled === true,
+    siren_control_enabled: row?.siren_control_enabled === true,
+    light_control_enabled: row?.light_control_enabled === true,
+    control_port: row?.control_port || 80,
     has_password: Boolean(row?.password_ciphertext),
     state: row?.state || "not_configured",
     last_test_status: row?.last_test_status || "never",
@@ -270,6 +597,8 @@ function makePathName(cameraId) {
   return `cam_${String(cameraId).replace(/[^a-z0-9]/gi, "").slice(0, 36)}`;
 }
 
+const activePtzMoves = new Map();
+
 async function saveConnection(pool, camera, connection, userId, previous = null) {
   const password = connection.allow_no_auth ? "" : (connection.password || (previous ? decryptPassword(previous) : ""));
   const encrypted = encryptPassword(password);
@@ -277,19 +606,25 @@ async function saveConnection(pool, camera, connection, userId, previous = null)
   const result = await pool.query(
     `INSERT INTO camera_connections (
        camera_id, site_id, path_name, network_mode, network_label, protocol, host, port, stream_path,
-       username, password_ciphertext, password_iv, password_tag, rtsp_transport, state,
+       username, password_ciphertext, password_iv, password_tag, rtsp_transport, ptz_enabled, control_port,
+       event_listener_enabled, audio_enabled, siren_control_enabled, light_control_enabled, state,
        last_test_status, last_test_at, configured_by, created_at, updated_at
-     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'configured','passed',now(),$15,now(),now())
+     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,'configured','passed',now(),$21,now(),now())
      ON CONFLICT (camera_id) DO UPDATE SET site_id=EXCLUDED.site_id, network_mode=EXCLUDED.network_mode,
        network_label=EXCLUDED.network_label, protocol=EXCLUDED.protocol, host=EXCLUDED.host, port=EXCLUDED.port,
        stream_path=EXCLUDED.stream_path, username=EXCLUDED.username, password_ciphertext=EXCLUDED.password_ciphertext,
        password_iv=EXCLUDED.password_iv, password_tag=EXCLUDED.password_tag, rtsp_transport=EXCLUDED.rtsp_transport,
+       ptz_enabled=EXCLUDED.ptz_enabled, control_port=EXCLUDED.control_port,
+       event_listener_enabled=EXCLUDED.event_listener_enabled, audio_enabled=EXCLUDED.audio_enabled,
+       siren_control_enabled=EXCLUDED.siren_control_enabled, light_control_enabled=EXCLUDED.light_control_enabled,
        enabled=true, state='configured', last_test_status='passed', last_test_at=now(), last_error='',
        configured_by=EXCLUDED.configured_by, updated_at=now()
      RETURNING *`,
     [camera.id, String(camera.site_id), pathName, connection.network_mode, connection.network_label,
       connection.protocol, connection.host, connection.port, connection.stream_path, connection.username,
-      encrypted.ciphertext, encrypted.iv, encrypted.tag, connection.rtsp_transport, userId]
+      encrypted.ciphertext, encrypted.iv, encrypted.tag, connection.rtsp_transport,
+      connection.ptz_enabled, connection.control_port, connection.event_listener_enabled, connection.audio_enabled,
+      connection.siren_control_enabled, connection.light_control_enabled, userId]
   );
   return result.rows[0];
 }
@@ -351,6 +686,77 @@ export function registerCameraRoutes(app, pool, requireAuth, checkOrigin) {
     return { connection: safeConnection(row, pathStatus.online === true) };
   });
 
+  app.get("/api/cameras/:id/events", { preHandler: requireAuth }, async (request, reply) => {
+    if (!viewerRoles.has(request.user.role)) return reply.code(403).send({ error: "Your role cannot view camera events." });
+    await authorizedCamera(pool, request.user, request.params.id);
+    const requestedLimit = Number(request.query.limit || 30);
+    const limit = Number.isInteger(requestedLimit) && requestedLimit > 0 ? Math.min(100, requestedLimit) : 30;
+    const result = await pool.query(
+      `SELECT id,data,created_at,updated_at FROM app_records
+       WHERE entity='CameraEvent' AND data->>'camera_id'=$1
+       ORDER BY created_at DESC LIMIT $2`, [String(request.params.id), limit]
+    );
+    return result.rows.map((row) => ({ ...row.data, id: row.id, created_date: row.created_at, updated_date: row.updated_at }));
+  });
+
+  app.get("/api/cameras/:id/events/status", { preHandler: requireAuth }, async (request, reply) => {
+    if (!viewerRoles.has(request.user.role)) return reply.code(403).send({ error: "Your role cannot view camera events." });
+    await authorizedCamera(pool, request.user, request.params.id);
+    return cameraEventState.get(String(request.params.id)) || { status: "not_configured", last_event_at: null, last_error: "" };
+  });
+
+  app.get("/api/cameras/:id/events/live", {
+    preHandler: requireAuth,
+    config: { rateLimit: { max: 20, timeWindow: "1 minute" } },
+  }, async (request, reply) => {
+    if (!checkOrigin(request, reply)) return;
+    if (!viewerRoles.has(request.user.role)) return reply.code(403).send({ error: "Your role cannot view camera events." });
+    const camera = await authorizedCamera(pool, request.user, request.params.id);
+    const cameraId = String(request.params.id);
+    const sessionToken = request.cookies?.nws_session || "";
+    reply.hijack();
+    const response = reply.raw;
+    response.writeHead(200, {
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "private, no-cache, no-transform",
+      "Connection": "keep-alive",
+      "X-Accel-Buffering": "no",
+    });
+    response.write(`event: ready\ndata: ${JSON.stringify({ camera_id: cameraId, status: cameraEventState.get(cameraId)?.status || "unknown" })}\n\n`);
+    const subscribers = cameraEventSubscribers.get(cameraId) || new Set();
+    subscribers.add(response);
+    cameraEventSubscribers.set(cameraId, subscribers);
+    let checkingSession = false;
+    const cleanup = () => {
+      clearInterval(heartbeat);
+      subscribers.delete(response);
+      if (!subscribers.size) cameraEventSubscribers.delete(cameraId);
+    };
+    const heartbeat = setInterval(async () => {
+      if (checkingSession) return;
+      checkingSession = true;
+      try {
+        const claims = request.server.jwt.verify(sessionToken);
+        const current = await pool.query("SELECT id,role,status,site_ids,session_version FROM app_users WHERE id=$1", [request.user.id]);
+        const row = current.rows[0];
+        const user = row ? { ...request.user, ...row } : null;
+        if (!claims || String(claims.sub) !== String(request.user.id) || !row || row.status !== "active" || Number(claims.sv || 0) !== Number(row.session_version || 0) || !viewerRoles.has(row.role) || !canReadSite(user, camera)) {
+          cleanup();
+          response.end();
+          return;
+        }
+        response.write(": keep-alive\n\n");
+      } catch {
+        cleanup();
+        response.end();
+      } finally {
+        checkingSession = false;
+      }
+    }, 20000);
+    response.once("close", cleanup);
+    response.once("error", cleanup);
+  });
+
   app.post("/api/cameras/test-connection", {
     preHandler: requireAuth,
     config: { rateLimit: { max: 8, timeWindow: "10 minutes" } },
@@ -407,6 +813,10 @@ export function registerCameraRoutes(app, pool, requireAuth, checkOrigin) {
     if (duplicateLabel.rowCount) return reply.code(409).send({ error: "That camera label is already in use. Choose a unique label." });
     encryptionKey();
     const connection = normalizeConnection(body.connection);
+    requireSupportedPtzAdapter(metadata, connection.ptz_enabled);
+    requireSupportedDahuaCamera(metadata, connection.event_listener_enabled, "event listener");
+    requireSupportedDahuaCamera(metadata, connection.siren_control_enabled, "manual siren");
+    requireSupportedDahuaCamera(metadata, connection.light_control_enabled, "manual warning light");
     if (!connection.password && !connection.allow_no_auth) return reply.code(400).send({ error: "Enter the camera password or confirm that this stream has no password." });
     const test = await probeWithMediaMTX(connection);
 
@@ -455,11 +865,13 @@ export function registerCameraRoutes(app, pool, requireAuth, checkOrigin) {
       );
       const pathName = makePathName(id);
       await client.query(
-        `INSERT INTO camera_connections (camera_id,site_id,path_name,network_mode,network_label,protocol,host,port,stream_path,username,password_ciphertext,password_iv,password_tag,rtsp_transport,state,last_test_status,last_test_at,configured_by)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'configured','passed',now(),$15)`,
+        `INSERT INTO camera_connections (camera_id,site_id,path_name,network_mode,network_label,protocol,host,port,stream_path,username,password_ciphertext,password_iv,password_tag,rtsp_transport,ptz_enabled,control_port,event_listener_enabled,audio_enabled,siren_control_enabled,light_control_enabled,state,last_test_status,last_test_at,configured_by)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,'configured','passed',now(),$21)`,
         [id, siteId, pathName, connection.network_mode, connection.network_label, connection.protocol,
           connection.host, connection.port, connection.stream_path, connection.username,
-          encrypted.ciphertext, encrypted.iv, encrypted.tag, connection.rtsp_transport, request.user.id]
+          encrypted.ciphertext, encrypted.iv, encrypted.tag, connection.rtsp_transport,
+          connection.ptz_enabled, connection.control_port, connection.event_listener_enabled, connection.audio_enabled,
+          connection.siren_control_enabled, connection.light_control_enabled, request.user.id]
       );
       await client.query("COMMIT");
       committed = true;
@@ -497,6 +909,10 @@ export function registerCameraRoutes(app, pool, requireAuth, checkOrigin) {
     const previous = await connectionFor(pool, camera.id);
     encryptionKey();
     const connection = normalizeConnection(request.body || {});
+    requireSupportedPtzAdapter(camera, connection.ptz_enabled);
+    requireSupportedDahuaCamera(camera, connection.event_listener_enabled, "event listener");
+    requireSupportedDahuaCamera(camera, connection.siren_control_enabled, "manual siren");
+    requireSupportedDahuaCamera(camera, connection.light_control_enabled, "manual warning light");
     if (!connection.password && !previous && !connection.allow_no_auth) throw httpError(400, "Enter the camera password or confirm that this stream has no password.");
     if (!connection.password && previous && !connection.allow_no_auth) connection.password = decryptPassword(previous);
     await probeWithMediaMTX(connection);
@@ -532,6 +948,116 @@ export function registerCameraRoutes(app, pool, requireAuth, checkOrigin) {
     return { connection: safeConnection(await connectionFor(pool, camera.id)) };
   });
 
+  app.post("/api/cameras/:id/control/ptz", {
+    preHandler: requireAuth,
+    config: { rateLimit: { max: 60, timeWindow: "1 minute" } },
+  }, async (request, reply) => {
+    requireManager(request.user);
+    if (!checkOrigin(request, reply)) return;
+    const camera = await authorizedCamera(pool, request.user, request.params.id);
+    const connection = await connectionFor(pool, camera.id);
+    if (!connection || !connection.enabled || connection.state !== "configured") throw httpError(409, "Apply a working camera stream route before using controls.");
+    if (connection.ptz_enabled !== true) throw httpError(409, "Manual pan/tilt is not enabled for this camera. Configure it in camera setup first.");
+    requireSupportedPtzAdapter(camera, true);
+    if (connection.network_mode !== "vpn_routed") throw httpError(409, "Camera controls require a private VPN route. Public camera control ports are not allowed.");
+
+    const body = request.body || {};
+    const action = String(body.action || "").toLowerCase();
+    const direction = String(body.direction || "");
+    const directions = new Set(["Up", "Down", "Left", "Right", "LeftUp", "RightUp", "LeftDown", "RightDown"]);
+    if (action === "preset") {
+      const presetId = Number(body.preset_id || 1);
+      if (!Number.isInteger(presetId) || presetId < 1 || presetId > 255) return reply.code(400).send({ error: "Preset ID must be between 1 and 255." });
+      const previous = activePtzMoves.get(camera.id);
+      if (previous) {
+        clearTimeout(previous.timer);
+        activePtzMoves.delete(camera.id);
+        await cameraPtzRequest(connection, connection.password_ciphertext ? decryptPassword(connection) : "", "stop", previous.direction, previous.speed).catch(() => {});
+      }
+      await cameraPresetRequest(connection, connection.password_ciphertext ? decryptPassword(connection) : "", presetId);
+      await addAudit(request.user.id, "camera.ptz.preset", "Camera", camera.id, { preset_id: presetId });
+      return { success: true, action, preset_id: presetId };
+    }
+    if (!new Set(["start", "stop"]).has(action) || !directions.has(direction)) {
+      return reply.code(400).send({ error: "Choose a valid pan/tilt direction and start or stop action." });
+    }
+    const speed = Number(body.speed || 3);
+    if (!Number.isInteger(speed) || speed < 1 || speed > 5) return reply.code(400).send({ error: "Pan/tilt speed must be between 1 and 5." });
+    const password = connection.password_ciphertext ? decryptPassword(connection) : "";
+    const previous = activePtzMoves.get(camera.id);
+
+    if (action === "start" && previous) {
+      clearTimeout(previous.timer);
+      activePtzMoves.delete(camera.id);
+      await cameraPtzRequest(connection, password, "stop", previous.direction, previous.speed).catch(() => {});
+    }
+
+    await cameraPtzRequest(connection, password, action, direction, speed);
+    if (action === "start") {
+      const timer = setTimeout(() => {
+        activePtzMoves.delete(camera.id);
+        cameraPtzRequest(connection, password, "stop", direction, speed)
+          .catch(() => request.log.warn({ cameraId: camera.id }, "Camera PTZ safety stop failed"));
+      }, 850);
+      timer.unref();
+      activePtzMoves.set(camera.id, { timer, direction, speed });
+    } else if (previous) {
+      clearTimeout(previous.timer);
+      activePtzMoves.delete(camera.id);
+    }
+    await addAudit(request.user.id, `camera.ptz.${action}`, "Camera", camera.id, { direction, speed });
+    return { success: true, action, direction, safety_stop_ms: action === "start" ? 850 : 0 };
+  });
+
+  app.post("/api/cameras/:id/control/deterrence", {
+    preHandler: requireAuth,
+    config: { rateLimit: { max: 12, timeWindow: "1 minute" } },
+  }, async (request, reply) => {
+    requireManager(request.user);
+    if (!checkOrigin(request, reply)) return;
+    const camera = await authorizedCamera(pool, request.user, request.params.id);
+    const connection = await connectionFor(pool, camera.id);
+    if (!connection || !connection.enabled || connection.state !== "configured") throw httpError(409, "Apply a working camera stream route before using controls.");
+    if (connection.network_mode !== "vpn_routed") throw httpError(409, "Camera controls require a private VPN route. Public camera control ports are not allowed.");
+    requireSupportedDahuaCamera(camera, true, "manual deterrence");
+    const body = request.body || {};
+    const device = String(body.device || "");
+    const state = String(body.state || "").toLowerCase();
+    if (device === "siren" && !["on", "off"].includes(state)) return reply.code(400).send({ error: "Choose siren on or off." });
+    if (device === "light" && !["manual", "off"].includes(state)) return reply.code(400).send({ error: "Choose light manual or off." });
+    if (!["siren", "light"].includes(device)) return reply.code(400).send({ error: "Choose siren or light." });
+    if (device === "siren" && connection.siren_control_enabled !== true) throw httpError(409, "Manual siren control is not enabled in this camera's setup.");
+    if (device === "light" && connection.light_control_enabled !== true) throw httpError(409, "Manual light control is not enabled in this camera's setup.");
+
+    const password = connection.password_ciphertext ? decryptPassword(connection) : "";
+    const commandPath = device === "siren"
+      ? `/cgi-bin/coaxialControlIO.cgi?action=control&channel=1&info[0].Type=2&info[0].IO=${state === "on" ? 1 : 2}`
+      : `/cgi-bin/configManager.cgi?action=setConfig&Lighting[0][0].Mode=${state === "manual" ? "Manual" : "Off"}`;
+    const response = await dahuaGet(connection, password, commandPath, 5000);
+    const responseText = await response.text().catch(() => "");
+    if (/(^|\b)(error|failed|failure)(\b|$)/i.test(responseText)) throw httpError(502, "The camera did not accept that manual control command. Verify API support for its firmware.");
+
+    if (device === "siren") {
+      const existing = sirenSafetyTimers.get(camera.id);
+      if (existing) clearTimeout(existing.timer);
+      sirenSafetyTimers.delete(camera.id);
+      if (state === "on") {
+        const safety = { off: async () => {
+          const offResponse = await dahuaGet(connection, password, "/cgi-bin/coaxialControlIO.cgi?action=control&channel=1&info[0].Type=2&info[0].IO=2", 5000);
+          const offText = await offResponse.text().catch(() => "");
+          if (/(^|\b)(error|failed|failure)(\b|$)/i.test(offText)) throw httpError(502, "The camera rejected its automatic siren safety-off command.");
+        } };
+        safety.timer = setTimeout(async () => {
+          sirenSafetyTimers.delete(camera.id);
+          await safety.off().catch((error) => request.log.error({ cameraId: camera.id, message: error.message }, "Automatic siren safety-off failed"));
+        }, 10000);
+        sirenSafetyTimers.set(camera.id, safety);
+      }
+    }
+    await addAudit(request.user.id, `camera.deterrence.${device}.${state}`, "Camera", camera.id, { device, state, manual: true });
+    return { success: true, device, state, auto_off_seconds: device === "siren" && state === "on" ? 10 : 0 };
+  });
+
   app.delete("/api/cameras/:id/connection", {
     preHandler: requireAuth,
     config: { rateLimit: { max: 10, timeWindow: "10 minutes" } },
@@ -559,7 +1085,7 @@ export function registerCameraRoutes(app, pool, requireAuth, checkOrigin) {
       sub: String(request.user.id), purpose: "camera_stream", camera_id: camera.id, path_name: row.path_name,
     }, { expiresIn: "30m" });
     reply.header("Cache-Control", "no-store");
-    return { whep_url: `/media/${row.path_name}/whep`, token, expires_in: 1800 };
+    return { whep_url: `/media/${row.path_name}/whep`, token, expires_in: 1800, audio_enabled: row.audio_enabled === true };
   });
 
   app.post("/api/cameras/media-auth", async (request, reply) => {
@@ -596,24 +1122,79 @@ export function registerCameraRoutes(app, pool, requireAuth, checkOrigin) {
 
 let reconcilePromise = null;
 export function startCameraEngine(app, pool) {
+  const reconcileEvents = async () => {
+    const result = await pool.query(
+      `SELECT c.*,r.data FROM camera_connections c JOIN app_records r ON r.id=c.camera_id AND r.entity='Camera'
+       WHERE c.enabled=true AND c.state='configured' AND c.event_listener_enabled=true AND c.network_mode='vpn_routed'`
+    );
+    const desired = new Map();
+    for (const row of result.rows) {
+      const camera = { ...row.data, id: row.camera_id };
+      if (!/dahua/i.test(`${camera.brand || ""} ${camera.model || ""}`)) continue;
+      desired.set(String(row.camera_id), { camera, row });
+    }
+    for (const [cameraId, entry] of desired) {
+      if (eventWorkers.has(cameraId)) continue;
+      const controller = new AbortController();
+      const worker = { controller };
+      eventWorkers.set(cameraId, worker);
+      void runCameraEventListener(app, pool, entry.camera, entry.row, controller.signal)
+        .catch((error) => app.log.error({ cameraId, message: error.message }, "Camera event worker stopped unexpectedly"))
+        .finally(() => {
+          if (eventWorkers.get(cameraId) === worker) eventWorkers.delete(cameraId);
+        });
+    }
+    for (const [cameraId, worker] of eventWorkers) {
+      if (!desired.has(cameraId)) {
+        worker.controller.abort();
+        eventWorkers.delete(cameraId);
+      }
+    }
+  };
   const reconcile = async () => {
     if (reconcilePromise) return reconcilePromise;
     reconcilePromise = (async () => {
-      const result = await pool.query("SELECT * FROM camera_connections WHERE enabled=true AND state IN ('configured','apply_failed') ORDER BY created_at");
-      for (const row of result.rows) {
-        try {
-          const current = await mediaRequest(`/v3/config/paths/get/${encodeURIComponent(row.path_name)}`);
-          if (current.ok && row.state !== "apply_failed") continue;
-          await applyStoredConnection(pool, row);
-        } catch {
-          app.log.warn({ cameraId: row.camera_id }, "Camera stream path reconciliation failed");
+      try {
+        const result = await pool.query("SELECT * FROM camera_connections WHERE enabled=true AND state IN ('configured','apply_failed') ORDER BY created_at");
+        for (const row of result.rows) {
+          try {
+            const current = await mediaRequest(`/v3/config/paths/get/${encodeURIComponent(row.path_name)}`);
+            if (current.ok && row.state !== "apply_failed") continue;
+            await applyStoredConnection(pool, row);
+          } catch {
+            app.log.warn({ cameraId: row.camera_id }, "Camera stream path reconciliation failed");
+          }
         }
+      } finally {
+        await reconcileEvents().catch((error) => app.log.warn({ message: error.message }, "Camera event worker reconciliation failed"));
       }
     })().finally(() => { reconcilePromise = null; });
     return reconcilePromise;
   };
   void reconcile();
-  const timer = setInterval(() => { void reconcile(); }, 30000);
+  const timer = setInterval(() => { void reconcile(); }, 10000);
   timer.unref();
-  return () => clearInterval(timer);
+  const retentionTimer = setInterval(() => {
+    pruneCameraSnapshots(pool, process.env.CAMERA_SNAPSHOT_RETENTION_DAYS || 30)
+      .then((count) => { if (count) app.log.info({ count }, "Expired private camera snapshots removed"); })
+      .catch((error) => app.log.warn({ message: error.message }, "Camera snapshot retention cleanup failed"));
+  }, 6 * 60 * 60 * 1000);
+  retentionTimer.unref();
+  void pruneCameraSnapshots(pool, process.env.CAMERA_SNAPSHOT_RETENTION_DAYS || 30)
+    .catch((error) => app.log.warn({ message: error.message }, "Camera snapshot retention cleanup failed"));
+  return async () => {
+    clearInterval(timer);
+    clearInterval(retentionTimer);
+    for (const worker of eventWorkers.values()) worker.controller.abort();
+    eventWorkers.clear();
+    for (const subscribers of cameraEventSubscribers.values()) for (const response of subscribers) response.end();
+    cameraEventSubscribers.clear();
+    const sirenOffCommands = [];
+    for (const safety of sirenSafetyTimers.values()) {
+      clearTimeout(safety.timer);
+      sirenOffCommands.push(safety.off().catch(() => {}));
+    }
+    sirenSafetyTimers.clear();
+    await Promise.allSettled(sirenOffCommands);
+  };
 }

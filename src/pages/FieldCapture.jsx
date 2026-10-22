@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Satellite, WifiOff, Wifi, MapPin, Loader2, NotebookPen, Camera, History, Info } from "lucide-react";
+import { Satellite, WifiOff, Wifi, MapPin, Loader2, NotebookPen, Camera, History, Info, RefreshCw } from "lucide-react";
 import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import CameraViewfinder from "@/components/field/CameraViewfinder";
@@ -12,15 +12,17 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 
 export default function FieldCapture() {
-  const { coords, error: gpsError, loading: gpsLoading } = useGeolocation();
+  const { coords, error: gpsError, loading: gpsLoading, refreshing: gpsRefreshing, refresh: refreshGps } = useGeolocation();
   const online = useOnlineStatus();
   const [notes, setNotes] = useState("");
   const [locationName, setLocationName] = useState("");
   const [manualLat, setManualLat] = useState("");
   const [manualLng, setManualLng] = useState("");
+  const [useManualLocation, setUseManualLocation] = useState(false);
   const [lastCaptureAt, setLastCaptureAt] = useState(null);
   const [sites, setSites] = useState([]);
   const [siteId, setSiteId] = useState("");
@@ -34,23 +36,38 @@ export default function FieldCapture() {
 
   const { queue, enqueue, removeItem, flush, syncing, loadingQueue, storageError } = useCaptureQueue(online, () => {});
 
-  const effectiveLat = coords?.latitude ?? (manualLat ? Number(manualLat) : null);
-  const effectiveLng = coords?.longitude ?? (manualLng ? Number(manualLng) : null);
-
   const handleCapture = async (photoDataUrl) => {
-    if (effectiveLat == null || effectiveLng == null) {
-      toast({
-        title: "No GPS coordinates",
-        description: "Enter coordinates manually or enable location, then capture again.",
-        variant: "destructive",
-      });
+    let location;
+    if (useManualLocation) {
+      const latitude = Number(manualLat);
+      const longitude = Number(manualLng);
+      if (!manualLat.trim() || !manualLng.trim() || !Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
+        toast({ title: "Enter valid coordinates", description: "Latitude must be between -90 and 90 and longitude between -180 and 180.", variant: "destructive" });
+        return;
+      }
+      location = { latitude, longitude, accuracy: null };
+    } else {
+      try {
+        // Request a fresh high-accuracy fix at capture time so a photo does not inherit
+        // an old location from when the page was opened.
+        location = await refreshGps();
+      } catch (error) {
+        const recentEnough = coords?.timestamp && Date.now() - coords.timestamp < 90000;
+        if (recentEnough && coords.accuracy <= 200) {
+          location = coords;
+          toast({ title: "Using the latest GPS fix", description: "A fresh location timed out, so this capture uses the recent fix shown on screen." });
+        } else {
+          toast({ title: "Could not get a reliable GPS fix", description: `${error.message} Refresh GPS or enter the farm coordinates manually.`, variant: "destructive" });
+          return;
+        }
+      }
     }
     try {
       await enqueue({
         photoDataUrl,
-        latitude: effectiveLat,
-        longitude: effectiveLng,
-        accuracy: coords?.accuracy ?? null,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        accuracy: location.accuracy ?? null,
         site_id: siteId,
         location_name: locationName,
         notes,
@@ -95,22 +112,43 @@ export default function FieldCapture() {
 
         <div
           className={`flex items-center gap-2.5 rounded-2xl border px-3.5 py-2.5 ${
-            coords ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-white"
+              coords && !useManualLocation ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-white"
           }`}
         >
-          <Satellite className={`w-4 h-4 ${coords ? "text-emerald-600" : "text-slate-400"}`} />
+          <Satellite className={`w-4 h-4 ${coords && !useManualLocation ? "text-emerald-600" : "text-slate-400"}`} />
           <div className="min-w-0">
             <div className="text-sm font-semibold text-slate-700">
-              {gpsLoading ? "Acquiring GPS…" : coords ? "GPS locked" : "No GPS"}
+              {useManualLocation ? "Manual coordinates" : gpsLoading ? "Acquiring GPS…" : coords ? "GPS fix available" : "No GPS fix"}
             </div>
             <div className="text-[11px] text-slate-500 truncate">
-              {coords
-                ? `${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)} (±${Math.round(coords.accuracy)}m)`
-                : gpsError || "Waiting for signal"}
+              {useManualLocation
+                ? "The entered farm coordinates will be attached to captures"
+                : coords
+                  ? `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)} · accuracy ±${Math.round(coords.accuracy)} m${coords.timestamp ? ` · ${Math.max(0, Math.round((Date.now() - coords.timestamp) / 1000))}s ago` : ""}`
+                  : gpsError || "Waiting for signal"}
             </div>
           </div>
         </div>
       </div>
+
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5">
+        <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-700">
+          <input type="checkbox" checked={useManualLocation} onChange={(event) => setUseManualLocation(event.target.checked)} className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
+          Use manually entered farm coordinates
+        </label>
+        <Button type="button" variant="outline" size="sm" onClick={() => refreshGps().catch(() => {})} disabled={gpsRefreshing}>
+          <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${gpsRefreshing ? "animate-spin" : ""}`} />{gpsRefreshing ? "Getting GPS…" : "Refresh GPS"}
+        </Button>
+      </div>
+
+      {(useManualLocation || !coords || gpsError) && <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50/70 p-3">
+        <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-amber-800"><MapPin className="h-3.5 w-3.5" /> Farm coordinates</div>
+        <div className="grid grid-cols-2 gap-2">
+          <Input type="number" step="any" inputMode="decimal" value={manualLat} onChange={(event) => setManualLat(event.target.value)} placeholder="Latitude (e.g. 28.20)" aria-label="Manual latitude" />
+          <Input type="number" step="any" inputMode="decimal" value={manualLng} onChange={(event) => setManualLng(event.target.value)} placeholder="Longitude (e.g. 83.98)" aria-label="Manual longitude" />
+        </div>
+        {gpsError && <p className="mt-2 text-[11px] text-amber-800">{gpsError} On phones, GPS requires location permission and a secure HTTPS page.</p>}
+      </div>}
 
       {storageError && <div role="alert" className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
         Offline-safe storage is unavailable in this browser. Captures are disabled to avoid losing field evidence. {storageError}
@@ -195,18 +233,6 @@ export default function FieldCapture() {
         </div>
       </div>
 
-      {/* Manual GPS fallback */}
-      {gpsError && !coords && (
-        <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50/50 p-3">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-700 mb-2">
-            <MapPin className="w-3.5 h-3.5" /> Enter coordinates manually
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <Input value={manualLat} onChange={(e) => setManualLat(e.target.value)} placeholder="Latitude (28.394)" />
-            <Input value={manualLng} onChange={(e) => setManualLng(e.target.value)} placeholder="Longitude (81.383)" />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import { AlertTriangle, Loader2, Video } from "lucide-react";
+import { AlertTriangle, Loader2, Video, Volume2, VolumeX } from "lucide-react";
 
 const noIceServers = Object.freeze([]);
 
 /** Receives a short-lived, site-authorized MediaMTX WHEP stream. */
-export default function WebRTCPlayer({ whepEndpoint, token, iceServers = noIceServers, onError, onReady }) {
+export default function WebRTCPlayer({ whepEndpoint, token, iceServers = noIceServers, audioAvailable = false, onError, onReady }) {
   const videoRef = useRef(null);
   const pcRef = useRef(null);
   const resourceRef = useRef(null);
@@ -14,6 +14,7 @@ export default function WebRTCPlayer({ whepEndpoint, token, iceServers = noIceSe
   onReadyRef.current = onReady;
   const [status, setStatus] = useState("connecting");
   const [errorMsg, setErrorMsg] = useState("");
+  const [muted, setMuted] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -27,7 +28,7 @@ export default function WebRTCPlayer({ whepEndpoint, token, iceServers = noIceSe
       const pc = new RTCPeerConnection({ iceServers });
       pcRef.current = pc;
       pc.addTransceiver("video", { direction: "recvonly" });
-      // Audio remains disabled for the image-only human–monkey conflict study.
+      if (audioAvailable) pc.addTransceiver("audio", { direction: "recvonly" });
       pc.ontrack = (event) => {
         if (cancelled || !videoRef.current) return;
         videoRef.current.srcObject = event.streams[0];
@@ -97,10 +98,11 @@ export default function WebRTCPlayer({ whepEndpoint, token, iceServers = noIceSe
       }
       if (videoRef.current) videoRef.current.srcObject = null;
     };
-  }, [whepEndpoint, token, iceServers]);
+  }, [whepEndpoint, token, iceServers, audioAvailable]);
 
   return <div className="relative flex h-full w-full items-center justify-center bg-slate-950">
-    <video ref={videoRef} autoPlay playsInline muted className={`h-full w-full object-contain ${status === "playing" ? "" : "hidden"}`} />
+    <video ref={videoRef} autoPlay playsInline muted={muted || !audioAvailable} className={`h-full w-full object-contain ${status === "playing" ? "" : "hidden"}`} />
+    {audioAvailable && status === "playing" && <button type="button" onClick={() => { const nextMuted = !muted; setMuted(nextMuted); if (!nextMuted) videoRef.current?.play().catch(() => {}); }} aria-label={muted ? "Enable camera audio" : "Mute camera audio"} className="absolute bottom-3 right-3 inline-flex items-center gap-2 rounded-lg border border-white/20 bg-black/70 px-3 py-2 text-xs font-medium text-white backdrop-blur hover:bg-black/85">{muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}{muted ? "Enable audio" : "Mute audio"}</button>}
     {status === "connecting" && <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400"><Loader2 className="mb-2 h-8 w-8 animate-spin" /><p className="text-sm">Establishing secure live stream…</p></div>}
     {status === "error" && <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center text-slate-400"><AlertTriangle className="mb-2 h-8 w-8 text-amber-400" /><p className="mb-1 text-sm font-medium text-slate-300">Live stream unavailable</p><p className="max-w-sm text-xs text-slate-500">{errorMsg}</p></div>}
     {status !== "playing" && <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-md bg-black/50 px-2 py-1 backdrop-blur"><Video className="h-3 w-3 text-slate-400" /><span className="font-mono text-[10px] text-slate-300">no signal</span></div>}

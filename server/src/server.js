@@ -112,7 +112,7 @@ let stopCameraEngine = () => {};
 const shutdown = async (signal) => {
   app.log.info({ signal }, "Shutting down API");
   clearInterval(pushWorker);
-  stopCameraEngine();
+  await stopCameraEngine();
   await app.close();
   await pool.end();
   process.exit(0);

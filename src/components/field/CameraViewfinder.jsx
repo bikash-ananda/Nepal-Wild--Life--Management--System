@@ -11,6 +11,7 @@ export default function CameraViewfinder({ onCapture, disabled }) {
   const [facing, setFacing] = useState("environment");
   const [ready, setReady] = useState(false);
   const [starting, setStarting] = useState(true);
+  const [capturing, setCapturing] = useState(false);
   const [error, setError] = useState(null);
 
   const stop = () => {
@@ -54,9 +55,9 @@ export default function CameraViewfinder({ onCapture, disabled }) {
 
   }, [facing]);
 
-  const capture = () => {
+  const capture = async () => {
     const video = videoRef.current;
-    if (!video || !ready || disabled) return;
+    if (!video || !ready || disabled || capturing) return;
     const w = video.videoWidth || 1280;
     const h = video.videoHeight || 720;
     const maxDim = 1280;
@@ -68,9 +69,12 @@ export default function CameraViewfinder({ onCapture, disabled }) {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     try {
       const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
-      onCapture?.(dataUrl);
+      setCapturing(true);
+      await onCapture?.(dataUrl);
     } catch {
-      /* ignore */
+      // The parent reports save errors; keep this control usable for another attempt.
+    } finally {
+      setCapturing(false);
     }
   };
 
@@ -121,7 +125,7 @@ export default function CameraViewfinder({ onCapture, disabled }) {
         <button
           type="button"
           onClick={capture}
-          disabled={!ready || disabled || starting}
+          disabled={!ready || disabled || starting || capturing}
           className={cn(
             "w-18 h-18 rounded-full border-4 border-white/90 flex items-center justify-center shadow-lg transition-transform active:scale-95 disabled:opacity-40",
             "bg-white/15 backdrop-blur"
@@ -130,7 +134,7 @@ export default function CameraViewfinder({ onCapture, disabled }) {
           aria-label="Capture photo"
         >
           <span className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center">
-            <Camera className="w-6 h-6 text-slate-800" />
+            {capturing ? <Loader2 className="w-6 h-6 animate-spin text-slate-800" /> : <Camera className="w-6 h-6 text-slate-800" />}
           </span>
         </button>
       </div>

@@ -22,7 +22,7 @@ const roles = [
   { value: "technician", label: "Technician" },
 ];
 
-const emptyAccount = { full_name: "", email: "", password: "", role: "field_worker", site_ids: [] };
+const emptyAccount = { full_name: "", email: "", password: "", confirm_password: "", role: "field_worker", site_ids: [] };
 
 export default function Accounts() {
   const { user } = useAuth();
@@ -60,13 +60,21 @@ export default function Accounts() {
   if (user && user.role !== "admin") return <Navigate to="/" replace />;
 
   const createAccount = async () => {
-    if (!form.full_name.trim() || !form.email.trim() || form.password.length < 12) {
-      toast({ title: "Check the account details", description: "Name, valid email, and a password with at least 12 characters are required.", variant: "destructive" });
+    const email = form.email.trim().toLowerCase();
+    const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+    if (!form.full_name.trim() || !validEmail || form.password.length < 12 || form.password !== form.confirm_password) {
+      const description = !form.full_name.trim() ? "Enter the person's full name."
+        : !validEmail ? "Enter a valid email address that the person can access."
+          : form.password.length < 12 ? "Use a password with at least 12 characters."
+            : "The passwords do not match.";
+      toast({ title: "Check the account details", description, variant: "destructive" });
       return;
     }
     setSaving(true);
     try {
-      await api.entities.User.create({ ...form, full_name: form.full_name.trim(), email: form.email.trim().toLowerCase() });
+      const accountPayload = { ...form };
+      delete accountPayload.confirm_password;
+      await api.entities.User.create({ ...accountPayload, full_name: form.full_name.trim(), email });
       toast({ title: "Account created", description: "Share the initial password securely and ask the user to change it after signing in." });
       setCreating(false);
       setForm(emptyAccount);
@@ -161,8 +169,9 @@ export default function Accounts() {
           <DialogHeader><DialogTitle>Create field account</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div><Label htmlFor="account-name">Full name</Label><Input id="account-name" value={form.full_name} onChange={(event) => setForm({ ...form, full_name: event.target.value })} /></div>
-            <div><Label htmlFor="account-email">Email</Label><Input id="account-email" type="email" autoComplete="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /></div>
-            <div><Label htmlFor="account-password">Initial password (12+ characters)</Label><Input id="account-password" type="password" autoComplete="new-password" minLength={12} value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} /></div>
+            <div><Label htmlFor="account-email">Email address</Label><Input id="account-email" type="email" required autoComplete="email" inputMode="email" autoCapitalize="none" autoCorrect="off" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} placeholder="name@example.com" /><p className="mt-1 text-xs text-slate-500">Use an address the account holder can access.</p></div>
+            <div><Label htmlFor="account-password">Initial password (12+ characters)</Label><Input id="account-password" type="password" autoComplete="new-password" minLength={12} required value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} /></div>
+            <div><Label htmlFor="account-confirm-password">Confirm password</Label><Input id="account-confirm-password" type="password" autoComplete="new-password" minLength={12} required value={form.confirm_password} onChange={(event) => setForm({ ...form, confirm_password: event.target.value })} /></div>
             <div><Label>Role</Label><Select value={form.role} onValueChange={(role) => setForm({ ...form, role })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{roles.map((role) => <SelectItem key={role.value} value={role.value}>{role.label}</SelectItem>)}</SelectContent></Select></div>
             <SiteSelector sites={sites} selected={form.site_ids} onChange={(site_ids) => setForm({ ...form, site_ids })} />
             <p className="text-xs text-slate-500">For password reset by email, configure SMTP on the VPS. Keep the initial password out of chat and email.</p>

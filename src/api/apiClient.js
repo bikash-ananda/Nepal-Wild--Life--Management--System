@@ -101,6 +101,11 @@ export const api = {
     apply: (id) => request(`/api/cameras/${encodeURIComponent(id)}/connection/apply`, { method: "POST" }).then((response) => response.connection),
     remove: (id) => request(`/api/cameras/${encodeURIComponent(id)}/connection`, { method: "DELETE" }),
     viewToken: (id) => request(`/api/cameras/${encodeURIComponent(id)}/view-token`, { method: "POST" }),
+    events: (id, limit = 30) => request(`/api/cameras/${encodeURIComponent(id)}/events?limit=${encodeURIComponent(limit)}`),
+    eventStatus: (id) => request(`/api/cameras/${encodeURIComponent(id)}/events/status`),
+    eventFeedUrl: (id) => `/api/cameras/${encodeURIComponent(id)}/events/live`,
+    ptz: (id, payload) => request(`/api/cameras/${encodeURIComponent(id)}/control/ptz`, { method: "POST", body: JSON.stringify(payload) }),
+    deterrence: (id, payload) => request(`/api/cameras/${encodeURIComponent(id)}/control/deterrence`, { method: "POST", body: JSON.stringify(payload) }),
   },
   ai: {
     status: () => request("/api/ai/status"),
@@ -131,7 +136,6 @@ export const api = {
       const relative = path.origin === window.location.origin ? `${path.pathname}${path.search}${path.hash}` : "/";
       window.location.assign(`/login?returnTo=${encodeURIComponent(relative)}`);
     },
-    register: (payload) => request("/api/auth/register", { method: "POST", body: JSON.stringify(payload) }),
     resetPasswordRequest: (email) => request("/api/auth/request-password-reset", { method: "POST", body: JSON.stringify({ email }) }),
     resetPassword: (payload) => request("/api/auth/reset-password", { method: "POST", body: JSON.stringify(payload) }),
     loginWithProvider: () => { throw new Error("External sign-in is not configured for this deployment."); },

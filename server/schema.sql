@@ -60,6 +60,12 @@ CREATE TABLE IF NOT EXISTS camera_connections (
   password_iv text NOT NULL,
   password_tag text NOT NULL,
   rtsp_transport text NOT NULL DEFAULT 'tcp' CHECK (rtsp_transport IN ('tcp', 'udp')),
+  ptz_enabled boolean NOT NULL DEFAULT false,
+  control_port integer NOT NULL DEFAULT 80 CHECK (control_port BETWEEN 1 AND 65535),
+  event_listener_enabled boolean NOT NULL DEFAULT false,
+  audio_enabled boolean NOT NULL DEFAULT false,
+  siren_control_enabled boolean NOT NULL DEFAULT false,
+  light_control_enabled boolean NOT NULL DEFAULT false,
   enabled boolean NOT NULL DEFAULT true,
   state text NOT NULL DEFAULT 'configured' CHECK (state IN ('configured', 'apply_failed', 'disabled')),
   last_test_status text NOT NULL DEFAULT 'never' CHECK (last_test_status IN ('never', 'passed', 'failed')),
@@ -74,6 +80,12 @@ CREATE TABLE IF NOT EXISTS camera_connections (
 CREATE INDEX IF NOT EXISTS camera_connections_site_idx ON camera_connections (site_id, enabled);
 ALTER TABLE camera_connections DROP CONSTRAINT IF EXISTS camera_connections_protocol_check;
 ALTER TABLE camera_connections ADD CONSTRAINT camera_connections_protocol_check CHECK (protocol IN ('rtsp', 'rtsps', 'http', 'https'));
+ALTER TABLE camera_connections ADD COLUMN IF NOT EXISTS ptz_enabled boolean NOT NULL DEFAULT false;
+ALTER TABLE camera_connections ADD COLUMN IF NOT EXISTS control_port integer NOT NULL DEFAULT 80;
+ALTER TABLE camera_connections ADD COLUMN IF NOT EXISTS event_listener_enabled boolean NOT NULL DEFAULT false;
+ALTER TABLE camera_connections ADD COLUMN IF NOT EXISTS audio_enabled boolean NOT NULL DEFAULT false;
+ALTER TABLE camera_connections ADD COLUMN IF NOT EXISTS siren_control_enabled boolean NOT NULL DEFAULT false;
+ALTER TABLE camera_connections ADD COLUMN IF NOT EXISTS light_control_enabled boolean NOT NULL DEFAULT false;
 
 CREATE TABLE IF NOT EXISTS audit_events (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
