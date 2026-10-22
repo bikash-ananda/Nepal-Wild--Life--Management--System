@@ -11,7 +11,7 @@ Configure the domain at the DNS provider using the supplied Contabo nameservers:
 | A | `@` / `bikasheng.com.np` | `169.58.25.131` |
 | AAAA | `@` / `bikasheng.com.np` | `2a02:c207:2364:8298::1` |
 
-The target is the Contabo Linux VPS `vmi3648298`. Before starting Caddy, confirm the A and AAAA records resolve to it and allow inbound TCP 80/443. The Compose stack also publishes UDP 443 for HTTP/3 and UDP 8189 for WebRTC media. Keep SSH restricted to the administrator's management network where possible. Never publish MediaMTX API port 9997 or camera RTSP ports on the VPS.
+The target is the Contabo Linux VPS `vmi3648298`. Before starting Caddy, confirm the A and AAAA records resolve to it and allow inbound TCP 80/443. The Compose stack also publishes UDP 443 for HTTP/3 and UDP and TCP 8189 for WebRTC media. Both 8189 protocols must pass the VPS firewall; TCP is a fallback for viewer networks that block UDP. Keep SSH restricted to the administrator's management network where possible. Never publish MediaMTX API port 9997 or camera RTSP ports on the VPS.
 
 ## First deployment
 
@@ -45,9 +45,10 @@ The API runs the additive SQL schema migration on startup. Keep an off-VPS backu
 
 - Keep `.env` out of Git and limit VPS access. Do not put API secrets or camera credentials in `VITE_*` variables.
 - PostgreSQL and API traffic is private to the Compose networks; Caddy is the public web entry point. MediaMTX control is on a private Docker network and requires a separate random service password.
-- Browser signaling uses `https://bikasheng.com.np/media/`; WebRTC video media uses UDP 8189. If client networks block UDP, playback may require a separately configured TURN service.
+- Browser signaling uses `https://bikasheng.com.np/media/`; WebRTC video media uses UDP 8189, with TCP 8189 as a fallback. Both must be allowed by the VPS firewall. If the viewer and VPS networks block both paths, playback may require a separately configured TURN service.
 - Each camera has independent route settings, so farm routers may use different DDNS names, mapped ports, or VPN LAN addresses. Public port forwarding should allowlist VPS source `169.58.25.131` where supported. Never expose camera admin interfaces or open camera ports to all internet hosts.
 - Camera setup supports RTSP/RTSPS and HLS over HTTP/HTTPS. Use a dedicated read-only account. The server tests the route before saving; passwords are encrypted with `CAMERA_ENCRYPTION_KEY` and never returned to the browser.
+- A passing VPS route test confirms that MediaMTX receives the camera source; it does not prove that every browser can decode the stream. Dahua's P3I-PV specification lists H.265 video, which has limited browser/device support. If this model reaches MediaMTX but remains blank in live view, use a compatible H.265 browser/device or add a server-side H.264 transcoding stage. Transcoding is not currently included.
 - Cookie sessions are HttpOnly, Secure in production, same-site, and invalidated when a password is reset or account is disabled.
 - Private images require an authenticated session. Keep backups encrypted and access-controlled because photos and precise farm coordinates can be sensitive.
 - Set privacy masks, disable camera audio for the image-only pilot, define retention, and avoid collecting household/private-space footage.

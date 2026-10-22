@@ -19,7 +19,9 @@ webrtcAddress: :8889
 webrtcAllowOrigins:
   - https://bikasheng.com.np
 webrtcLocalUDPAddress: :8189
-webrtcLocalTCPAddress: ""
+# Keep the UDP path for normal low-latency playback and expose the same ICE
+# port over TCP as a fallback for networks that block UDP.
+webrtcLocalTCPAddress: :8189
 webrtcAdditionalHosts:
   - 169.58.25.131
   - bikasheng.com.np

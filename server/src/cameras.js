@@ -251,7 +251,7 @@ async function probeWithMediaMTX(connection) {
       if (response.ok) {
         const status = await response.json().catch(() => ({}));
         if (status.online === true) {
-          return { success: true, message: "Camera stream reached the VPS and MediaMTX received video/audio tracks.", tracks: status.tracks2?.length || status.tracks?.length || 0 };
+          return { success: true, message: "The VPS received camera media. This confirms the source route; browser playback is checked after activation.", tracks: status.tracks2?.length || status.tracks?.length || 0 };
         }
       }
       await new Promise((resolve) => setTimeout(resolve, 500));

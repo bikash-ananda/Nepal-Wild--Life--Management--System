@@ -227,6 +227,8 @@ export default function CameraSetupWizard({ open, onOpenChange, sites = [], onCr
   const streamPortHint = { rtsp: "554", rtsps: "322", http: "80", https: "443" }[connection.protocol] || "554";
   const privateAddressWarning = connection.network_mode === "public_forward" && isPrivateCameraAddress(connection.host);
   const dahuaCamera = /dahua/i.test(`${form.brand} ${form.model}`);
+  const normalizedCameraModel = `${form.brand} ${form.model}`.replace(/[^a-z0-9]/gi, "").toLowerCase();
+  const p3iPvCamera = normalizedCameraModel.includes("p3ipv") || normalizedCameraModel.includes("p31pv");
 
   return <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="max-h-[92vh] max-w-3xl overflow-y-auto">
@@ -274,6 +276,7 @@ export default function CameraSetupWizard({ open, onOpenChange, sites = [], onCr
 
       {(isEditing || step === 3) && <section className="space-y-4">
         <div className="flex items-start gap-3 rounded-xl bg-slate-50 p-3 text-sm text-slate-600"><Wifi className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" /><p>The server tests the source, then saves its own path in the streaming service. Camera usernames and passwords stay encrypted on the server.</p></div>
+        {p3iPvCamera && <div role="note" className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-950"><strong>Browser codec check:</strong> Dahua specifies the P3I-PV video stream as H.265. The VPS test confirms it can receive the camera feed, but it does not test browser decoding. If the test passes and live view stays blank, H.265 compatibility may be the cause; this app does not currently transcode the stream to H.264.</div>}
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Stream type" required><Select value={connection.protocol} onValueChange={(value) => { setConnectionField("protocol", value); setConnectionField("port", ({ rtsp: "554", rtsps: "322", http: "80", https: "443" })[value]); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="rtsp">RTSP</SelectItem><SelectItem value="rtsps">Secure RTSP (RTSPS)</SelectItem><SelectItem value="http">HLS over HTTP</SelectItem><SelectItem value="https">HLS over HTTPS</SelectItem></SelectContent></Select></Field>
           <Field label="Stream transport"><Select value={connection.rtsp_transport} onValueChange={(value) => setConnectionField("rtsp_transport", value)} disabled={!['rtsp', 'rtsps'].includes(connection.protocol)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="tcp">TCP (recommended for routed networks)</SelectItem><SelectItem value="udp">UDP</SelectItem></SelectContent></Select></Field>
@@ -295,7 +298,7 @@ export default function CameraSetupWizard({ open, onOpenChange, sites = [], onCr
           {connection.network_mode !== "vpn_routed" ? <p className="mt-2 text-xs text-amber-800">Remote control and camera event listening require a private VPN route. This app will not ask you to expose the camera's web control port to the internet.</p> : <p className="mt-2 text-xs text-slate-500">The server uses camera HTTP port 80 through the VPN. The camera login needs permissions for each feature you enable. Exact CGI support can depend on camera firmware and must be confirmed during the post-deploy connection check.</p>}
         </div> : <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600">Manual camera controls are not enabled for this manufacturer yet. The stream can still be added; a supported camera-control adapter must be selected for this model.</div>}
         {testMessage && <div role="status" className={`flex items-start gap-2 rounded-xl p-3 text-sm ${testState === "success" ? "bg-emerald-50 text-emerald-900" : testState === "error" ? "bg-rose-50 text-rose-900" : "bg-sky-50 text-sky-900"}`}>{testState === "success" ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /> : testState === "testing" ? <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin" /> : <CircleHelp className="mt-0.5 h-4 w-4 shrink-0" />}<p>{testMessage}</p></div>}
-        <Button type="button" variant="outline" className="w-full" onClick={testConnection} disabled={busy}>{busy && testState === "testing" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Testing from VPS…</> : "Test this camera from the VPS"}</Button>
+        <Button type="button" variant="outline" className="w-full" onClick={testConnection} disabled={busy}>{busy && testState === "testing" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Testing from VPS…</> : "Test camera route from the VPS"}</Button>
       </section>}
 
       <DialogFooter className="gap-2 sm:justify-between">
