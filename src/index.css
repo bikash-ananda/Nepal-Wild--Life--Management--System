@@ -231,6 +231,153 @@ html {
   }
 }
 
+/* International field platform landing page */
+.public-landing {
+  --field-ink: #10261f;
+  --field-forest: #0b211a;
+  --field-lime: #d7ef9c;
+  background: #f7f7f2;
+}
+
+.public-header {
+  box-shadow: 0 1px 0 rgba(19, 46, 35, 0.04), 0 8px 28px rgba(19, 46, 35, 0.035);
+}
+
+.hero-glow {
+  background:
+    radial-gradient(ellipse at 77% 28%, rgba(101, 161, 106, .22), transparent 36%),
+    radial-gradient(ellipse at 8% 88%, rgba(167, 196, 120, .10), transparent 35%),
+    linear-gradient(120deg, #081c17 0%, #0b241b 55%, #102a20 100%);
+}
+
+.hero-grid-lines {
+  background-image: linear-gradient(rgba(230, 245, 221, .035) 1px, transparent 1px), linear-gradient(90deg, rgba(230, 245, 221, .035) 1px, transparent 1px);
+  background-size: 68px 68px;
+  mask-image: linear-gradient(110deg, transparent 4%, black 52%, transparent 100%);
+  opacity: .42;
+}
+
+.hero-kicker {
+  border-color: rgba(215, 239, 156, .26);
+  background: rgba(237, 248, 224, .07);
+  color: #e0efc9;
+  backdrop-filter: blur(12px);
+}
+
+.hero-trust-card {
+  border-color: rgba(235, 245, 221, .14);
+  background: linear-gradient(110deg, rgba(255,255,255,.075), rgba(255,255,255,.025));
+  color: rgba(238, 246, 232, .84);
+  box-shadow: inset 0 1px rgba(255,255,255,.08);
+  backdrop-filter: blur(16px);
+}
+
+.hero-photo-halo {
+  background: radial-gradient(ellipse, rgba(180, 219, 129, .28), transparent 68%);
+}
+
+.hero-photo-frame {
+  isolation: isolate;
+  transform: perspective(1200px) rotateY(-2deg) rotateX(1deg);
+  transition: transform 650ms cubic-bezier(.2,.75,.25,1), box-shadow 650ms ease;
+}
+
+.hero-art:hover .hero-photo-frame {
+  transform: perspective(1200px) rotateY(0) rotateX(0) translateY(-3px);
+}
+
+.hero-photo-frame > img {
+  animation: wildlife-photo-drift 24s ease-in-out infinite alternate;
+  transform: scale(1.025);
+}
+
+.hero-photo-orbit {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  right: -7%;
+  width: min(62%, 330px);
+  aspect-ratio: 1;
+  opacity: .8;
+  pointer-events: none;
+  filter: drop-shadow(0 0 26px rgba(199, 239, 155, .16));
+  mask-image: radial-gradient(circle, black 40%, rgba(0,0,0,.7) 58%, transparent 76%);
+}
+
+.public-landing #about,
+.public-landing #guides {
+  position: relative;
+}
+
+.public-landing #about article,
+.public-landing #guides article {
+  border-color: rgba(21, 58, 42, .11);
+  border-radius: 1.2rem;
+  box-shadow: 0 8px 30px rgba(27, 49, 35, .035);
+}
+
+.public-landing #about article {
+  transition: transform 240ms ease, box-shadow 240ms ease;
+}
+
+.public-landing #about article:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 17px 38px rgba(27, 49, 35, .09);
+}
+
+.public-landing #report {
+  background:
+    radial-gradient(ellipse at 0 10%, rgba(206, 223, 171, .24), transparent 36%),
+    linear-gradient(180deg, #f1f4ec 0%, #f7f7f2 100%);
+}
+
+.report-guide-card {
+  border-color: rgba(223, 241, 207, .12);
+  background: radial-gradient(ellipse at 100% 0, rgba(72, 127, 87, .23), transparent 45%), linear-gradient(140deg, #102c22, #0c211b 76%);
+  box-shadow: 0 20px 48px -34px rgba(10, 38, 27, .62), inset 0 1px rgba(255,255,255,.06);
+}
+
+.public-landing #report form {
+  border-color: rgba(21, 58, 42, .1);
+  box-shadow: 0 25px 70px -48px rgba(13, 42, 29, .42), 0 2px 8px rgba(13, 42, 29, .025);
+}
+
+.public-landing #report :is(input:not([type="checkbox"]), select, textarea) {
+  border-color: #dce3d9;
+  border-radius: .85rem;
+  background-color: #fff;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.public-landing #report :is(input:not([type="checkbox"]), select, textarea):focus {
+  border-color: #679077;
+  box-shadow: 0 0 0 4px rgba(67, 124, 86, .1);
+}
+
+.public-landing #guides img {
+  transition: transform 550ms cubic-bezier(.2,.7,.2,1), filter 550ms ease;
+}
+
+.public-landing #guides article:hover img {
+  filter: saturate(1.07);
+}
+
+.mobile-action-dock {
+  border-color: rgba(20, 58, 41, .12);
+  box-shadow: 0 15px 44px -16px rgba(9, 31, 23, .4);
+}
+
+@keyframes wildlife-photo-drift {
+  from { transform: scale(1.025) translate3d(0, 0, 0); }
+  to { transform: scale(1.08) translate3d(-.4%, -.45%, 0); }
+}
+
+@media (max-width: 640px) {
+  .hero-photo-frame { transform: none; }
+  .hero-photo-orbit { right: -9%; width: 58%; opacity: .64; }
+  .hero-grid-lines { background-size: 46px 46px; opacity: .26; }
+}
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
