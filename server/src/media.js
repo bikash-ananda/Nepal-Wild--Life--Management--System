@@ -17,10 +17,18 @@ export function mediaIdFromUri(uri) {
   return match ? match[1] : null;
 }
 
-async function saveUpload(request, pool, visibility, actorId) {
+async function saveUpload(request, pool, visibility, actorId, requireConsent = false) {
   const part = await request.file();
   if (!part) throw Object.assign(new Error("Choose a file to upload."), { statusCode: 400 });
+  if (requireConsent && part.fields?.consent?.value !== "true") {
+    part.file.resume();
+    throw Object.assign(new Error("Consent is required before uploading public wildlife photos."), { statusCode: 400 });
+  }
   const contentType = String(part.mimetype || "").split(";")[0].toLowerCase();
+  if (requireConsent && !contentType.startsWith("image/")) {
+    part.file.resume();
+    throw Object.assign(new Error("Public wildlife submissions accept image files only."), { statusCode: 415 });
+  }
   const extension = extensions.get(contentType);
   if (!extension) {
     part.file.resume();
@@ -101,14 +109,15 @@ export async function pruneCameraSnapshots(pool, retentionDays = 30) {
   return result.rowCount;
 }
 
-export function registerMediaRoutes(app, pool, requireAuth) {
+export function registerMediaRoutes(app, pool, requireAuth, checkOrigin) {
   app.post("/api/uploads", { preHandler: requireAuth }, async (request, reply) => {
     const result = await saveUpload(request, pool, "private", request.user.id);
     return reply.code(201).send(result);
   });
 
   app.post("/api/public/uploads", { config: { rateLimit: { max: 8, timeWindow: "1 hour" } } }, async (request, reply) => {
-    const result = await saveUpload(request, pool, "private", null);
+    if (!checkOrigin(request, reply)) return;
+    const result = await saveUpload(request, pool, "private", null, true);
     return reply.code(201).send(result);
   });
 

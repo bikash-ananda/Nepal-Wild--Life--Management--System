@@ -68,6 +68,9 @@ async function notifyVerifiedMonkey(pool, sample, observation, label, user) {
 }
 
 async function createCapture(pool, body, user, isPublic = false) {
+  if (isPublic && body.consent !== true) {
+    throw Object.assign(new Error("Consent is required before submitting a public wildlife photo."), { statusCode: 400 });
+  }
   if (user && !["admin", "researcher", "reviewer", "field_officer", "field_worker", "community_reporter"].includes(user.role)) {
     throw Object.assign(new Error("Your account cannot submit field observations."), { statusCode: 403 });
   }

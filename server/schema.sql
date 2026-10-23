@@ -98,6 +98,31 @@ CREATE TABLE IF NOT EXISTS audit_events (
 );
 CREATE INDEX IF NOT EXISTS audit_events_created_idx ON audit_events (created_at DESC);
 
+-- Public-facing notices are separate from field records. AI-generated notices
+-- remain drafts until an administrator explicitly publishes them.
+CREATE TABLE IF NOT EXISTS public_notices (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  title_en text NOT NULL,
+  title_np text NOT NULL,
+  content_en text NOT NULL,
+  content_np text NOT NULL,
+  target_ward text NOT NULL DEFAULT '',
+  target_municipality text NOT NULL DEFAULT '',
+  priority smallint NOT NULL DEFAULT 2 CHECK (priority BETWEEN 1 AND 4),
+  source text NOT NULL CHECK (source IN ('manual', 'ai')),
+  status text NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'expired')),
+  evidence_summary jsonb NOT NULL DEFAULT '{}'::jsonb,
+  expires_at timestamptz NOT NULL,
+  created_by uuid REFERENCES app_users(id) ON DELETE SET NULL,
+  published_by uuid REFERENCES app_users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS public_notices_active_idx ON public_notices (status, expires_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS hwc_case_submission_id_uniq
+  ON app_records ((data->>'submission_id'))
+  WHERE entity = 'HwcCase' AND data ? 'submission_id';
+
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
   token_hash text PRIMARY KEY,
   user_id uuid NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,

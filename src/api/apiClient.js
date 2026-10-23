@@ -72,8 +72,9 @@ const entities = new Proxy({}, {
   },
 });
 
-async function upload(path, { file }) {
+async function upload(path, { file, fields = {} }) {
   const form = new FormData();
+  for (const [key, value] of Object.entries(fields)) form.append(key, String(value));
   form.append("file", file, file?.name || "capture.jpg");
   return request(path, { method: "POST", body: form });
 }
@@ -111,11 +112,20 @@ export const api = {
     status: () => request("/api/ai/status"),
     analyze: (payload) => request("/api/ai/analyze", { method: "POST", body: JSON.stringify(payload) }),
   },
+  public: {
+    activeNotices: (ward = "", municipality = "") => request(`/api/v1/notices/active${queryString({ ward, municipality })}`),
+    submitDamageReport: (payload) => request("/api/public/reports", { method: "POST", body: JSON.stringify(payload) }),
+    reverseGeocode: (payload) => request("/api/public/geocode/reverse", { method: "POST", body: JSON.stringify(payload) }),
+    manageNotices: () => request("/api/v1/notices/manage"),
+    createManualNotice: (payload) => request("/api/v1/notices/manual", { method: "POST", body: JSON.stringify(payload) }),
+    generateNoticeDraft: (payload) => request("/api/v1/notices/ai-generate", { method: "POST", body: JSON.stringify(payload) }),
+    publishNotice: (id) => request(`/api/v1/notices/${encodeURIComponent(id)}/publish`, { method: "POST" }),
+  },
   integrations: {
     Core: {
       UploadFile: ({ file }) => upload("/api/uploads", { file }),
       UploadPrivateFile: ({ file }) => upload("/api/uploads", { file }),
-      UploadPublicFile: ({ file }) => upload("/api/public/uploads", { file }),
+      UploadPublicFile: ({ file }) => upload("/api/public/uploads", { file, fields: { consent: true } }),
       CreateFileSignedUrl: ({ file_uri }) => request("/api/media/signed-url", { method: "POST", body: JSON.stringify({ file_uri }) }),
       SendEmail: ({ to, subject, body }) => request("/api/integrations/send-email", { method: "POST", body: JSON.stringify({ to, subject, body }) }),
     },

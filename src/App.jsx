@@ -57,6 +57,7 @@ const SightingHistory = lazy(() => import('@/pages/SightingHistory'));
 const MovementMap = lazy(() => import('@/pages/MovementMap'));
 const FieldCapture = lazy(() => import('@/pages/FieldCapture'));
 const PublicCapture = lazy(() => import('@/pages/PublicCapture'));
+const PublicLanding = lazy(() => import('@/pages/PublicLanding'));
 const NationalWildlife = lazy(() => import('@/pages/NationalWildlife'));
 const VerificationGame = lazy(() => import('@/pages/VerificationGame'));
 const Leaderboard = lazy(() => import('@/pages/Leaderboard'));
@@ -72,9 +73,11 @@ const AuthenticatedApp = () => {
   const { isLoadingAuth, isAuthenticated } = useAuth();
   const location = useLocation();
   const isPublicRoute = location.pathname === "/public-capture";
+  const isPublicHome = location.pathname === "/welcome" || (location.pathname === "/" && !isAuthenticated && !isLoadingAuth);
   const isAuthRoute = ["/login", "/register", "/forgot-password", "/reset-password"].includes(location.pathname);
 
   if (isPublicRoute) return <PublicCapture />;
+  if (isPublicHome) return <PublicLanding />;
 
   if (isAuthRoute) {
     return (
