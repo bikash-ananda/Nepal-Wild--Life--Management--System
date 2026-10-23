@@ -44,3 +44,5 @@ Collect local day, night, rain, distance, occlusion, crop, human, livestock, and
 ## Current boundary
 
 The app does not yet train, evaluate, register, or deploy a monkey-specific model. It does not automatically monitor a camera stream. AI results remain review-only, and the research pilot does not activate physical deterrents.
+
+The local, model-independent consensus and re-identification prototype is in [`ai_pipeline/`](../ai_pipeline/README.md). It is not wired into this service and cannot identify monkeys without separately configured, validated model providers. See the [zero-cost pipeline plan](AI_PIPELINE_ZERO_COST.md) for model choices and integration gates.
