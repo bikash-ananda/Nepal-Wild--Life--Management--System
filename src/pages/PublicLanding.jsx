@@ -1,24 +1,27 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  ArrowDown, ArrowRight, BellRing, BookOpen, Check, CircleHelp, Clock3,
-  Globe2, Leaf, LocateFixed, MapPin, Menu, ShieldCheck, Sprout, UsersRound, X,
+  ArrowDown, ArrowRight, BellRing, BookOpen, Camera, Check, ChevronDown,
+  CircleHelp, Clock3, Globe2, Leaf, LocateFixed, MapPin, Menu, ShieldCheck,
+  UsersRound, X,
 } from "lucide-react";
 import { api } from "@/api/apiClient";
 
 const copy = {
   en: {
-    system: "Nepal Human–Wildlife Conflict Management System", navAbout: "About the pilot", navGuides: "Safety guides", navReport: "Report an incident", signIn: "Officer sign in", language: "नेपाली", noticeScope: "Show notices for", noticeWard: "Ward", noticeMunicipality: "Municipality",
-    eyebrow: "COMMUNITY · RESEARCH · COEXISTENCE", heroTitle: "Safer farms. Better evidence. Shared solutions.", heroBody: "A community-first pilot in Pokhara Metropolitan City studying human–monkey crop conflict in Ward 21. Help document sightings and losses so local teams can respond with evidence and care.", capture: "Capture a wildlife sighting", report: "Report crop or livestock loss", pilot: "Pokhara Metropolitan City · Ward 21 pilot", pilotNote: "Camera and community reports are reviewed by people. An AI flag is not a confirmed sighting.",
-    trustTitle: "A careful, community-led pilot", trustOne: "People review every report", trustOneBody: "Camera and phone reports stay unverified until a trained reviewer checks them.", trustTwo: "Your location stays private", trustTwoBody: "Precise coordinates are restricted to authorized case reviewers.", trustThree: "No automatic deterrents", trustThreeBody: "This research pilot does not automatically activate lights, sound, or electrical devices.",
+    system: "Nepal Human–Wildlife Conflict Management System", navAbout: "About this prototype", navGuides: "Safety guides", navReport: "Report farm damage", signIn: "Officer sign in", language: "नेपाली", noticeScope: "Show notices for", noticeWard: "Ward", noticeMunicipality: "Municipality",
+    eyebrow: "POKHARA METROPOLITAN CITY · COMMUNITY PROTOTYPE", heroTitle: "Help make farms safer, one clear report at a time.", heroBody: "This prototype supports a study of human–monkey crop conflict in Pokhara Metropolitan City, Ward 21. Send a wildlife photo or tell us about farm damage. Project staff review each report to understand what is happening and where support may be needed.", capture: "Send a wildlife photo", report: "Report farm damage", pilot: "Pokhara Metropolitan City prototype · Ward 21", pilotNote: "For the Ward 21 study: share sightings and losses. A person reviews every submission; an AI alert alone is never treated as confirmed.", artAlt: "Illustration of a monkey near farms in Pokhara", illustration: "Study illustration", locationLabel: "STUDY AREA", areaLabel: "Ward 21 · Pokhara, Kaski", focusLabel: "Community study on monkey crop conflict", noticeSetup: "Choose the area for public notices",
+    aboutTitle: "A local prototype for Ward 21", aboutBody: "The first study focuses on when and where monkeys affect farms in Ward 21. Residents can share a sighting or a loss; the project team reviews reports to learn from local experience.", howTitle: "How the prototype works", howPhoto: "Share what you saw", howPhotoBody: "Take or upload a wildlife photo, or describe crop damage.", howReview: "The team reviews it", howReviewBody: "A project reviewer checks reports before they are used as evidence.", howLearn: "Local learning builds", howLearnBody: "Reviewed reports help the study understand conflict patterns and response needs.",
+    trustTitle: "Your report, handled with care", trustOne: "A person checks reports", trustOneBody: "Phone and camera reports remain unverified until a project reviewer checks them.", trustTwo: "Your exact location is protected", trustTwoBody: "Precise coordinates are visible only to authorized case reviewers.", trustThree: "No automatic deterrents", trustThreeBody: "This research prototype does not automatically trigger lights, sound, or electrical devices.",
     reportTitle: "Tell us what happened", reportBody: "Your report helps researchers understand where conflict occurs and what support is needed. Fields marked required are needed to send it.", reportType: "Type of loss", crop: "Crop damage", livestock: "Livestock loss", both: "Crop and livestock", other: "Other wildlife damage", cropName: "Crop affected", livestockName: "Livestock affected", estimate: "Estimated loss (NPR)", details: "What happened?", detailsPlaceholder: "Tell us what was damaged, when it happened, and any details that may help the review.", name: "Your name (optional)", phone: "Phone (optional)", province: "Province", district: "District", municipality: "Municipality", ward: "Ward number", area: "Area or village (optional)", location: "Use my location", lookup: "Suggest area from GPS", gpsUnavailable: "Location unavailable. You can enter the area manually.", geocodeUnavailable: "Automatic area lookup is not configured. Please verify and enter the area yourself.", geocodeReview: "Area suggestions can be approximate. Please check them before submitting.", geocodePrivacy: "Your precise coordinates go to the configured area-lookup provider only when you request a suggestion.", consent: "I agree to share this report and its location with authorized project reviewers for conflict research and response.", submit: "Send report for review", sending: "Sending report…", submitted: "Thank you. Your report was received for human review.", reportError: "We could not send the report. Please try again.", gpsReady: "Location details", gpsAccuracy: "Estimated GPS accuracy", required: "Required",
     knowledgeEyebrow: "PRACTICAL FIELD GUIDANCE", knowledgeTitle: "Share space safely", knowledgeBody: "Simple, non-harmful steps can reduce risk while the local team learns from community reports.", monkey: "Monkeys", monkeyBody: "Keep food and waste covered. Avoid feeding, cornering, or chasing monkeys; move indoors if a group approaches.", elephant: "Elephants", elephantBody: "Keep a wide distance, never block a route, and follow instructions from local responders.", leopard: "Leopards", leopardBody: "Bring children and pets indoors at dusk. Do not approach an animal or its den; alert local officials.", boar: "Wild boar", boarBody: "Keep a safe barrier, avoid approaching piglets, and move away calmly if an animal is nearby.", helpTitle: "If anyone is in immediate danger", helpBody: "Move to a safe place and contact your local ward office, police, or the appropriate wildlife authority. This website is not an emergency dispatch service.",
     researchEyebrow: "LEARNING FROM THE FIELD", researchTitle: "Research and community learning", researchBody: "The initial study focuses on human–monkey crop-raiding reports in Pokhara Metropolitan City, Ward 21. Data supports careful research and review; reports are not published as verified incidents by default.", researchCard: "Ward 21 pilot focus", researchCardBody: "Document time, location, crop impact, and response so patterns can be reviewed with the community.", repository: "Research repository", repositoryBody: "Approved papers, summaries, and anonymized incident reports will be shared here when the project team publishes them.", status: "Repository materials will be added after review", footer: "A research pilot for safer coexistence in Nepal.", alertsLabel: "Community notice", noNotices: "No active public notices", dismiss: "Dismiss notice", noticeLabel: "Public safety notice", active: "Active notice", menu: "Open menu", closeMenu: "Close menu", viewGuides: "Read safety guides", scroll: "Explore the pilot",
   },
   np: {
-    system: "नेपाल मानव–वन्यजन्तु द्वन्द्व व्यवस्थापन प्रणाली", navAbout: "अध्ययनबारे", navGuides: "सुरक्षा सुझाव", navReport: "घटना जानकारी", signIn: "अधिकारी लगइन", language: "English", noticeScope: "सूचना देखाउने क्षेत्र", noticeWard: "वडा", noticeMunicipality: "पालिका",
-    eyebrow: "समुदाय · अनुसन्धान · सहअस्तित्व", heroTitle: "सुरक्षित खेत। राम्रो प्रमाण। साझा समाधान।", heroBody: "पोखरा महानगरपालिका वडा २१ मा मानव–बाँदर बाली द्वन्द्व अध्ययनका लागि समुदाय केन्द्रित प्रारम्भिक परियोजना। स्थानीय टोलीले प्रमाण र संवेदनशीलतासहित प्रतिक्रिया दिन सकून् भनेर देखिएका घटना र क्षतिको जानकारी दिनुहोस्।", capture: "वन्यजन्तु देखिएको तस्बिर खिच्नुहोस्", report: "बाली वा पशुधन क्षतिको जानकारी", pilot: "पोखरा महानगरपालिका · वडा २१ अध्ययन", pilotNote: "क्यामेरा र मोबाइलका विवरण मानिसले समीक्षा गर्छन्। एआईले देखाएको गतिविधि पुष्टि भएको घटना होइन।",
-    trustTitle: "सावधानीपूर्वक, समुदायको नेतृत्वमा गरिएको अध्ययन", trustOne: "हरेक विवरण मानिसले समीक्षा गर्छन्", trustOneBody: "प्रशिक्षित समीक्षकले नहेरेसम्म क्यामेरा र मोबाइलका विवरण अपुष्ट रहन्छन्।", trustTwo: "तपाईंको स्थान गोप्य रहन्छ", trustTwoBody: "ठ्याक्कै स्थान अधिकृत समीक्षकलाई मात्र देखाइन्छ।", trustThree: "स्वचालित प्रतिकार छैन", trustThreeBody: "यस अध्ययनमा बत्ती, आवाज वा विद्युतीय उपकरण आफैँ चलाइँदैन।",
+    system: "नेपाल मानव–वन्यजन्तु द्वन्द्व व्यवस्थापन प्रणाली", navAbout: "यस नमुना परियोजनाबारे", navGuides: "सुरक्षा सुझाव", navReport: "खेतको क्षति बताउनुहोस्", signIn: "अधिकारी लगइन", language: "English", noticeScope: "सूचना देखाउने क्षेत्र", noticeWard: "वडा", noticeMunicipality: "पालिका",
+    eyebrow: "पोखरा महानगरपालिका · समुदायका लागि नमुना प्रणाली", heroTitle: "एउटा स्पष्ट जानकारीले खेत सुरक्षित बनाउन मद्दत गर्छ।", heroBody: "यो नमुना प्रणाली पोखरा महानगरपालिका वडा २१ मा मानव–बाँदर बाली द्वन्द्वको अध्ययनका लागि बनाइएको हो। बाँदर देखिएको तस्बिर पठाउनुहोस् वा खेतको क्षति बताउनुहोस्। परियोजनाको टोलीले जानकारी समीक्षा गरेर समस्या कहाँ र कहिले भइरहेको छ भन्ने बुझ्नेछ।", capture: "वन्यजन्तुको तस्बिर पठाउनुहोस्", report: "खेतको क्षति बताउनुहोस्", pilot: "पोखरा महानगरपालिकाको नमुना परियोजना · वडा २१", pilotNote: "वडा २१ को अध्ययनका लागि बाँदर देखिएको वा बालीमा भएको क्षतिको जानकारी दिनुहोस्। हरेक जानकारी मानिसले समीक्षा गर्छन्; एआईको सूचना मात्र पुष्टि भएको घटना मानिँदैन।", artAlt: "पोखराको खेत नजिक बाँदर देखाइएको चित्र", illustration: "अध्ययनका लागि बनाइएको चित्र", locationLabel: "अध्ययन क्षेत्र", areaLabel: "वडा २१ · पोखरा, कास्की", focusLabel: "बाँदर र बाली द्वन्द्वसम्बन्धी समुदाय अध्ययन", noticeSetup: "सार्वजनिक सूचना देखाउने क्षेत्र छान्नुहोस्",
+    aboutTitle: "वडा २१ का लागि स्थानीय नमुना प्रणाली", aboutBody: "पहिलो अध्ययन वडा २१ मा बाँदरले खेतबालीमा असर गर्ने समय र स्थान बुझ्न केन्द्रित छ। बासिन्दाले वन्यजन्तु देखिएको वा क्षति भएको जानकारी दिन सक्छन्। स्थानीय अनुभवबाट सिक्न परियोजनाको टोलीले विवरण समीक्षा गर्छ।", howTitle: "यो नमुना प्रणाली कसरी चल्छ", howPhoto: "देखेको कुरा पठाउनुहोस्", howPhotoBody: "वन्यजन्तुको तस्बिर खिच्नुहोस् वा पठाउनुहोस्, अथवा बालीको क्षति लेख्नुहोस्।", howReview: "टोलीले समीक्षा गर्छ", howReviewBody: "परियोजनाको समीक्षकले विवरण जाँचेपछि मात्र यसलाई प्रमाणका रूपमा प्रयोग गर्छ।", howLearn: "स्थानीय जानकारी बढ्छ", howLearnBody: "समीक्षा भएका विवरणले द्वन्द्वको अवस्था र आवश्यक प्रतिक्रियाबारे अध्ययन गर्न मद्दत गर्छ।",
+    trustTitle: "तपाईंको जानकारी सावधानीपूर्वक प्रयोग हुन्छ", trustOne: "मानिसले विवरण जाँच्छन्", trustOneBody: "परियोजनाको समीक्षकले नजाँचेसम्म फोन र क्यामेराका विवरण अपुष्ट रहन्छन्।", trustTwo: "ठ्याक्कै स्थान सुरक्षित राखिन्छ", trustTwoBody: "ठ्याक्कै GPS स्थान अधिकृत केस समीक्षकले मात्र हेर्न सक्छन्।", trustThree: "स्वचालित प्रतिकार हुँदैन", trustThreeBody: "यो अनुसन्धान नमुना प्रणालीले बत्ती, आवाज वा विद्युतीय उपकरण आफैँ चलाउँदैन।",
     reportTitle: "के भयो हामीलाई बताउनुहोस्", reportBody: "तपाईंको जानकारीले द्वन्द्व कहाँ हुन्छ र कस्तो सहयोग चाहिन्छ भन्ने बुझ्न अनुसन्धानकर्तालाई मद्दत गर्छ। आवश्यक विवरण भर्नुहोस्।", reportType: "क्षतिको प्रकार", crop: "बाली क्षति", livestock: "पशुधन क्षति", both: "बाली र पशुधन", other: "अन्य वन्यजन्तु क्षति", cropName: "क्षति भएको बाली", livestockName: "क्षति भएको पशुधन", estimate: "अनुमानित क्षति (रु.)", details: "के भएको थियो?", detailsPlaceholder: "के क्षति भयो, कहिले भयो र समीक्षा गर्न सहयोग पुग्ने विवरण लेख्नुहोस्।", name: "तपाईंको नाम (वैकल्पिक)", phone: "फोन (वैकल्पिक)", province: "प्रदेश", district: "जिल्ला", municipality: "पालिका", ward: "वडा नम्बर", area: "टोल वा गाउँ (वैकल्पिक)", location: "मेरो स्थान प्रयोग गर्नुहोस्", lookup: "GPS बाट क्षेत्र सुझाव", gpsUnavailable: "स्थान पत्ता लागेन। तपाईं क्षेत्र आफैँ लेख्न सक्नुहुन्छ।", geocodeUnavailable: "स्वचालित क्षेत्र खोजी उपलब्ध छैन। कृपया क्षेत्र जाँचेर आफैँ भर्नुहोस्।", geocodeReview: "क्षेत्रका सुझाव अनुमानित हुन सक्छन्। पठाउनुअघि जाँच गर्नुहोस्।", geocodePrivacy: "क्षेत्र सुझाव माग्दा मात्र तपाईंको ठ्याक्कै GPS स्थान कन्फिगर गरिएको खोजी सेवामा पठाइन्छ।", consent: "द्वन्द्व अनुसन्धान र प्रतिक्रियाका लागि अधिकृत परियोजना समीक्षकसँग यो विवरण र स्थान साझा गर्न म सहमत छु।", submit: "समीक्षाका लागि पठाउनुहोस्", sending: "पठाउँदै…", submitted: "धन्यवाद। तपाईंको विवरण मानव समीक्षाका लागि प्राप्त भयो।", reportError: "विवरण पठाउन सकिएन। कृपया फेरि प्रयास गर्नुहोस्।", gpsReady: "स्थान विवरण", gpsAccuracy: "अनुमानित GPS शुद्धता", required: "आवश्यक", formLocationStatus: "स्थान प्रयोग गरिएको छैन",
     knowledgeEyebrow: "व्यावहारिक सुरक्षा सुझाव", knowledgeTitle: "सुरक्षित रूपमा सहअस्तित्व", knowledgeBody: "समुदायका विवरणबाट स्थानीय टोलीले सिक्दै गर्दा सरल र अहिंसात्मक उपायले जोखिम घटाउन सक्छ।", monkey: "बाँदर", monkeyBody: "खाना र फोहोर छोपेर राख्नुहोस्। बाँदरलाई खाना नदिनुहोस्, नघेर्‍नुहोस् वा नलखेट्नुहोस्; समूह नजिक आए सुरक्षित ठाउँमा जानुहोस्।", elephant: "हात्ती", elephantBody: "टाढै रहनुहोस्, बाटो नछेक्नुहोस् र स्थानीय उद्धार टोलीको निर्देशन पालना गर्नुहोस्।", leopard: "चितुवा", leopardBody: "साँझपख बालबालिका र घरपालुवा जनावरलाई भित्र राख्नुहोस्। जनावर वा ओडार नजिक नजानुहोस्; स्थानीय अधिकारीलाई जानकारी दिनुहोस्।", boar: "बँदेल", boarBody: "सुरक्षित दूरी कायम गर्नुहोस्, बच्चासहितको बँदेल नजिक नजानुहोस् र जनावर देखिए शान्तपूर्वक टाढा जानुहोस्।", helpTitle: "तत्काल जोखिम भएमा", helpBody: "सुरक्षित ठाउँमा जानुहोस् र स्थानीय वडा कार्यालय, प्रहरी वा सम्बन्धित वन्यजन्तु निकायलाई सम्पर्क गर्नुहोस्। यो वेबसाइट आपतकालीन सेवा होइन।",
     researchEyebrow: "मैदानबाट सिकाइ", researchTitle: "अनुसन्धान र समुदायको सिकाइ", researchBody: "प्रारम्भिक अध्ययन पोखरा महानगरपालिका वडा २१ मा मानव–बाँदर बाली द्वन्द्वमा केन्द्रित छ। विवरण सावधानीपूर्वक अनुसन्धान र समीक्षाका लागि हो; स्वतः पुष्टि भएको घटना भनेर सार्वजनिक गरिँदैन।", researchCard: "वडा २१ अध्ययनको केन्द्र", researchCardBody: "समुदायसँग ढाँचाहरू समीक्षा गर्न समय, स्थान, बालीको क्षति र प्रतिक्रियाको विवरण राख्नुहोस्।", repository: "अनुसन्धान सामग्री", repositoryBody: "परियोजना टोलीले समीक्षा गरी प्रकाशन गरेपछि स्वीकृत लेख, सारांश र पहिचान हटाइएका घटना प्रतिवेदन यहाँ राखिनेछन्।", status: "समीक्षापछि अनुसन्धान सामग्री थपिनेछ", footer: "नेपालमा सुरक्षित सहअस्तित्वका लागि अनुसन्धान परियोजना।", alertsLabel: "समुदाय सूचना", noNotices: "हाल सार्वजनिक सूचना छैन", dismiss: "सूचना बन्द गर्नुहोस्", noticeLabel: "सार्वजनिक सुरक्षा सूचना", active: "सक्रिय सूचना", menu: "मेनु खोल्नुहोस्", closeMenu: "मेनु बन्द गर्नुहोस्", viewGuides: "सुरक्षा सुझाव हेर्नुहोस्", scroll: "अध्ययनबारे थप जान्नुहोस्",
@@ -80,7 +83,7 @@ function NoticeBanner({ notice, lang, onDismiss }) {
       onPointerCancel={resume}
       onFocus={pause}
       onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) resume(); }}
-      className={`fixed inset-x-3 bottom-3 z-50 mx-auto max-w-3xl overflow-hidden rounded-2xl border bg-white shadow-[0_20px_60px_-22px_rgba(15,23,42,.55)] sm:inset-x-6 ${Number(notice.priority) >= 4 ? "border-rose-300" : "border-amber-200"}`}
+      className={`fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-50 mx-auto max-w-3xl overflow-hidden rounded-2xl border bg-white shadow-[0_20px_60px_-22px_rgba(15,23,42,.55)] sm:inset-x-6 sm:bottom-3 ${Number(notice.priority) >= 4 ? "border-rose-300" : "border-amber-200"}`}
     >
       <div className="flex items-start gap-3 p-4 sm:p-5">
         <div className={`mt-0.5 rounded-xl p-2 ${Number(notice.priority) >= 4 ? "bg-rose-100 text-rose-800" : "bg-amber-100 text-amber-800"}`}><BellRing className="h-5 w-5" /></div>
@@ -114,6 +117,106 @@ function getPosition() {
   });
 }
 
+function MonkeyCursor() {
+  const cursorRef = useRef(null);
+
+  useEffect(() => {
+    const canHover = window.matchMedia("(pointer: fine) and (hover: hover)");
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (!canHover.matches || prefersReducedMotion.matches) return undefined;
+
+    let frame = 0;
+    let lastX = 0;
+    let lastY = 0;
+    const move = (event) => {
+      lastX = event.clientX;
+      lastY = event.clientY;
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        const node = cursorRef.current;
+        if (node) {
+          node.style.transform = `translate3d(${lastX + 18}px, ${lastY + 16}px, 0)`;
+          node.style.opacity = "1";
+        }
+        frame = 0;
+      });
+    };
+
+    window.addEventListener("pointermove", move, { passive: true });
+    return () => {
+      window.removeEventListener("pointermove", move);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  return <span ref={cursorRef} className="monkey-cursor" aria-hidden="true"><span>🐒</span></span>;
+}
+
+function PilotIllustration({ t }) {
+  return (
+    <div className="pilot-illustration relative aspect-[1.05/1] min-h-[310px] overflow-hidden rounded-[1.6rem] border border-white/55 shadow-[0_35px_90px_-45px_rgba(15,54,42,.8)] sm:aspect-[1.08/1] sm:min-h-[420px]">
+      <svg viewBox="0 0 720 620" className="absolute inset-0 h-full w-full" role="img" aria-label={t.artAlt} preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="pokhara-sky" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#b8d9c2" /><stop offset=".58" stopColor="#e7e8c3" /><stop offset="1" stopColor="#f1d8a5" /></linearGradient>
+          <linearGradient id="field-green" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#8fa963" /><stop offset="1" stopColor="#476d48" /></linearGradient>
+          <linearGradient id="field-gold" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#d7b76e" /><stop offset="1" stopColor="#a77e4e" /></linearGradient>
+          <filter id="soft-shadow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="10" /></filter>
+        </defs>
+        <rect width="720" height="620" fill="url(#pokhara-sky)" />
+        <circle cx="560" cy="118" r="51" fill="#f8e6aa" opacity=".8" />
+        <path d="M0 255 113 142l83 86 127-151 107 157 85-91 205 142v165H0Z" fill="#718b7a" opacity=".54" />
+        <path d="m0 284 122-94 96 106 121-133 100 126 112-107 169 100v145H0Z" fill="#4d7861" opacity=".72" />
+        <path d="M0 342q118-73 233-12t227-9 260-5v112H0Z" fill="#71925e" />
+        <path d="M0 397q169-87 343-31t377-20v274H0Z" fill="url(#field-green)" />
+        <path d="M0 463q168-97 348-30t372-21v208H0Z" fill="#708c50" />
+        <path d="M0 536q191-99 386-21t334-34v139H0Z" fill="url(#field-gold)" />
+        <path d="M0 563q178-87 356-21t364-25" fill="none" stroke="#ead69a" strokeWidth="5" opacity=".62" />
+        <path d="M0 594q178-87 356-21t364-25" fill="none" stroke="#f1dfad" strokeWidth="4" opacity=".48" />
+        <g opacity=".9" stroke="#d3bd78" strokeWidth="3" strokeLinecap="round">
+          <path d="M75 452v88m-18-47 18 14m0-31-17-12m17 42 19-17m-19-17 19-13" />
+          <path d="M128 435v75m-16-40 16 13m0-26-16-12m16 35 17-15m-17-14 17-11" />
+          <path d="M633 415v89m-18-46 18 14m0-29-18-12m18 40 18-16m-18-17 18-12" />
+          <path d="M578 431v78m-16-41 16 13m0-27-16-11m16 37 16-14m-16-15 16-11" />
+        </g>
+        <g className="art-tree">
+          <path d="M96 365q43-93 78-160l15 11q-24 85-48 154Z" fill="#684d36" />
+          <path d="M173 225q48-5 80-28m-93 45q-38-5-67-35" fill="none" stroke="#684d36" strokeWidth="12" strokeLinecap="round" />
+          <circle cx="123" cy="192" r="48" fill="#456b46" /><circle cx="182" cy="165" r="55" fill="#527b4a" /><circle cx="232" cy="199" r="43" fill="#62844e" /><circle cx="163" cy="218" r="49" fill="#567748" />
+        </g>
+        <g opacity=".86">
+          <path d="m420 358 46-38 46 38v40h-92Z" fill="#f0dfb4" /><path d="m407 359 59-49 60 49" fill="none" stroke="#855d45" strokeWidth="11" strokeLinejoin="round" /><rect x="459" y="367" width="18" height="31" rx="2" fill="#8d6c4d" />
+          <path d="m522 373 34-29 35 29v31h-69Z" fill="#e9d7a9" /><path d="m513 374 43-36 44 36" fill="none" stroke="#795842" strokeWidth="9" strokeLinejoin="round" />
+        </g>
+        <ellipse cx="372" cy="437" rx="94" ry="19" fill="#233f31" opacity=".2" filter="url(#soft-shadow)" />
+        <g className="art-monkey" stroke="#543d31" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M343 351q-41-2-43-35t-24-24q-18 1-11 20" fill="none" strokeWidth="11" />
+          <path d="M353 342q-21 28-11 63l-11 22q19 11 43 2l4-37q22 8 37 30l13-7q-10-38-43-56l7-24Z" fill="#765541" strokeWidth="7" />
+          <path d="M356 365q-14 22-7 45l15 9 11-25-2-22" fill="#bd946b" stroke="none" />
+          <circle cx="363" cy="330" r="27" fill="#765541" strokeWidth="6" />
+          <ellipse cx="365" cy="336" rx="17" ry="14" fill="#d7b48a" stroke="none" />
+          <circle cx="368" cy="332" r="2.5" fill="#292720" stroke="none" /><path d="M375 340q-6 5-12 0" fill="none" stroke="#694632" strokeWidth="2.5" />
+          <path d="m344 319-10-10m38 1 8-12" fill="none" strokeWidth="6" />
+          <path d="m343 417-20 8m60 2 15 6" fill="none" strokeWidth="8" />
+        </g>
+        <g className="art-focus" fill="none" stroke="#f8fff1" strokeWidth="3" opacity=".9">
+          <path d="M310 286v-17h18m72 0h18v17m0 76v17h-18m-72 0h-18v-17" />
+          <circle cx="363" cy="333" r="72" strokeDasharray="3 9" opacity=".72" />
+        </g>
+        <path d="M0 0h720v620H0Z" fill="url(#pokhara-sky)" opacity=".04" />
+      </svg>
+      <div className="absolute inset-x-4 top-4 flex items-start justify-between gap-3 sm:inset-x-6 sm:top-6">
+        <span className="max-w-[78%] rounded-full border border-white/50 bg-white/88 px-3 py-2 text-[10px] font-bold uppercase tracking-[.12em] text-emerald-950 shadow-sm backdrop-blur sm:text-xs">{t.pilot}</span>
+        <span className="rounded-full bg-emerald-950/80 px-3 py-2 text-[10px] font-semibold text-white backdrop-blur">{t.illustration}</span>
+      </div>
+      <div className="absolute inset-x-4 bottom-4 rounded-2xl border border-white/60 bg-white/90 p-4 shadow-xl backdrop-blur-md sm:inset-x-6 sm:bottom-6 sm:p-5">
+        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.14em] text-emerald-800"><MapPin className="h-3.5 w-3.5" />{t.locationLabel}</div>
+        <p className="mt-1 text-lg font-semibold tracking-tight text-slate-950 sm:text-xl">{t.areaLabel}</p>
+        <p className="mt-1 text-xs leading-5 text-slate-600">{t.focusLabel}</p>
+      </div>
+    </div>
+  );
+}
+
 export default function PublicLanding() {
   const [lang, setLang] = useState(() => window.localStorage.getItem("nws-public-language") === "np" ? "np" : "en");
   const [notices, setNotices] = useState([]);
@@ -121,6 +224,7 @@ export default function PublicLanding() {
   const [noticeMunicipality, setNoticeMunicipality] = useState(() => window.localStorage.getItem("nws-notice-municipality") || "Pokhara Metropolitan City");
   const [dismissed, setDismissed] = useState(() => new Set());
   const [mobileNav, setMobileNav] = useState(false);
+  const scrollProgressRef = useRef(null);
   const [gps, setGps] = useState(null);
   const [locationBusy, setLocationBusy] = useState(false);
   const [lookupMessage, setLookupMessage] = useState("");
@@ -155,6 +259,28 @@ export default function PublicLanding() {
   useEffect(() => {
     document.documentElement.lang = lang === "np" ? "ne" : "en";
   }, [lang]);
+
+  useEffect(() => {
+    let frame = 0;
+    const updateProgress = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        const page = document.documentElement;
+        const distance = page.scrollHeight - window.innerHeight;
+        const progress = distance > 0 ? Math.min(1, Math.max(0, window.scrollY / distance)) : 0;
+        if (scrollProgressRef.current) scrollProgressRef.current.style.transform = `scaleX(${progress})`;
+        frame = 0;
+      });
+    };
+    window.addEventListener("scroll", updateProgress, { passive: true });
+    window.addEventListener("resize", updateProgress);
+    updateProgress();
+    return () => {
+      window.removeEventListener("scroll", updateProgress);
+      window.removeEventListener("resize", updateProgress);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
 
   const setLanguage = (next) => {
     setLang(next);
@@ -231,8 +357,10 @@ export default function PublicLanding() {
   };
 
   return (
-    <div className="min-h-screen overflow-hidden bg-[#fafbf8] text-slate-900 selection:bg-emerald-200 selection:text-emerald-950">
+    <div className="public-landing min-h-screen overflow-x-clip bg-[#fafbf8] pb-24 text-slate-900 selection:bg-emerald-200 selection:text-emerald-950 sm:pb-0">
+      <a href="#top" className="skip-to-content">{lang === "np" ? "मुख्य सामग्रीमा जानुहोस्" : "Skip to main content"}</a>
       <header className="sticky top-0 z-40 border-b border-emerald-950/5 bg-white/90 backdrop-blur-xl">
+        <div ref={scrollProgressRef} className="absolute inset-x-0 bottom-0 h-[2px] origin-left scale-x-0 bg-lime-500" aria-hidden="true" />
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
           <a href="#top" className="flex min-w-0 items-center gap-3" aria-label={t.system}>
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-900 text-emerald-50 shadow-sm"><Leaf className="h-5 w-5" /></span>
@@ -253,40 +381,46 @@ export default function PublicLanding() {
       </header>
 
       <main id="top">
-        <section className="relative isolate">
-          <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_78%_15%,rgba(187,220,190,.48),transparent_35%),linear-gradient(145deg,#f6faf3_10%,#fff_68%)]" />
-          <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 pb-16 pt-12 sm:px-6 sm:pb-20 sm:pt-16 lg:grid-cols-[1.02fr_.98fr] lg:px-8 lg:pb-24 lg:pt-20">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-900/10 bg-white/80 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[.15em] text-emerald-900 shadow-sm"><span className="h-2 w-2 rounded-full bg-emerald-500" />{t.eyebrow}</div>
-              <h1 className="mt-6 max-w-3xl text-[clamp(2.6rem,6vw,5rem)] font-semibold leading-[1.04] tracking-[-.055em] text-slate-950">{t.heroTitle}</h1>
-              <p className="mt-6 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">{t.heroBody}</p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link to={`/public-capture?lang=${lang}`} className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-emerald-900 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-950/15 transition hover:-translate-y-0.5 hover:bg-emerald-800">{t.capture}<ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></Link>
-                <a href="#report" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-slate-300 bg-white/70 px-6 py-3 text-sm font-semibold text-slate-800 transition hover:border-emerald-800 hover:text-emerald-900">{t.report}<ArrowDown className="h-4 w-4" /></a>
+        <section className="hero-section relative isolate">
+          <div className="hero-glow absolute inset-0 -z-10" />
+          <div className="mx-auto grid max-w-7xl items-center gap-9 px-4 pb-12 pt-8 sm:px-6 sm:pb-20 sm:pt-14 lg:grid-cols-[1.04fr_.96fr] lg:gap-14 lg:px-8 lg:pb-24 lg:pt-16">
+            <div className="hero-copy">
+              <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-emerald-900/10 bg-white/85 px-3.5 py-2 text-[10px] font-bold uppercase tracking-[.11em] text-emerald-900 shadow-sm sm:text-xs"><span className="h-2 w-2 shrink-0 rounded-full bg-lime-600 ring-4 ring-lime-100" />{t.eyebrow}</div>
+              <h1 className="mt-5 max-w-3xl text-[clamp(2.25rem,8vw,4.6rem)] font-semibold leading-[1.05] tracking-[-.05em] text-slate-950 sm:mt-7">{t.heroTitle}</h1>
+              <p className="mt-5 max-w-2xl text-[15px] leading-7 text-slate-600 sm:mt-6 sm:text-lg sm:leading-8">{t.heroBody}</p>
+              <div className="mt-6 grid gap-3 sm:mt-8 sm:flex sm:flex-wrap">
+                <Link to={`/public-capture?lang=${lang}`} className="group inline-flex min-h-[54px] items-center justify-center gap-2.5 rounded-2xl bg-emerald-900 px-5 py-3 text-center text-sm font-semibold text-white shadow-[0_12px_28px_-12px_rgba(6,78,59,.6)] transition hover:-translate-y-0.5 hover:bg-emerald-800 active:scale-[.99] sm:rounded-full sm:px-6"><Camera className="h-4 w-4" />{t.capture}<ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></Link>
+                <a href="#report" className="inline-flex min-h-[54px] items-center justify-center gap-2 rounded-2xl border border-emerald-900/20 bg-white/85 px-5 py-3 text-center text-sm font-semibold text-emerald-950 transition hover:border-emerald-800 hover:bg-white active:scale-[.99] sm:rounded-full sm:px-6">{t.report}<ArrowDown className="h-4 w-4" /></a>
               </div>
-              <div className="mt-8 flex items-start gap-3 border-l-2 border-emerald-700 pl-4 text-sm leading-6 text-slate-600"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-800" /><div><strong className="font-semibold text-slate-800">{t.pilot}</strong><p>{t.pilotNote}</p><div className="mt-3 flex flex-wrap items-center gap-2"><span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{t.noticeScope}:</span><input aria-label={t.noticeMunicipality} value={noticeMunicipality} onChange={(event) => setNoticeMunicipality(event.target.value)} className="h-8 w-48 rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-800" /><span className="text-xs text-slate-600">{t.noticeWard}</span><input aria-label={t.noticeWard} value={noticeWard} onChange={(event) => setNoticeWard(event.target.value.slice(0, 3))} inputMode="numeric" className="h-8 w-14 rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-800" /></div></div></div>
+              <div className="mt-6 flex max-w-xl items-start gap-3 rounded-2xl border border-emerald-900/10 bg-white/75 p-4 text-sm leading-6 text-slate-600 shadow-sm sm:mt-8 sm:p-5"><span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-900"><ShieldCheck className="h-5 w-5" /></span><div><strong className="font-semibold text-slate-900">{t.pilot}</strong><p className="mt-1">{t.pilotNote}</p></div></div>
+              <a href="#about" className="mt-5 inline-flex min-h-10 items-center gap-2 px-1 text-sm font-semibold text-emerald-900 hover:text-emerald-700"><span>{t.scroll}</span><ChevronDown className="h-4 w-4 animate-bounce" /></a>
             </div>
-
-            <div className="relative mx-auto w-full max-w-xl">
-              <div className="absolute -right-3 -top-5 h-32 w-32 rounded-full bg-lime-200/50 blur-3xl" />
-              <div className="relative overflow-hidden rounded-[2rem] border border-white bg-[#163b31] p-4 shadow-[0_35px_90px_-42px_rgba(15,54,42,.7)] sm:p-6">
-                <div className="relative min-h-[370px] overflow-hidden rounded-[1.5rem] bg-[linear-gradient(160deg,#6f9d79_0%,#9ec596_35%,#d7d9a4_68%,#bb9065_69%,#775a42_100%)] p-5 sm:min-h-[430px] sm:p-7">
-                  <div className="absolute inset-x-0 top-[62%] h-20 rotate-[-8deg] bg-[#718c58]/70" /><div className="absolute inset-x-[-10%] top-[72%] h-24 rotate-[7deg] bg-[#beaa72]/80" />
-                  <div className="absolute left-[9%] top-[31%] h-28 w-2 rotate-[11deg] rounded-full bg-[#574936] sm:h-40" /><div className="absolute left-[6%] top-[24%] h-20 w-32 rounded-[100%] bg-[#446b43] blur-[1px] sm:h-28 sm:w-44" /><div className="absolute left-[16%] top-[20%] h-14 w-28 rounded-[100%] bg-[#537e4f] sm:h-20 sm:w-36" />
-                  <div className="absolute right-[12%] top-[45%] h-16 w-16 rounded-full bg-[#49382d] shadow-[0_3px_0_1px_#d1a769] sm:right-[17%] sm:h-20 sm:w-20"><span className="absolute -left-2 top-5 h-9 w-10 rounded-full bg-[#49382d] sm:h-11 sm:w-12" /><span className="absolute -right-6 top-1 h-2 w-12 rotate-[-32deg] rounded-full bg-[#49382d]" /><span className="absolute -left-6 top-8 h-2 w-9 rotate-[28deg] rounded-full bg-[#49382d]" /></div>
-                  <div className="absolute inset-x-5 top-5 flex items-start justify-between gap-3 sm:inset-x-7 sm:top-7"><span className="rounded-full border border-white/40 bg-white/85 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.13em] text-emerald-950 backdrop-blur">{t.pilot}</span><span className="flex items-center gap-1.5 rounded-full bg-emerald-950/70 px-3 py-1.5 text-[10px] font-semibold text-white"><span className="h-1.5 w-1.5 rounded-full bg-lime-300" />FIELD STUDY</span></div>
-                  <div className="absolute bottom-5 left-5 max-w-[75%] rounded-2xl border border-white/45 bg-white/88 p-4 shadow-xl backdrop-blur-md sm:bottom-7 sm:left-7 sm:p-5"><div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.12em] text-emerald-900"><MapPin className="h-3.5 w-3.5" />Pokhara · Kaski</div><p className="mt-1.5 text-lg font-semibold text-slate-950 sm:text-xl">Ward 21 study area</p><div className="mt-3 flex items-center gap-2 text-xs text-slate-600"><span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-lime-100"><Sprout className="h-3.5 w-3.5 text-emerald-900" /></span>Community crop protection study</div></div>
-                  <div className="absolute bottom-7 right-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/50 bg-emerald-950/75 text-white shadow-xl sm:bottom-8 sm:right-7"><MapPin className="h-5 w-5" /></div>
-                </div>
-                <div className="flex items-center justify-between gap-4 px-1 pb-1 pt-4 text-xs text-emerald-50/80"><span className="flex items-center gap-2"><UsersRound className="h-4 w-4" />{t.trustOne}</span><span className="hidden items-center gap-2 sm:flex"><ShieldCheck className="h-4 w-4" />{t.trustTwo}</span></div>
-              </div>
-            </div>
+            <div className="hero-art relative mx-auto w-full max-w-xl lg:ml-auto"><div className="absolute -inset-3 -z-10 rounded-[2rem] bg-emerald-900/10 blur-2xl" /><PilotIllustration t={t} /></div>
           </div>
         </section>
 
-        <section id="about" className="border-y border-emerald-950/5 bg-white py-12 sm:py-16">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"><div className="mb-7 flex items-end justify-between gap-4"><h2 className="max-w-xl text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">{t.trustTitle}</h2><span className="hidden text-xs font-semibold uppercase tracking-[.15em] text-slate-400 sm:block">01 — 03</span></div>
-            <div className="grid gap-3 md:grid-cols-3"><article className="rounded-2xl border border-slate-200 bg-[#fbfcfa] p-5"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-900"><UsersRound className="h-5 w-5" /></span><h3 className="mt-4 font-semibold">{t.trustOne}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{t.trustOneBody}</p></article><article className="rounded-2xl border border-slate-200 bg-[#fbfcfa] p-5"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-100 text-sky-900"><ShieldCheck className="h-5 w-5" /></span><h3 className="mt-4 font-semibold">{t.trustTwo}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{t.trustTwoBody}</p></article><article className="rounded-2xl border border-slate-200 bg-[#fbfcfa] p-5"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-900"><CircleHelp className="h-5 w-5" /></span><h3 className="mt-4 font-semibold">{t.trustThree}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{t.trustThreeBody}</p></article></div>
+        <section id="about" className="scroll-mt-20 border-y border-emerald-950/5 bg-white py-14 sm:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="max-w-3xl">
+              <p className="text-xs font-bold uppercase tracking-[.16em] text-emerald-800">{t.pilot}</p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">{t.aboutTitle}</h2>
+              <p className="mt-4 text-[15px] leading-7 text-slate-600 sm:text-base sm:leading-8">{t.aboutBody}</p>
+            </div>
+            <div className="mt-8 grid gap-3 md:grid-cols-3">
+              <article className="rounded-2xl border border-emerald-950/10 bg-[#f7faf5] p-5 sm:p-6"><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-emerald-900 shadow-sm"><Camera className="h-5 w-5" /></span><h3 className="mt-4 font-semibold text-slate-950">{t.howPhoto}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{t.howPhotoBody}</p></article>
+              <article className="rounded-2xl border border-emerald-950/10 bg-[#f7faf5] p-5 sm:p-6"><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-emerald-900 shadow-sm"><UsersRound className="h-5 w-5" /></span><h3 className="mt-4 font-semibold text-slate-950">{t.howReview}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{t.howReviewBody}</p></article>
+              <article className="rounded-2xl border border-emerald-950/10 bg-[#f7faf5] p-5 sm:p-6"><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-emerald-900 shadow-sm"><Leaf className="h-5 w-5" /></span><h3 className="mt-4 font-semibold text-slate-950">{t.howLearn}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{t.howLearnBody}</p></article>
+            </div>
+            <div className="mb-6 mt-12 flex items-end justify-between gap-4 sm:mt-16"><h2 className="max-w-xl text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">{t.trustTitle}</h2><span className="hidden text-xs font-semibold uppercase tracking-[.15em] text-slate-400 sm:block">01 — 03</span></div>
+            <div className="grid gap-3 md:grid-cols-3">
+              <article className="rounded-2xl border border-slate-200 bg-[#fbfcfa] p-5"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-900"><UsersRound className="h-5 w-5" /></span><h3 className="mt-4 font-semibold">{t.trustOne}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{t.trustOneBody}</p></article>
+              <article className="rounded-2xl border border-slate-200 bg-[#fbfcfa] p-5"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-100 text-sky-900"><ShieldCheck className="h-5 w-5" /></span><h3 className="mt-4 font-semibold">{t.trustTwo}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{t.trustTwoBody}</p></article>
+              <article className="rounded-2xl border border-slate-200 bg-[#fbfcfa] p-5"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-900"><CircleHelp className="h-5 w-5" /></span><h3 className="mt-4 font-semibold">{t.trustThree}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{t.trustThreeBody}</p></article>
+            </div>
+            <details className="notice-settings group mt-6 rounded-2xl border border-slate-200 bg-white">
+              <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 text-sm font-semibold text-slate-800 sm:px-5"><span>{t.noticeSetup}</span><ChevronDown className="h-4 w-4 transition group-open:rotate-180" /></summary>
+              <div className="flex flex-wrap items-center gap-3 border-t border-slate-100 px-4 py-4 sm:px-5"><span className="text-xs font-semibold text-slate-500">{t.noticeScope}:</span><label className="grid flex-1 gap-1 text-xs text-slate-600 sm:max-w-xs">{t.noticeMunicipality}<input aria-label={t.noticeMunicipality} value={noticeMunicipality} onChange={(event) => setNoticeMunicipality(event.target.value)} className="h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-800" /></label><label className="grid w-28 gap-1 text-xs text-slate-600">{t.noticeWard}<input aria-label={t.noticeWard} value={noticeWard} onChange={(event) => setNoticeWard(event.target.value.slice(0, 3))} inputMode="numeric" className="h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-800" /></label></div>
+            </details>
           </div>
         </section>
 
@@ -322,6 +456,11 @@ export default function PublicLanding() {
       </main>
 
       <footer className="border-t border-slate-200 bg-white"><div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8"><span>{t.footer}</span><Link className="inline-flex items-center gap-1 font-semibold text-emerald-900 hover:underline" to="/login">{t.signIn}<ArrowRight className="h-3.5 w-3.5" /></Link></div></footer>
+      <div className="mobile-action-dock fixed inset-x-3 bottom-[calc(.65rem+env(safe-area-inset-bottom))] z-40 grid grid-cols-2 gap-2 rounded-2xl border border-emerald-950/10 bg-white/95 p-2 shadow-[0_14px_36px_-12px_rgba(15,23,42,.35)] backdrop-blur-xl sm:hidden">
+        <Link to={`/public-capture?lang=${lang}`} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-900 px-3 text-center text-sm font-semibold text-white active:scale-[.98]"><Camera className="h-4 w-4 shrink-0" />{t.capture}</Link>
+        <a href="#report" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-emerald-900/15 bg-emerald-50 px-3 text-center text-sm font-semibold text-emerald-950 active:scale-[.98]">{t.report}<ArrowDown className="h-4 w-4 shrink-0" /></a>
+      </div>
+      <MonkeyCursor />
       {activeNotice && <NoticeBanner notice={activeNotice} lang={lang} onDismiss={dismissNotice} />}
     </div>
   );
