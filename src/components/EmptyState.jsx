@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function EmptyState({ icon: Icon, title, description, action }) {
+export default function EmptyState({ icon: Icon = null, title, description = "", action = null }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       {Icon && (

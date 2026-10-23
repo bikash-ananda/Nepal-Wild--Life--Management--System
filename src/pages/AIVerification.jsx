@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Brain, CheckCircle2, Loader2, SkipForward, Image as ImageIcon, UsersRound } from "lucide-react";
 import { api } from "@/api/apiClient";
-import { useAuth } from "@/lib/AuthContext";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,7 @@ export default function AIVerification() {
   const [verified, setVerified] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const { user } = useAuth();
+  const [deferredIds, setDeferredIds] = useState(() => new Set());
   const { toast } = useToast();
 
   const load = async () => {
@@ -57,16 +56,13 @@ export default function AIVerification() {
     }
   };
 
-  const handleSkip = async (sample) => {
-    try {
-      await api.entities.VerificationSample.update(sample.id, { status: "rejected", rejected_by: user?.id || null, rejected_at: new Date().toISOString() });
-      await load();
-    } catch (error) {
-      toast({ title: "Could not skip this sample", description: error.message, variant: "destructive" });
-    }
+  const handleSkip = (sample) => {
+    setDeferredIds((current) => new Set([...current, sample.id]));
+    toast({ title: "Skipped for now", description: "This sample remains pending and can be reviewed later in this session." });
   };
 
-  const currentSample = pending[0];
+  const currentSample = pending.find((sample) => !deferredIds.has(sample.id));
+  const deferredCount = pending.filter((sample) => deferredIds.has(sample.id)).length;
   const stats = [
     { label: "Waiting for review", value: pending.length, icon: ImageIcon, color: "text-amber-600", bg: "bg-amber-50" },
     { label: "Recently verified", value: verified.length, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
@@ -94,6 +90,12 @@ export default function AIVerification() {
 
       {loading ? (
         <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-emerald-500 animate-spin" /></div>
+      ) : !currentSample && pending.length > 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 text-center">
+          <h2 className="font-semibold text-slate-800">All remaining samples were skipped for now</h2>
+          <p className="mt-2 text-sm text-slate-500">{deferredCount} sample(s) are still pending review. Skipping did not reject or change them.</p>
+          <Button variant="outline" className="mt-4" onClick={() => setDeferredIds(new Set())}>Review skipped samples</Button>
+        </div>
       ) : !currentSample ? (
         <div className="bg-white rounded-2xl border border-slate-200">
           <EmptyState icon={CheckCircle2} title="Review queue is clear" description="New mobile and public submissions will appear here as unverified evidence." />
@@ -101,7 +103,7 @@ export default function AIVerification() {
       ) : (
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-3">
-            <div className="text-xs text-slate-400">Reviewing 1 of {pending.length}</div>
+            <div className="text-xs text-slate-400">Reviewing {pending.length - deferredCount} of {pending.length} pending · {deferredCount} skipped</div>
             <Button variant="ghost" size="sm" onClick={() => handleSkip(currentSample)} disabled={saving}><SkipForward className="w-4 h-4 mr-1" /> Skip</Button>
           </div>
           {saving ? (

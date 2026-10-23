@@ -64,9 +64,9 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [location, setLocation] = useState("kaski");
   const [stats, setStats] = useState({
-    activeAlerts: 0, todayDetections: 0, farmsMonitored: 0,
+    activeAlerts: 0, todayDetections: 0, farmsMonitored: 0, farmsAtRisk: 0,
     devicesOnline: 0, devicesTotal: 0, activeReactions: 0,
-    aiConfidence: 0, teamMembers: 0, cameras: 0, activeDeterrents: 0,
+    aiModelRecords: 0, teamMembers: 0, cameras: 0, activeDeterrents: 0,
   });
   const [recentEvents, setRecentEvents] = useState([]);
   const [observations, setObservations] = useState([]);
@@ -115,9 +115,6 @@ export default function Home() {
         (e) => e.deterrent_triggered && new Date(e.detected_at || e.created_date) >= yesterday
       ).length;
 
-      const activeModel = aiModels.find((m) => m.status === "active") || aiModels[0];
-      const aiConfidence = activeModel?.accuracy || 0;
-
       const activeCameras = cameras.filter((c) => c.online_status === "online").length;
       const activeDeterrents = devices.filter((d) => d.category === "deterrent" && d.status === "online" && d.enabled).length;
 
@@ -156,7 +153,7 @@ export default function Home() {
         devicesOnline,
         devicesTotal,
         activeReactions,
-        aiConfidence,
+        aiModelRecords: aiModels.length,
         teamMembers: teamMembers.length,
         cameras: activeCameras,
         activeDeterrents,
@@ -251,7 +248,7 @@ export default function Home() {
       <StaggerContainer className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" stagger={0.05}>
         <StaggerItem><Link to="/cameras"><StatCard icon={Camera} label="Active Cameras" value={stats.cameras} tone="amber" sublabel="online cameras" /></Link></StaggerItem>
         <StaggerItem><Link to="/deterrents"><StatCard icon={Zap} label="Active Deterrents" value={stats.activeDeterrents} tone="blue" sublabel="response devices" /></Link></StaggerItem>
-        <StaggerItem><Link to="/ai-models"><StatCard icon={Brain} label="AI Confidence" value={`${stats.aiConfidence}%`} tone="emerald" sublabel="active model" /></Link></StaggerItem>
+        <StaggerItem><Link to="/ai-models"><StatCard icon={Brain} label="Active model records" value={stats.aiModelRecords} tone="emerald" sublabel="registry metadata" /></Link></StaggerItem>
         <StaggerItem><Link to="/team"><StatCard icon={Users} label="Field Team" value={stats.teamMembers} tone="default" sublabel="active members" /></Link></StaggerItem>
       </StaggerContainer>
 

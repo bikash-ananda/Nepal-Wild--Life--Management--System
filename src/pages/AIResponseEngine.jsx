@@ -26,6 +26,9 @@ export default function AIResponseEngine() {
   const [protocols, setProtocols] = useState([]);
   const [sites, setSites] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [pendingId, setPendingId] = useState("");
+  const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [filterLevel, setFilterLevel] = useState("all");
   const { toast } = useToast();
@@ -35,11 +38,19 @@ export default function AIResponseEngine() {
   });
 
   const load = async () => {
-    const [p, s] = await Promise.all([
-      api.entities.ResponseProtocol.list("-level"),
-      api.entities.Site.list(),
-    ]);
-    setProtocols(p); setSites(s); setLoading(false);
+    setLoading(true);
+    setError("");
+    try {
+      const [p, s] = await Promise.all([
+        api.entities.ResponseProtocol.list("-level"),
+        api.entities.Site.list(),
+      ]);
+      setProtocols(p); setSites(s);
+    } catch (requestError) {
+      setError(requestError.message || "Response protocols could not be loaded.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); }, []);
@@ -66,23 +77,44 @@ export default function AIResponseEngine() {
   const create = async () => {
     if (!form.name || !form.site_id) { toast({ title: "Name and site required", variant: "destructive" }); return; }
     const site = sites.find(s => s.id === form.site_id);
-    await api.entities.ResponseProtocol.create({ ...form, site_name: site?.name });
-    await api.entities.AuditLog.create({ action: "create", entity_type: "ResponseProtocol", entity_name: form.name, user_name: "admin", details: `Created L${form.level} protocol`, severity: "info", timestamp: new Date().toISOString() });
-    setShowModal(false);
-    setForm({ name: "", level: 1, level_name: "Early Warning", site_id: "", detection_type: "monkey", trigger_conditions: "", actions: [], notification_channels: [], auto_escalate_after_seconds: 0, active: true });
-    toast({ title: "Protocol created" });
-    load();
+    setSaving(true);
+    try {
+      await api.entities.ResponseProtocol.create({ ...form, site_name: site?.name });
+      setShowModal(false);
+      setForm({ name: "", level: 1, level_name: "Early Warning", site_id: "", detection_type: "monkey", trigger_conditions: "", actions: [], notification_channels: [], auto_escalate_after_seconds: 0, active: true });
+      toast({ title: "Protocol saved", description: "This is configuration metadata; no automation worker evaluates it." });
+      await load();
+    } catch (requestError) {
+      toast({ title: "Protocol could not be saved", description: requestError.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const toggleActive = async (p) => {
-    await api.entities.ResponseProtocol.update(p.id, { active: !p.active });
-    load();
+    setPendingId(p.id);
+    try {
+      await api.entities.ResponseProtocol.update(p.id, { active: !p.active });
+      await load();
+    } catch (requestError) {
+      toast({ title: "Protocol setting could not be updated", description: requestError.message, variant: "destructive" });
+    } finally {
+      setPendingId("");
+    }
   };
 
   const remove = async (p) => {
-    await api.entities.ResponseProtocol.delete(p.id);
-    await api.entities.AuditLog.create({ action: "delete", entity_type: "ResponseProtocol", entity_name: p.name, user_name: "admin", details: `Deleted ${p.name}`, severity: "warning", timestamp: new Date().toISOString() });
-    load();
+    if (!window.confirm("Delete protocol “" + p.name + "”? This cannot be undone.")) return;
+    setPendingId(p.id);
+    try {
+      await api.entities.ResponseProtocol.delete(p.id);
+      toast({ title: "Protocol deleted" });
+      await load();
+    } catch (requestError) {
+      toast({ title: "Protocol could not be deleted", description: requestError.message, variant: "destructive" });
+    } finally {
+      setPendingId("");
+    }
   };
 
   const filtered = filterLevel === "all" ? protocols : protocols.filter(p => p.level === parseInt(filterLevel));
@@ -92,6 +124,8 @@ export default function AIResponseEngine() {
     <div>
       <PageHeader title="Response Protocols" description="Draft five-level review workflows. No automation worker or deterrent control is connected." icon={Shield}
         actions={<Button onClick={() => setShowModal(true)} className="bg-emerald-600 hover:bg-emerald-700"><Plus className="w-4 h-4 mr-1" /> New Protocol</Button>} />
+
+      {error && <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800"><span>{error}</span><Button variant="outline" size="sm" onClick={load}>Try again</Button></div>}
 
       {/* Level overview */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
@@ -162,8 +196,9 @@ export default function AIResponseEngine() {
                   )}
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <Switch checked={p.active} onCheckedChange={() => toggleActive(p)} />
-                  <Button variant="ghost" size="icon" onClick={() => remove(p)}><Trash2 className="w-4 h-4 text-red-400" /></Button>
+                  <span className="text-[10px] text-slate-400">{p.active ? "Enabled · config only" : "Disabled"}</span>
+                  <Switch checked={p.active} disabled={pendingId === p.id} aria-label={p.active ? "Disable saved protocol setting" : "Enable saved protocol setting"} onCheckedChange={() => toggleActive(p)} />
+                  <Button variant="ghost" size="icon" disabled={pendingId === p.id} aria-label="Delete response protocol" onClick={() => remove(p)}><Trash2 className="w-4 h-4 text-red-400" /></Button>
                 </div>
               </div>
             </div>
@@ -175,6 +210,7 @@ export default function AIResponseEngine() {
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>New Response Protocol</DialogTitle></DialogHeader>
+          <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">This saves a draft configuration only. No camera event is evaluated, and no alert, notification, or deterrent is triggered.</p>
           <div className="space-y-4">
             <div><Label>Protocol Name</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Monkey Eastern Field L2" /></div>
             <div className="grid grid-cols-2 gap-3">
@@ -220,7 +256,7 @@ export default function AIResponseEngine() {
               </div>
             </div>
           </div>
-          <DialogFooter><Button variant="outline" onClick={() => setShowModal(false)}>Cancel</Button><Button onClick={create} className="bg-emerald-600 hover:bg-emerald-700">Create Protocol</Button></DialogFooter>
+          <DialogFooter><Button variant="outline" disabled={saving} onClick={() => setShowModal(false)}>Cancel</Button><Button disabled={saving} onClick={create} className="bg-emerald-600 hover:bg-emerald-700">{saving ? "Saving…" : "Save draft"}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

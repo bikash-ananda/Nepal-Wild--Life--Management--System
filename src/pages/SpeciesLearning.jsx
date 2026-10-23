@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { PawPrint, Plus, Loader2, Trash2, Upload, Brain, CheckCircle2 } from "lucide-react";
+import { PawPrint, Plus, Loader2, Trash2 } from "lucide-react";
 import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
@@ -19,39 +19,47 @@ const categoryColors = {
   other: "bg-slate-50 text-slate-500 border-slate-200",
 };
 
-const modelStatusColors = {
-  not_trained: "bg-slate-100 text-slate-500",
-  training: "bg-blue-100 text-blue-600",
-  trained: "bg-purple-100 text-purple-600",
-  deployed: "bg-emerald-100 text-emerald-600",
-};
-
 const deterrentOptions = ["Siren", "Ultrasonic Emitter", "Flash Light", "Strobe Light", "RF Deterrent", "Laser", "Water Sprinkler", "AI Voice Speaker"];
 
 export default function SpeciesLearning() {
   const [species, setSpecies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ name: "", scientific_name: "", category: "wildlife", description: "", detection_threshold: 0.7, response_rules: "", assigned_deterrents: [] });
   const [saving, setSaving] = useState(false);
+  const [pendingId, setPendingId] = useState("");
   const { toast } = useToast();
 
   const load = async () => {
-    const s = await api.entities.Species.list("-created_date", 100);
-    setSpecies(s); setLoading(false);
+    setLoading(true);
+    setError("");
+    try {
+      const result = await api.entities.Species.list("-created_date", 100);
+      setSpecies(result);
+    } catch (requestError) {
+      setError(requestError.message || "Species profiles could not be loaded.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); }, []);
 
   const handleAdd = async () => {
-    if (!form.name) { toast({ title: "Name required", variant: "destructive" }); return; }
+    if (!form.name.trim()) { toast({ title: "Name required", variant: "destructive" }); return; }
     setSaving(true);
-    await api.entities.Species.create({ ...form, sample_count: 0, model_status: "not_trained", active: true });
-    await api.entities.AuditLog.create({ action: "create", entity_type: "Species", entity_name: form.name, user_name: "admin", details: `Added new species: ${form.name} (${form.category})`, severity: "info", timestamp: new Date().toISOString() });
-    toast({ title: "Species added", description: `${form.name} is now available for detection. Upload labelled images to train the model.` });
-    setSaving(false); setShowAdd(false);
-    setForm({ name: "", scientific_name: "", category: "wildlife", description: "", detection_threshold: 0.7, response_rules: "", assigned_deterrents: [] });
-    load();
+    try {
+      await api.entities.Species.create({ ...form, name: form.name.trim(), sample_count: 0, model_status: "not_trained", active: false });
+      toast({ title: "Species profile saved", description: "This is reference metadata; no detector was trained or changed." });
+      setShowAdd(false);
+      setForm({ name: "", scientific_name: "", category: "wildlife", description: "", detection_threshold: 0.7, response_rules: "", assigned_deterrents: [] });
+      await load();
+    } catch (requestError) {
+      toast({ title: "Species profile could not be saved", description: requestError.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const toggleDeterrent = (d) => {
@@ -59,38 +67,31 @@ export default function SpeciesLearning() {
   };
 
   const handleDelete = async (s) => {
-    await api.entities.Species.delete(s.id);
-    toast({ title: "Species removed", description: `${s.name} has been deleted.` });
-    load();
-  };
-
-  const handleTrain = async (s) => {
-    await api.entities.Species.update(s.id, { model_status: "training" });
-    toast({ title: `Training started for ${s.name}`, description: "Collecting samples and training a new detection model..." });
-    load();
-    setTimeout(async () => {
-      await api.entities.Species.update(s.id, { model_status: "trained", sample_count: (s.sample_count || 0) + 150 });
-      toast({ title: `${s.name} model trained`, description: "Ready for evaluation and deployment." });
-      load();
-    }, 4000);
-  };
-
-  const handleDeploy = async (s) => {
-    await api.entities.Species.update(s.id, { model_status: "deployed" });
-    await api.entities.AuditLog.create({ action: "config_change", entity_type: "Species", entity_name: s.name, user_name: "admin", details: `Deployed detection model for ${s.name}`, severity: "warning", timestamp: new Date().toISOString() });
-    toast({ title: `${s.name} model deployed`, description: "Detection active on all connected devices." });
-    load();
+    if (!window.confirm("Delete the species profile for “" + s.name + "”? This cannot be undone.")) return;
+    setPendingId(s.id);
+    try {
+      await api.entities.Species.delete(s.id);
+      toast({ title: "Species profile deleted" });
+      await load();
+    } catch (requestError) {
+      toast({ title: "Species profile could not be deleted", description: requestError.message, variant: "destructive" });
+    } finally {
+      setPendingId("");
+    }
   };
 
   return (
     <div>
-      <PageHeader title="Species Learning" description="Add new wildlife species without changing the application — upload images, define rules, train & deploy AI models" icon={PawPrint}
+      <PageHeader title="Species Reference Profiles" description="Maintain species notes for research. This page does not train, change, or deploy an AI model." icon={PawPrint}
         actions={<Button onClick={() => setShowAdd(true)} className="bg-emerald-600 hover:bg-emerald-700"><Plus className="w-4 h-4 mr-1" /> Add Species</Button>} />
+
+      <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">Model training and deployment are not connected. Response rules and deterrent selections are saved as notes only; they do not control cameras or field equipment.</div>
+      {error && <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800"><span>{error}</span><Button variant="outline" size="sm" onClick={load}>Try again</Button></div>}
 
       {loading ? (
         <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-emerald-500 animate-spin" /></div>
       ) : species.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-200"><EmptyState icon={PawPrint} title="No species configured" description="Add your first wildlife species to start training AI models." /></div>
+        <div className="bg-white rounded-2xl border border-slate-200"><EmptyState icon={PawPrint} title="No species profiles yet" description="Add a reference profile to document species considered in the research." /></div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {species.map(s => (
@@ -107,21 +108,18 @@ export default function SpeciesLearning() {
               </div>
               {s.description && <div className="text-xs text-slate-500 mb-3 line-clamp-2">{s.description}</div>}
               <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-                <div><span className="text-slate-400">Samples:</span> <span className="font-medium text-slate-700">{s.sample_count || 0}</span></div>
-                <div><span className="text-slate-400">Threshold:</span> <span className="font-medium text-slate-700">{Math.round((s.detection_threshold || 0.7) * 100)}%</span></div>
+                <div><span className="text-slate-400">Recorded samples:</span> <span className="font-medium text-slate-700">{s.sample_count || 0}</span></div>
+                <div><span className="text-slate-400">Proposed threshold:</span> <span className="font-medium text-slate-700">{Math.round((s.detection_threshold ?? 0.7) * 100)}%</span></div>
               </div>
               {s.assigned_deterrents?.length > 0 && (
                 <div className="flex flex-wrap gap-1 mb-3">
                   {s.assigned_deterrents.map((d, i) => <span key={i} className="text-[10px] bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded border border-amber-100">{d}</span>)}
                 </div>
               )}
-              <div className="flex items-center justify-between pt-3 border-t border-slate-50">
-                <span className={`text-[10px] font-medium px-2 py-1 rounded ${modelStatusColors[s.model_status] || modelStatusColors.not_trained}`}>{(s.model_status || "not_trained").replace("_", " ")}</span>
+              <div className="flex items-center justify-between gap-2 border-t border-slate-50 pt-3">
+                <span className="text-[10px] text-slate-500">Saved status: {(s.model_status || "not_trained").replaceAll("_", " ")} · metadata only</span>
                 <div className="flex gap-1">
-                  {s.model_status === "not_trained" && <Button size="sm" onClick={() => handleTrain(s)} className="bg-blue-600 hover:bg-blue-700 h-7 text-xs"><Brain className="w-3 h-3 mr-1" /> Train</Button>}
-                  {s.model_status === "trained" && <Button size="sm" onClick={() => handleDeploy(s)} className="bg-emerald-600 hover:bg-emerald-700 h-7 text-xs"><Upload className="w-3 h-3 mr-1" /> Deploy</Button>}
-                  {s.model_status === "deployed" && <span className="text-emerald-500 flex items-center gap-1 text-xs"><CheckCircle2 className="w-3 h-3" /> Active</span>}
-                  <Button size="sm" variant="ghost" onClick={() => handleDelete(s)} className="h-7 text-red-400 hover:text-red-600"><Trash2 className="w-3 h-3" /></Button>
+                  <Button size="sm" variant="ghost" disabled={pendingId === s.id} aria-label={"Delete " + s.name + " profile"} onClick={() => handleDelete(s)} className="h-7 text-red-400 hover:text-red-600"><Trash2 className="w-3 h-3" /></Button>
                 </div>
               </div>
             </div>
@@ -134,9 +132,9 @@ export default function SpeciesLearning() {
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Add New Species</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div className="bg-blue-50 rounded-xl p-3 text-xs text-blue-600 flex items-start gap-2">
+              <div className="bg-blue-50 rounded-xl p-3 text-xs text-blue-800 flex items-start gap-2">
               <PawPrint className="w-4 h-4 flex-shrink-0 mt-0.5" />
-              <div>Add a new wildlife species to the detection system. After adding, upload labelled images, define response rules, assign deterrents, then train and deploy a custom AI model.</div>
+              <div>Add a reference profile for research. These fields document plans only and do not affect detection or activate deterrents.</div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>Species Name *</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Wild Boar" /></div>
@@ -156,12 +154,12 @@ export default function SpeciesLearning() {
                   </SelectContent>
                 </Select>
               </div>
-              <div><Label>Detection Threshold</Label><Input type="number" step="0.05" min="0" max="1" value={form.detection_threshold} onChange={e => setForm({ ...form, detection_threshold: parseFloat(e.target.value) })} /></div>
+              <div><Label>Proposed score threshold (metadata)</Label><Input type="number" step="0.05" min="0" max="1" value={form.detection_threshold} onChange={e => setForm({ ...form, detection_threshold: Number(e.target.value) || 0 })} /><p className="mt-1 text-[10px] text-slate-500">Does not change the running detector.</p></div>
             </div>
             <div><Label>Description</Label><Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Describe the species and its behavior patterns..." /></div>
-            <div><Label>Response Rules</Label><Textarea value={form.response_rules} onChange={e => setForm({ ...form, response_rules: e.target.value })} placeholder="e.g. Trigger siren at level 2, escalate to voice call at level 3..." /></div>
+            <div><Label>Research response notes</Label><Textarea value={form.response_rules} onChange={e => setForm({ ...form, response_rules: e.target.value })} placeholder="Document a response idea for later review; no action will be triggered." /></div>
             <div>
-              <Label>Assigned Deterrents</Label>
+              <Label>Possible responses (notes only)</Label>
               <div className="flex flex-wrap gap-1.5 mt-1">
                 {deterrentOptions.map(d => (
                   <button key={d} type="button" onClick={() => toggleDeterrent(d)}
@@ -174,7 +172,7 @@ export default function SpeciesLearning() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAdd(false)}>Cancel</Button>
-            <Button onClick={handleAdd} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">{saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />} Add Species</Button>
+            <Button onClick={handleAdd} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">{saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />} Save Profile</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

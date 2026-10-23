@@ -37,6 +37,9 @@ export default function AutomationRules() {
   const [rules, setRules] = useState([]);
   const [sites, setSites] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [pendingId, setPendingId] = useState("");
   const [showModal, setShowModal] = useState(false);
   const { toast } = useToast();
   const [form, setForm] = useState({
@@ -46,8 +49,16 @@ export default function AutomationRules() {
   });
 
   const load = async () => {
-    const [r, s] = await Promise.all([api.entities.AutomationRule.list("-priority"), api.entities.Site.list()]);
-    setRules(r); setSites(s); setLoading(false);
+    setLoading(true);
+    setError("");
+    try {
+      const [r, s] = await Promise.all([api.entities.AutomationRule.list("-priority"), api.entities.Site.list()]);
+      setRules(r); setSites(s);
+    } catch (requestError) {
+      setError(requestError.message || "Automation rule drafts could not be loaded.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); }, []);
@@ -59,24 +70,46 @@ export default function AutomationRules() {
   const toggleAction = (a) => setForm(f => ({ ...f, actions: f.actions.includes(a) ? f.actions.filter(x => x !== a) : [...f.actions, a] }));
 
   const create = async () => {
-    if (!form.name || !form.site_id) { toast({ title: "Name and site required", variant: "destructive" }); return; }
+    if (!form.name.trim() || !form.site_id) { toast({ title: "Name and site required", variant: "destructive" }); return; }
     const site = sites.find(s => s.id === form.site_id);
-    await api.entities.AutomationRule.create({ ...form, site_name: site?.name });
-    await api.entities.AuditLog.create({ action: "create", entity_type: "AutomationRule", entity_name: form.name, user_name: "admin", details: `Created automation rule`, severity: "info", timestamp: new Date().toISOString() });
-    setShowModal(false);
-    setForm({ name: "", site_id: "", description: "", conditions: [{ field: "detection_type", operator: "==", value: "monkey" }], actions: [], active: true, priority: 1 });
-    toast({ title: "Automation rule created" });
-    load();
+    setSaving(true);
+    try {
+      await api.entities.AutomationRule.create({ ...form, name: form.name.trim(), site_name: site?.name });
+      setShowModal(false);
+      setForm({ name: "", site_id: "", description: "", conditions: [{ field: "detection_type", operator: "==", value: "monkey" }], actions: [], active: false, priority: 1 });
+      toast({ title: "Rule draft saved", description: "No automation worker evaluates this configuration." });
+      await load();
+    } catch (requestError) {
+      toast({ title: "Rule draft could not be saved", description: requestError.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const toggleActive = async (r) => {
-    await api.entities.AutomationRule.update(r.id, { active: !r.active });
-    load();
+    setPendingId(r.id);
+    try {
+      await api.entities.AutomationRule.update(r.id, { active: !r.active });
+      await load();
+    } catch (requestError) {
+      toast({ title: "Rule setting could not be updated", description: requestError.message, variant: "destructive" });
+    } finally {
+      setPendingId("");
+    }
   };
 
   const remove = async (r) => {
-    await api.entities.AutomationRule.delete(r.id);
-    load();
+    if (!window.confirm("Delete the rule draft “" + r.name + "”? This cannot be undone.")) return;
+    setPendingId(r.id);
+    try {
+      await api.entities.AutomationRule.delete(r.id);
+      toast({ title: "Rule draft deleted" });
+      await load();
+    } catch (requestError) {
+      toast({ title: "Rule draft could not be deleted", description: requestError.message, variant: "destructive" });
+    } finally {
+      setPendingId("");
+    }
   };
 
   return (
@@ -84,10 +117,12 @@ export default function AutomationRules() {
       <PageHeader title="Automation Rules" description="Draft human-reviewed workflows for the Ward 21 pilot" icon={Workflow}
         actions={<Button onClick={() => setShowModal(true)} className="bg-emerald-600 hover:bg-emerald-700"><Plus className="w-4 h-4 mr-1" /> New Rule</Button>} />
 
+      {error && <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800"><span>{error}</span><Button variant="outline" size="sm" onClick={load}>Try again</Button></div>}
+
       {loading ? (
         <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin" /></div>
       ) : rules.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-200"><EmptyState icon={Workflow} title="No automation rules" description="Create IF/AND/THEN rules to automate your response system." /></div>
+        <div className="bg-white rounded-2xl border border-slate-200"><EmptyState icon={Workflow} title="No rule drafts yet" description="Save a review workflow proposal for later engineering and research approval." /></div>
       ) : (
         <div className="space-y-3">
           {rules.map(r => (
@@ -98,7 +133,7 @@ export default function AutomationRules() {
                     <span className="font-semibold text-slate-800">{r.name}</span>
                     <span className="text-xs text-slate-400">· {r.site_name}</span>
                     {r.priority > 0 && <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">P{r.priority}</span>}
-                    {r.trigger_count > 0 && <span className="text-[10px] text-emerald-500 font-medium">{r.trigger_count}× triggered</span>}
+                    {r.trigger_count > 0 && <span className="text-[10px] text-slate-500 font-medium">{r.trigger_count} recorded trigger(s) · metadata</span>}
                   </div>
                   {r.description && <p className="text-sm text-slate-500 mb-3">{r.description}</p>}
 
@@ -121,8 +156,9 @@ export default function AutomationRules() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <Switch checked={r.active} onCheckedChange={() => toggleActive(r)} />
-                  <Button variant="ghost" size="icon" onClick={() => remove(r)}><Trash2 className="w-4 h-4 text-red-400" /></Button>
+                  <span className="text-[10px] text-slate-400">{r.active ? "Enabled · config only" : "Disabled"}</span>
+                  <Switch checked={r.active} disabled={pendingId === r.id} aria-label={r.active ? "Disable saved rule configuration" : "Enable saved rule configuration"} onCheckedChange={() => toggleActive(r)} />
+                  <Button variant="ghost" size="icon" disabled={pendingId === r.id} aria-label="Delete rule draft" onClick={() => remove(r)}><Trash2 className="w-4 h-4 text-red-400" /></Button>
                 </div>
               </div>
             </div>
@@ -136,7 +172,8 @@ export default function AutomationRules() {
 
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Create Automation Rule</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Create Automation Rule Draft</DialogTitle></DialogHeader>
+          <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">This stores a workflow proposal only. The app does not evaluate it or send alerts, messages, or device commands.</p>
           <div className="space-y-4">
             <div><Label>Rule Name</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Monkey Near East Field" /></div>
             <div className="grid grid-cols-2 gap-3">
@@ -186,7 +223,7 @@ export default function AutomationRules() {
               </div>
             </div>
           </div>
-          <DialogFooter><Button variant="outline" onClick={() => setShowModal(false)}>Cancel</Button><Button onClick={create} className="bg-emerald-600 hover:bg-emerald-700">Create Rule</Button></DialogFooter>
+          <DialogFooter><Button variant="outline" disabled={saving} onClick={() => setShowModal(false)}>Cancel</Button><Button disabled={saving} onClick={create} className="bg-emerald-600 hover:bg-emerald-700">{saving ? "Saving…" : "Save rule draft"}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

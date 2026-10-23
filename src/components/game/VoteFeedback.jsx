@@ -4,12 +4,12 @@ import { CheckCircle2, Clock, XCircle, Sparkles } from "lucide-react";
 
 // Feedback overlay shown after a player submits a vote.
 // state: "voting" | "waiting" | "correct" | "needsExpert" | "error"
-export default function VoteFeedback({ state, points, message }) {
+export default function VoteFeedback({ state, message }) {
   const config = {
     voting: { icon: Clock, color: "text-slate-400", bg: "bg-slate-50", title: "Submitting…", desc: "" },
-    waiting: { icon: Clock, color: "text-blue-500", bg: "bg-blue-50", title: "Vote recorded!", desc: "Waiting for more players to reach consensus…" },
-    correct: { icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-50", title: "Correct!", desc: message || `+${points} points awarded` },
-    needsExpert: { icon: Sparkles, color: "text-amber-500", bg: "bg-amber-50", title: "Sent to expert review", desc: "Consensus reached — a senior verifier will confirm the label." },
+    waiting: { icon: Clock, color: "text-blue-500", bg: "bg-blue-50", title: "Vote recorded", desc: message || "An authorized reviewer must confirm the label before it is used as evidence." },
+    correct: { icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-50", title: "Review recorded", desc: message || "Thanks for contributing a review." },
+    needsExpert: { icon: Sparkles, color: "text-amber-500", bg: "bg-amber-50", title: "More than one vote recorded", desc: message || "The votes are still unverified. An authorized reviewer must decide the final label." },
     error: { icon: XCircle, color: "text-red-500", bg: "bg-red-50", title: "Couldn't submit", desc: message || "Please try again." },
   };
   const c = config[state] || config.waiting;

@@ -6,6 +6,7 @@ import PageHeader from "@/components/PageHeader";
 
 const stateStyles = {
   ready: "bg-emerald-50 text-emerald-800 border-emerald-200",
+  engine_offline: "bg-amber-50 text-amber-900 border-amber-200",
   disabled: "bg-slate-100 text-slate-700 border-slate-200",
   unavailable: "bg-rose-50 text-rose-800 border-rose-200",
   model_missing: "bg-amber-50 text-amber-900 border-amber-200",
@@ -31,7 +32,7 @@ export default function AIModels() {
   }, []);
 
   const validFile = file && ["image/jpeg", "image/png", "image/webp"].includes(file.type) && file.size <= 15 * 1024 * 1024;
-  const canAnalyze = state.status?.state === "ready" && Boolean(validFile) && Boolean(siteId) && !analyzing;
+  const canAnalyze = state.status?.state === "ready" && state.status?.engine_ready === true && Boolean(validFile) && Boolean(siteId) && !analyzing;
 
   const analyzeImage = async (event) => {
     event.preventDefault();
@@ -56,6 +57,7 @@ export default function AIModels() {
   };
 
   const status = state.status;
+  const statusLabel = status?.state === "ready" && status.engine_ready !== true ? "engine_offline" : status?.state;
 
   return (
     <div>
@@ -67,10 +69,10 @@ export default function AIModels() {
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><Activity className="h-5 w-5" /></span>
             <div>
               <h2 className="font-semibold text-slate-800">Private inference service</h2>
-              <p className="mt-1 max-w-2xl text-sm text-slate-600">{state.loading ? "Checking server configuration…" : status?.message || state.error || "Service status is unavailable."}</p>
+              <p className="mt-1 max-w-2xl text-sm text-slate-600">{state.loading ? "Checking server configuration…" : status?.state === "ready" && status.engine_ready !== true ? "The model is configured, but the inference worker is not healthy yet. Image analysis is unavailable until it responds." : status?.message || state.error || "Service status is unavailable."}</p>
             </div>
           </div>
-          {status && <span className={`rounded-full border px-3 py-1 text-xs font-medium ${stateStyles[status.state] || stateStyles.disabled}`}>{status.state.replaceAll("_", " ")}</span>}
+          {status && <span className={`rounded-full border px-3 py-1 text-xs font-medium ${stateStyles[statusLabel] || stateStyles.disabled}`}>{statusLabel.replaceAll("_", " ")}</span>}
         </div>
         {status?.enabled && <div className="mt-4 grid gap-3 rounded-xl bg-slate-50 p-3 text-sm sm:grid-cols-2">
           <div><span className="text-slate-500">Configured model</span><div className="font-medium text-slate-800">{status.detector_model}</div></div>
@@ -109,7 +111,8 @@ export default function AIModels() {
             <button type="submit" disabled={!canAnalyze} className="inline-flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">
               {analyzing ? <><Loader2 className="h-4 w-4 animate-spin" /> Analyzing image…</> : "Analyze and add to review"}
             </button>
-            {status?.state === "disabled" && <span className="text-xs text-slate-500">Enable the optional AI service on the server to use this feature.</span>}
+            {status?.state === "disabled" && <span className="text-xs text-slate-500">The optional AI service is not enabled.</span>}
+            {status?.state === "ready" && status.engine_ready !== true && <span className="text-xs text-amber-800">The inference worker is not ready. No upload or analysis has started.</span>}
           </div>
         </form>
         {error && <p role="alert" className="mt-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}

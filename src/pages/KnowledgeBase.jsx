@@ -18,32 +18,58 @@ const categories = [
 export default function KnowledgeBase() {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [pendingId, setPendingId] = useState("");
   const [filter, setFilter] = useState("all");
   const { toast } = useToast();
 
   const load = async () => {
-    const e = await api.entities.KnowledgeBase.list("-created_at", 50);
-    setEntries(e); setLoading(false);
+    setLoading(true);
+    setError("");
+    try {
+      const result = await api.entities.KnowledgeBase.list("-created_at", 50);
+      setEntries(result);
+    } catch (requestError) {
+      setError(requestError.message || "Knowledge base records could not be loaded.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); }, []);
 
   const toggleShare = async (entry) => {
-    await api.entities.KnowledgeBase.update(entry.id, { shared: !entry.shared });
-    toast({ title: entry.shared ? "Data unshared" : "Data shared with central knowledge base" });
-    load();
+    setPendingId(entry.id);
+    try {
+      await api.entities.KnowledgeBase.update(entry.id, { shared: !entry.shared });
+      toast({ title: entry.shared ? "Share flag cleared" : "Share flag saved", description: "This changes a record field in this deployment only." });
+      await load();
+    } catch (requestError) {
+      toast({ title: "Share flag could not be updated", description: requestError.message, variant: "destructive" });
+    } finally {
+      setPendingId("");
+    }
   };
 
   const remove = async (entry) => {
-    await api.entities.KnowledgeBase.delete(entry.id);
-    load();
+    if (!window.confirm("Delete the knowledge record “" + (entry.title || "Untitled") + "”? This cannot be undone.")) return;
+    setPendingId(entry.id);
+    try {
+      await api.entities.KnowledgeBase.delete(entry.id);
+      toast({ title: "Knowledge record deleted" });
+      await load();
+    } catch (requestError) {
+      toast({ title: "Record could not be deleted", description: requestError.message, variant: "destructive" });
+    } finally {
+      setPendingId("");
+    }
   };
 
   const filtered = filter === "all" ? entries : entries.filter(e => e.category === filter);
 
   return (
     <div>
-      <PageHeader title="Central AI Knowledge Base" description="Secure cloud platform for sharing verified operational data to improve AI models across all deployments" icon={Globe} />
+      <PageHeader title="Knowledge Base Records" description="Review operational knowledge records saved in this deployment. A share flag does not publish data or train a model." icon={Globe} />
 
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
         <button onClick={() => setFilter("all")} className={`flex flex-col items-center p-2.5 rounded-xl border transition-colors ${filter === "all" ? "border-emerald-400 bg-emerald-50" : "border-slate-200 bg-white hover:bg-slate-50"}`}>
@@ -60,10 +86,12 @@ export default function KnowledgeBase() {
         })}
       </div>
 
+      {error && <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800"><span>{error}</span><Button variant="outline" size="sm" onClick={load}>Try again</Button></div>}
+
       {loading ? (
         <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-emerald-500 animate-spin" /></div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-200"><EmptyState icon={Globe} title="No knowledge base entries" description="Verified operational data will appear here and can be shared to improve AI models globally." /></div>
+        <div className="bg-white rounded-2xl border border-slate-200"><EmptyState icon={Globe} title="No knowledge records" description="Knowledge records created for this deployment will appear here." /></div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filtered.map(e => {
@@ -84,8 +112,8 @@ export default function KnowledgeBase() {
                 <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-50">
                   <span>{e.data_points?.toLocaleString()} data points · {Math.round((e.confidence || 0) * 100)}% confidence</span>
                   <div className="flex items-center gap-1">
-                    <button onClick={() => toggleShare(e)} className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg transition-colors ${e.shared ? "bg-emerald-50 text-emerald-600" : "bg-slate-50 text-slate-500 hover:bg-slate-100"}`}><Share2 className="w-3 h-3" /> {e.shared ? "Shared" : "Share"}</button>
-                    <Button variant="ghost" size="icon" onClick={() => remove(e)}><Trash2 className="w-3.5 h-3.5 text-red-400" /></Button>
+                    <button type="button" disabled={pendingId === e.id} onClick={() => toggleShare(e)} aria-label={e.shared ? "Clear local share flag" : "Set local share flag"} className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg transition-colors disabled:opacity-50"><Share2 className="w-3 h-3" /> {e.shared ? "Flagged shared" : "Set share flag"}</button>
+                    <Button variant="ghost" size="icon" disabled={pendingId === e.id} aria-label="Delete knowledge record" onClick={() => remove(e)}><Trash2 className="w-3.5 h-3.5 text-red-400" /></Button>
                   </div>
                 </div>
               </div>
@@ -95,8 +123,8 @@ export default function KnowledgeBase() {
       )}
 
       <div className="mt-4 bg-emerald-50 rounded-2xl p-4">
-        <div className="text-sm font-semibold text-emerald-700 mb-1">🔒 Secure Data Sharing</div>
-        <div className="text-xs text-emerald-600">All shared data is anonymized and encrypted. You control what is shared. Shared data improves AI models for all users, learns regional wildlife patterns, and helps recommend better deterrents. Offline operation is supported — data syncs when connectivity returns.</div>
+        <div className="text-sm font-semibold text-emerald-800 mb-1">What the share control means</div>
+        <div className="text-xs leading-5 text-emerald-800">It saves a shared/not-shared value on this record in the current deployment. It does not anonymize or publish the record, synchronize it with another system, or update an AI model. Check permissions and remove identifying details before any separate export.</div>
       </div>
     </div>
   );

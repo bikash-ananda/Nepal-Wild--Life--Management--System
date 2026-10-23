@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 // Module-level cache so repeated renders of the same private file reuse the signed URL.
 const signedCache = new Map();
 
-export default function PrivateImage({ fileUri, alt = "", className, fallbackClassName }) {
+export default function PrivateImage({ fileUri, alt = "", className = "", fallbackClassName = "" }) {
   const isUrl = fileUri && /^https?:\/\//.test(fileUri);
   const [src, setSrc] = useState(() => {
     if (!fileUri) return null;

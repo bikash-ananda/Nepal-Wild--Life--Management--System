@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Loader2, Send, MessageSquarePlus, X, Trophy, ListOrdered, Sparkles } from "lucide-react";
+import { Loader2, Send, MessageSquarePlus, X, ListOrdered, Sparkles, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
@@ -7,7 +7,6 @@ import EmptyState from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import GameHUD from "@/components/game/GameHUD";
 import SpeciesPicker from "@/components/game/SpeciesPicker";
 import VoteFeedback from "@/components/game/VoteFeedback";
 import PrivateImage from "@/components/PrivateImage";
@@ -22,41 +21,48 @@ export default function VerificationGame() {
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState("idle");
   const [feedbackMsg, setFeedbackMsg] = useState("");
-  const [sessionPoints, setSessionPoints] = useState(0);
+  const [sessionVoteCount, setSessionVoteCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const { toast } = useToast();
-  const pollRef = useRef(null);
+  const votedIdsRef = useRef(new Set());
+  const advanceTimeoutRef = useRef(null);
 
   const serveNext = useCallback(async () => {
+    setLoading(true);
+    setError("");
     try {
-      const res = await api.functions.invoke("verificationGame", { action: "serveNext" });
-      setSample(res.sample || null);
-      setStats(res.playerStats || null);
-      setQueueCount(res.queueCount || 0);
+      const res = await api.functions.invoke("verificationGame", { action: "reviewQueue" });
+      const queue = res.queue || [];
+      setSample(queue.find((item) => !votedIdsRef.current.has(item.id)) || null);
+      setQueueCount(queue.length);
+      try {
+        const statsResult = await api.functions.invoke("verificationGame", { action: "getPlayerStats" });
+        setStats(statsResult.stats || null);
+      } catch {
+        setStats(null);
+      }
       setLabel("");
       setComment("");
       setShowComment(false);
       setFeedback("idle");
     } catch (e) {
+      setError(e.message || "The review queue could not be loaded.");
       toast({ title: "Couldn't load next image", description: e.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
   }, [toast]);
 
+  const refreshQueue = () => {
+    window.clearTimeout(advanceTimeoutRef.current);
+    return serveNext();
+  };
+
   useEffect(() => {
     serveNext();
-    // Poll for fresh queue count + new samples every 20s while idle
-    pollRef.current = setInterval(() => {
-      api.functions.invoke("verificationGame", { action: "serveNext" }).then((res) => {
-        setQueueCount(res.queueCount || 0);
-        setStats(res.playerStats || null);
-        if (!sample && res.sample) setSample(res.sample);
-      }).catch(() => {});
-    }, 20000);
-    return () => clearInterval(pollRef.current);
-
-  }, []);
+    return () => window.clearTimeout(advanceTimeoutRef.current);
+  }, [serveNext]);
 
   const handleSubmit = async () => {
     if (!sample || !label) return;
@@ -69,22 +75,21 @@ export default function VerificationGame() {
         voted_label: label,
         training_comment: comment,
       });
-      if (res.confirmed) {
-        setFeedback("correct");
-        setFeedbackMsg(`+${res.pointsAwarded} points — consensus reached!`);
-        setSessionPoints((p) => p + (res.pointsAwarded || 0));
-        // Trigger retraining check (best-effort, mirrors AI Verification)
-        api.functions.invoke("yoloRetrain", { action: "checkThreshold" }).catch(() => {});
-      } else if (res.consensus && res.consensus.needsExpert) {
+      votedIdsRef.current.add(sample.id);
+      setSessionVoteCount((count) => count + 1);
+      if (res.consensus && res.consensus.needsExpert) {
         setFeedback("needsExpert");
       } else {
         setFeedback("waiting");
       }
-      // Refresh stats
-      const st = await api.functions.invoke("verificationGame", { action: "getPlayerStats" });
-      setStats(st.stats || null);
-      // After a short pause, advance to the next image
-      setTimeout(() => serveNext(), res.confirmed ? 2200 : 2600);
+      setFeedbackMsg("Your vote is recorded. It is not a confirmed label and does not train the model.");
+      try {
+        const st = await api.functions.invoke("verificationGame", { action: "getPlayerStats" });
+        setStats(st.stats || null);
+      } catch {
+        // A vote remains saved even when the optional stats refresh is unavailable.
+      }
+      advanceTimeoutRef.current = window.setTimeout(() => serveNext(), 2400);
     } catch (e) {
       const msg = e?.message || "Please try again.";
       setFeedback("error");
@@ -103,13 +108,13 @@ export default function VerificationGame() {
   return (
     <div>
       <PageHeader
-        title="Verification Game"
-        description="Help train the AI — identify wildlife the model couldn't classify. Earn points, climb the leaderboard, and level up."
+        title="Community Image Review"
+        description="Suggest a label for an unverified image. Votes help organize review but do not confirm a species or train the model; an authorized reviewer must decide."
         icon={Sparkles}
-        action={
+        actions={
           <div className="flex gap-2">
-            <Button asChild variant="outline" size="sm"><Link to="/leaderboard"><Trophy className="w-4 h-4 mr-1" /> Leaderboard</Link></Button>
             <Button asChild variant="outline" size="sm"><Link to="/expert-review"><ListOrdered className="w-4 h-4 mr-1" /> Expert Review</Link></Button>
+            <Button variant="outline" size="sm" onClick={refreshQueue} disabled={loading}><RefreshCw className="w-4 h-4 mr-1" /> Refresh queue</Button>
           </div>
         }
       />
@@ -119,13 +124,19 @@ export default function VerificationGame() {
         <div className="lg:col-span-2 space-y-4">
           {loading ? (
             <div className="flex justify-center py-24"><Loader2 className="w-8 h-8 text-emerald-500 animate-spin" /></div>
+          ) : error ? (
+            <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800">
+              <p>{error}</p>
+              <Button variant="outline" size="sm" className="mt-3" onClick={refreshQueue}>Try again</Button>
+            </div>
           ) : !sample ? (
             <div className="bg-white rounded-2xl border border-slate-200">
               <EmptyState
                 icon={Sparkles}
-                title="All caught up!"
-                description="No images need verification right now. New captures from the field will appear here automatically — check back soon."
+                title={sessionVoteCount > 0 ? "You reviewed the available images" : "No images waiting for review"}
+                description={sessionVoteCount > 0 ? "Your votes remain unverified. Refresh later for new images, or review this batch again." : "New field captures appear after they are submitted. This page does not classify images automatically."}
               />
+              {sessionVoteCount > 0 && <div className="pb-5 text-center"><Button variant="outline" onClick={() => { window.clearTimeout(advanceTimeoutRef.current); votedIdsRef.current.clear(); setSessionVoteCount(0); serveNext(); }}>Review this batch again</Button></div>}
             </div>
           ) : (
             <>
@@ -148,7 +159,7 @@ export default function VerificationGame() {
 
               {/* Feedback */}
               {feedback !== "idle" && (
-                <VoteFeedback state={feedback} points={sessionPoints} message={feedbackMsg} />
+                <VoteFeedback state={feedback} message={feedbackMsg} />
               )}
 
               {/* Picker + submit */}
@@ -162,13 +173,13 @@ export default function VerificationGame() {
                   {showComment ? (
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
-                        <label className="text-xs font-medium text-slate-600">Training comment (optional)</label>
+                        <label className="text-xs font-medium text-slate-600">Research note (optional)</label>
                         <button onClick={() => setComment("")} className="text-[10px] text-slate-400 hover:text-slate-600 flex items-center gap-0.5"><X className="w-3 h-3" /> remove</button>
                       </div>
                       <Textarea
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
-                        placeholder="e.g. rosette pattern on the flank confirms leopard"
+                        placeholder="Optional note to help an authorized reviewer assess this image."
                         rows={2}
                         className="text-sm"
                       />
@@ -178,7 +189,7 @@ export default function VerificationGame() {
                       onClick={() => setShowComment(true)}
                       className="text-xs text-emerald-600 hover:text-emerald-700 flex items-center gap-1 font-medium"
                     >
-                      <MessageSquarePlus className="w-3.5 h-3.5" /> Add a training comment
+                      <MessageSquarePlus className="w-3.5 h-3.5" /> Add a research note
                     </button>
                   )}
 
@@ -197,21 +208,14 @@ export default function VerificationGame() {
 
         {/* Sidebar: HUD + queue */}
         <div className="space-y-4">
-          <GameHUD stats={stats} sessionPoints={sessionPoints} />
           <div className="bg-white rounded-2xl border border-slate-200 p-4">
             <div className="text-2xl font-bold text-slate-800">{queueCount}</div>
-            <div className="text-[10px] text-slate-400 uppercase">images in queue</div>
-          </div>
-          {stats && stats.badges && stats.badges.length > 0 && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-4">
-              <div className="text-xs font-semibold text-slate-700 mb-2">Your badges</div>
-              <div className="flex flex-wrap gap-2">
-                {stats.badges.map((b) => (
-                  <span key={b.id} className="text-[10px] font-bold uppercase bg-emerald-50 text-emerald-600 px-2 py-1 rounded">{b.name}</span>
-                ))}
-              </div>
+            <div className="text-[10px] text-slate-400 uppercase">pending images loaded (up to 100)</div>
+            <div className="mt-3 border-t border-slate-100 pt-3 text-xs text-slate-500">
+              <div className="flex justify-between gap-2"><span>Votes recorded by you</span><strong>{stats?.votes ?? "—"}</strong></div>
+              <div className="mt-1 flex justify-between gap-2"><span>Votes this session</span><strong>{sessionVoteCount}</strong></div>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

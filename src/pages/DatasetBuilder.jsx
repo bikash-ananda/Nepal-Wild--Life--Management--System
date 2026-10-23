@@ -5,8 +5,8 @@ import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import PrivateImage from "@/components/PrivateImage";
 
 const statusColors = {
   pending: "bg-amber-50 text-amber-600 border-amber-200",
@@ -22,11 +22,19 @@ export default function DatasetBuilder() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selected, setSelected] = useState(null);
-  const { toast } = useToast();
+  const [error, setError] = useState("");
 
   const load = async () => {
-    const r = await api.entities.DatasetRecord.list("-created_date", 200);
-    setRecords(r); setLoading(false);
+    setLoading(true);
+    setError("");
+    try {
+      const result = await api.entities.DatasetRecord.list("-created_date", 200);
+      setRecords(result);
+    } catch (requestError) {
+      setError(requestError.message || "Dataset records could not be loaded.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); }, []);
@@ -37,19 +45,23 @@ export default function DatasetBuilder() {
     return matchSearch && matchStatus;
   });
 
+  // Version history grouping and quality values only include scores that were actually recorded.
+  const versions = [...new Set(records.map(r => r.dataset_version).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }));
+  const qualityRecords = records.filter((record) => record.quality_score !== null && record.quality_score !== undefined && Number.isFinite(Number(record.quality_score)));
+
   const stats = [
     { label: "Total Records", value: records.length, icon: Database, color: "text-slate-700", bg: "bg-slate-100" },
     { label: "Verified", value: records.filter(r => r.status === "verified").length, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
     { label: "Duplicates", value: records.filter(r => r.is_duplicate).length, icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
-    { label: "Avg Quality", value: `${Math.round(records.reduce((a, r) => a + (r.quality_score || 0), 0) / (records.length || 1))}%`, icon: Filter, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "Avg Quality", value: qualityRecords.length ? `${Math.round(qualityRecords.reduce((total, record) => total + Number(record.quality_score), 0) / qualityRecords.length)}%` : "—", icon: Filter, color: "text-blue-600", bg: "bg-blue-50" },
   ];
-
-  // Version history grouping
-  const versions = [...new Set(records.map(r => r.dataset_version).filter(Boolean))].sort();
 
   return (
     <div>
       <PageHeader title="Dataset Builder" description="Labelled dataset records with version history — the foundation for AI self-learning" icon={Database} />
+
+      {error && <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800"><span>{error}</span><button type="button" onClick={load} className="rounded-lg border border-rose-300 px-3 py-1.5 font-medium hover:bg-rose-100">Try again</button></div>}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         {stats.map(s => {
@@ -108,9 +120,9 @@ export default function DatasetBuilder() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {filtered.map(r => (
-            <div key={r.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelected(r)}>
+            <div key={r.id} role="button" tabIndex={0} aria-label={`Open dataset record for ${r.correct_label || "unlabelled sample"}`} className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-600 transition-shadow cursor-pointer" onClick={() => setSelected(r)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelected(r); } }}>
               <div className="relative">
-                <img src={r.image_url} alt="" className="w-full h-40 object-cover" />
+                <PrivateImage fileUri={r.image_uri || r.image_url} alt="" className="w-full h-40 object-cover" />
                 <span className={`absolute top-2 right-2 text-[10px] font-medium px-2 py-0.5 rounded border ${statusColors[r.status] || statusColors.pending}`}>{r.status}</span>
                 {r.is_duplicate && <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded">DUPLICATE</span>}
                 {r.bounding_boxes?.length > 0 && (
@@ -145,7 +157,7 @@ export default function DatasetBuilder() {
           <DialogHeader><DialogTitle>Dataset Record Details</DialogTitle></DialogHeader>
           {selected && (
             <div className="space-y-3">
-              <img src={selected.image_url} alt="" className="w-full h-56 object-cover rounded-xl" />
+              <PrivateImage fileUri={selected.image_uri || selected.image_url} alt="Selected dataset sample" className="w-full h-56 object-cover rounded-xl" />
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div><span className="text-slate-400 text-xs">Correct Label:</span> <span className="font-medium text-emerald-600">{selected.correct_label}</span></div>
                 <div><span className="text-slate-400 text-xs">AI Prediction:</span> <span className="font-medium text-slate-700">{selected.ai_prediction} ({Math.round((selected.ai_confidence || 0) * 100)}%)</span></div>
@@ -153,7 +165,7 @@ export default function DatasetBuilder() {
                 <div><span className="text-slate-400 text-xs">Dataset Version:</span> <span className="font-medium text-slate-700">{selected.dataset_version || "v1.0"}</span></div>
                 <div><span className="text-slate-400 text-xs">Camera:</span> <span className="font-medium text-slate-700">{selected.camera_name || selected.camera_id || "N/A"}</span></div>
                 <div><span className="text-slate-400 text-xs">Site:</span> <span className="font-medium text-slate-700">{selected.site_name || "N/A"}</span></div>
-                <div><span className="text-slate-400 text-xs">GPS:</span> <span className="font-medium text-slate-700">{selected.latitude ? `${selected.latitude.toFixed(4)}, ${selected.longitude?.toFixed(4)}` : "N/A"}</span></div>
+                <div><span className="text-slate-400 text-xs">GPS:</span> <span className="font-medium text-slate-700">{selected.latitude !== null && selected.latitude !== undefined && selected.longitude !== null && selected.longitude !== undefined && Number.isFinite(Number(selected.latitude)) && Number.isFinite(Number(selected.longitude)) ? Number(selected.latitude).toFixed(4) + ", " + Number(selected.longitude).toFixed(4) : "N/A"}</span></div>
                 <div><span className="text-slate-400 text-xs">Captured:</span> <span className="font-medium text-slate-700">{selected.captured_at ? new Date(selected.captured_at).toLocaleString() : "N/A"}</span></div>
                 <div><span className="text-slate-400 text-xs">Weather:</span> <span className="font-medium text-slate-700">{selected.weather || "N/A"} {selected.temperature_c ? `${selected.temperature_c}°C` : ""}</span></div>
                 <div><span className="text-slate-400 text-xs">Verified By:</span> <span className="font-medium text-slate-700">{selected.verified_by || "N/A"}</span></div>

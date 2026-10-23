@@ -59,12 +59,15 @@ export default function Deterrents() {
     if (!form.name || !form.site_id) { toast({ title: "Name and site required", variant: "destructive" }); return; }
     const site = sites.find(s => s.id === form.site_id);
     const id = `DET-${Date.now().toString(36).toUpperCase()}`;
-    await api.entities.DeterrentDevice.create({ ...form, device_id: id, site_name: site?.name });
-    await api.entities.AuditLog.create({ action: "create", entity_type: "DeterrentDevice", entity_name: form.name, user_name: "admin", details: `Registered ${form.type} deterrent`, severity: "info", timestamp: new Date().toISOString() });
-    setShowModal(false);
-    setForm({ name: "", device_id: "", site_id: "", type: "siren", supported_species: [], active: true });
-    toast({ title: "Deterrent device registered" });
-    load();
+    try {
+      await api.entities.DeterrentDevice.create({ ...form, name: form.name.trim(), device_id: id, site_name: site?.name });
+      setShowModal(false);
+      setForm({ name: "", device_id: "", site_id: "", type: "siren", supported_species: [], active: true });
+      toast({ title: "Inventory record saved", description: "The device was recorded only; it was not activated." });
+      load();
+    } catch (error) {
+      toast({ title: "Device record could not be saved", description: error.message, variant: "destructive" });
+    }
   };
 
   const toggleActive = async (d) => {

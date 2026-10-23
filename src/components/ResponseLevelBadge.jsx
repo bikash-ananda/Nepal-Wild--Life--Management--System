@@ -9,7 +9,7 @@ const levelConfig = {
   4: { name: "Emergency", color: "bg-red-50 text-red-700 border-red-200", dot: "bg-red-500", desc: "Multi-stakeholder alert" },
 };
 
-export default function ResponseLevelBadge({ level, showDesc = false, className }) {
+export default function ResponseLevelBadge({ level, showDesc = false, className = "" }) {
   const cfg = levelConfig[level] ?? levelConfig[0];
   return (
     <div className={cn("inline-flex items-center gap-2 rounded-lg border px-2.5 py-1 text-xs font-medium", cfg.color, className)}>

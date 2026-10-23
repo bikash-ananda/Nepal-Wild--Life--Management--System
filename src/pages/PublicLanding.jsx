@@ -35,6 +35,55 @@ const species = [
   { icon: "🐗", key: "boar", tone: "bg-lime-50" },
 ];
 
+const researchSources = {
+  en: [
+    {
+      title: "Earlier Pokhara study · Pumdivumdi/Tallokodi (Ward 25)",
+      citation: "Sharma & Acharya · Banko Janakari 27(2), 2017 · field survey in 2016",
+      summary: "A purposive survey of 60 households reported maize and potato among the commonly raided crops. These are historical reports from another ward, not current Ward 21 measurements.",
+      url: "https://doi.org/10.3126/banko.v27i2.21222",
+      link: "Read the study",
+    },
+    {
+      title: "Crop-raiding observations · Kavrepalanchok",
+      citation: "Koirala et al. · Journal of Environmental Management 297, 2021",
+      summary: "Observations across 172 plots found crop type, distance to forest edges and macaque routes, and farmer actions relevant to crop damage. Ward 21 must test these factors locally.",
+      url: "https://pubmed.ncbi.nlm.nih.gov/34298347/",
+      link: "Read the study",
+    },
+    {
+      title: "Nationwide conflict mapping · Nepal",
+      citation: "Kandel et al. · Journal of Environmental Management 316, 2022",
+      summary: "A national analysis examined landscape and human influences on rhesus macaque conflict. Its maps can guide questions, but cannot replace local validation or confirm a sighting.",
+      url: "https://pubmed.ncbi.nlm.nih.gov/35576709/",
+      link: "Read the study",
+    },
+  ],
+  np: [
+    {
+      title: "पोखराको अघिल्लो अध्ययन · पुम्दीभुम्दी/तल्लोकोदी (वडा २५)",
+      citation: "शर्मा र आचार्य · बैंकको जनकारी २७(२), २०१७ · २०१६ को सर्वेक्षण",
+      summary: "६० घरधुरीको छनोट गरिएको सर्वेक्षणमा मकै र आलुलाई धेरै क्षति हुने बालीका रूपमा उल्लेख गरिएको थियो। यो अर्को वडाको पुरानो जानकारी हो, वडा २१ को अहिलेको मापन होइन।",
+      url: "https://doi.org/10.3126/banko.v27i2.21222",
+      link: "अध्ययन पढ्नुहोस्",
+    },
+    {
+      title: "बालीमा बाँदरको असर · काभ्रेपलाञ्चोक",
+      citation: "कोइराला लगायत · जर्नल अफ इन्भाइरोन्मेन्टल म्यानेजमेन्ट २९७, २०२१",
+      summary: "१७२ खेतबारीको अवलोकनमा बालीको प्रकार, वनको किनार र बाँदर हिँड्ने बाटोको दूरी तथा किसानको प्रयासलाई क्षतिसँग सम्बन्धित पक्षका रूपमा हेरिएको थियो। वडा २१ मा यी पक्ष छुट्टै जाँच्नुपर्छ।",
+      url: "https://pubmed.ncbi.nlm.nih.gov/34298347/",
+      link: "अध्ययन पढ्नुहोस्",
+    },
+    {
+      title: "नेपालभर बाँदर–मानव द्वन्द्वको नक्साङ्कन",
+      citation: "कँडेल लगायत · जर्नल अफ इन्भाइरोन्मेन्टल म्यानेजमेन्ट ३१६, २०२२",
+      summary: "राष्ट्रिय अध्ययनले बाँदरको द्वन्द्वमा वातावरण र मानव गतिविधिको प्रभाव जाँच्यो। नक्साले प्रश्न बनाउन मद्दत गर्छ; स्थानीय जाँच वा बाँदर देखिएको पुष्टि यसको विकल्प होइन।",
+      url: "https://pubmed.ncbi.nlm.nih.gov/35576709/",
+      link: "अध्ययन पढ्नुहोस्",
+    },
+  ],
+};
+
 function readDuration(notice, lang) {
   const words = `${notice.title || ""} ${notice.content || ""}`.trim().split(/\s+/u).filter(Boolean).length;
   return 4000 + (words / (lang === "np" ? 150 : 200)) * 60000;
@@ -452,7 +501,50 @@ export default function PublicLanding() {
 
         <section id="guides" className="scroll-mt-24 py-16 sm:py-20"><div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"><div className="max-w-2xl"><p className="text-xs font-bold uppercase tracking-[.16em] text-emerald-800">{t.knowledgeEyebrow}</p><h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">{t.knowledgeTitle}</h2><p className="mt-4 text-sm leading-7 text-slate-600">{t.knowledgeBody}</p></div><div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{species.map(({ icon, key, tone }) => <article key={key} className="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:-translate-y-1 hover:shadow-lg"><div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${tone} text-2xl`}>{icon}</div><h3 className="mt-4 text-lg font-semibold">{t[key]}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{t[`${key}Body`]}</p></article>)}</div></div></section>
 
-        <section className="bg-[#152f29] py-16 text-white sm:py-20"><div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[.8fr_1.2fr] lg:px-8"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-lime-300">{t.researchEyebrow}</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{t.researchTitle}</h2><p className="mt-4 max-w-lg text-sm leading-7 text-emerald-50/75">{t.researchBody}</p></div><div className="grid gap-3 sm:grid-cols-2"><article className="rounded-2xl border border-white/10 bg-white/[.06] p-5"><BookOpen className="h-5 w-5 text-lime-300" /><h3 className="mt-4 font-semibold">{t.researchCard}</h3><p className="mt-2 text-sm leading-6 text-emerald-50/75">{t.researchCardBody}</p></article><article className="rounded-2xl border border-white/10 bg-white/[.06] p-5"><Leaf className="h-5 w-5 text-lime-300" /><h3 className="mt-4 font-semibold">{t.repository}</h3><p className="mt-2 text-sm leading-6 text-emerald-50/75">{t.repositoryBody}</p><div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[11px] text-emerald-50/80"><Clock3 className="h-3 w-3" />{t.status}</div></article></div></div></section>
+        <section className="bg-[#152f29] py-16 text-white sm:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-10 lg:grid-cols-[.8fr_1.2fr]">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[.16em] text-lime-300">{t.researchEyebrow}</p>
+                <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{t.researchTitle}</h2>
+                <p className="mt-4 max-w-lg text-sm leading-7 text-emerald-50/75">{t.researchBody}</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <article className="rounded-2xl border border-white/10 bg-white/[.06] p-5">
+                  <BookOpen className="h-5 w-5 text-lime-300" />
+                  <h3 className="mt-4 font-semibold">{t.researchCard}</h3>
+                  <p className="mt-2 text-sm leading-6 text-emerald-50/75">{t.researchCardBody}</p>
+                </article>
+                <article className="rounded-2xl border border-white/10 bg-white/[.06] p-5">
+                  <Leaf className="h-5 w-5 text-lime-300" />
+                  <h3 className="mt-4 font-semibold">{t.repository}</h3>
+                  <p className="mt-2 text-sm leading-6 text-emerald-50/75">{t.repositoryBody}</p>
+                  <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[11px] text-emerald-50/80"><Clock3 className="h-3 w-3" />{t.status}</div>
+                </article>
+              </div>
+            </div>
+            <div className="mt-10 border-t border-white/10 pt-8">
+              <h3 className="text-xl font-semibold">{lang === "np" ? "अघिल्ला अध्ययनले के देखाए?" : "What earlier studies found"}</h3>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-emerald-50/75">
+                {lang === "np"
+                  ? "यी अध्ययनले पृष्ठभूमि दिन्छन्। यिनले वडा २१ को अहिलेको अवस्था बताउँदैनन्। यस परियोजनाले आफ्नै विवरण सङ्कलन र समीक्षा गर्नेछ।"
+                  : "These studies provide context; they do not describe current conditions in Ward 21. This project will collect and review its own evidence."}
+              </p>
+              <div className="mt-5 grid gap-3 md:grid-cols-3">
+                {researchSources[lang].map((source) => (
+                  <article key={source.url} className="flex flex-col rounded-2xl border border-white/10 bg-white/[.06] p-4">
+                    <h4 className="font-semibold leading-6">{source.title}</h4>
+                    <p className="mt-2 text-xs leading-5 text-lime-100/80">{source.citation}</p>
+                    <p className="mt-3 flex-1 text-sm leading-6 text-emerald-50/75">{source.summary}</p>
+                    <a href={source.url} target="_blank" rel="noreferrer" className="mt-4 inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-lime-200 underline-offset-4 hover:underline">
+                      {source.link}<ArrowRight className="h-4 w-4" />
+                    </a>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
       <footer className="border-t border-slate-200 bg-white"><div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8"><span>{t.footer}</span><Link className="inline-flex items-center gap-1 font-semibold text-emerald-900 hover:underline" to="/login">{t.signIn}<ArrowRight className="h-3.5 w-3.5" /></Link></div></footer>
