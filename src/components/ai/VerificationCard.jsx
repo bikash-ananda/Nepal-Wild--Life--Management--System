@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { MapPin, Clock, Camera, Brain, ChevronDown, ChevronUp, PenTool } from "lucide-react";
+import { MapPin, Clock, Camera, Brain, ChevronDown, ChevronUp, PenTool, SkipForward } from "lucide-react";
 import { cn } from "@/lib/utils";
 import BoundingBoxEditor from "./BoundingBoxEditor";
 import PrivateImage from "@/components/PrivateImage";
@@ -10,7 +10,7 @@ const verificationOptions = [
   "False Detection", "Other"
 ];
 
-export default function VerificationCard({ sample, onVerify }) {
+export default function VerificationCard({ sample, onVerify, onSkip }) {
   const [boxes, setBoxes] = useState(sample.bounding_boxes || []);
   const [showBBox, setShowBBox] = useState(false);
   const [customLabel, setCustomLabel] = useState("");
@@ -129,6 +129,15 @@ export default function VerificationCard({ sample, onVerify }) {
           </button>
         )}
       </div>
+
+      <button
+        type="button"
+        onClick={() => onSkip?.(sample)}
+        className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-400 hover:bg-amber-50 hover:text-amber-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+      >
+        <SkipForward className="h-4 w-4" />
+        Can’t verify this image · Pass it to another reviewer
+      </button>
     </div>
   );
 }

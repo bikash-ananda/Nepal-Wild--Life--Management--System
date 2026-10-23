@@ -1,8 +1,8 @@
 {
-  "name": "Nepal Wildlife Management System",
-  "short_name": "Wildlife MS",
-  "description": "Mobile field capture and wildlife conflict research for Nepal.",
-  "start_url": "/field-capture",
+  "name": "Human Wildlife Conflict Management System",
+  "short_name": "Wildlife Conflict",
+  "description": "Global wildlife conflict reporting and human review.",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#f8fafc",

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Brain, CheckCircle2, Loader2, SkipForward, Image as ImageIcon, UsersRound } from "lucide-react";
+import { Brain, CheckCircle2, Loader2, Image as ImageIcon, UsersRound } from "lucide-react";
 import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
@@ -58,7 +58,7 @@ export default function AIVerification() {
 
   const handleSkip = (sample) => {
     setDeferredIds((current) => new Set([...current, sample.id]));
-    toast({ title: "Skipped for now", description: "This sample remains pending and can be reviewed later in this session." });
+    toast({ title: "Passed to the next reviewer", description: "This sample stays unverified and can be reviewed by someone else." });
   };
 
   const currentSample = pending.find((sample) => !deferredIds.has(sample.id));
@@ -93,7 +93,7 @@ export default function AIVerification() {
       ) : !currentSample && pending.length > 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-6 text-center">
           <h2 className="font-semibold text-slate-800">All remaining samples were skipped for now</h2>
-          <p className="mt-2 text-sm text-slate-500">{deferredCount} sample(s) are still pending review. Skipping did not reject or change them.</p>
+          <p className="mt-2 text-sm text-slate-500">{deferredCount} sample(s) remain unverified. Passing them did not reject or change them; another reviewer can review them later.</p>
           <Button variant="outline" className="mt-4" onClick={() => setDeferredIds(new Set())}>Review skipped samples</Button>
         </div>
       ) : !currentSample ? (
@@ -102,13 +102,10 @@ export default function AIVerification() {
         </div>
       ) : (
         <div className="max-w-2xl mx-auto">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-xs text-slate-400">Reviewing {pending.length - deferredCount} of {pending.length} pending · {deferredCount} skipped</div>
-            <Button variant="ghost" size="sm" onClick={() => handleSkip(currentSample)} disabled={saving}><SkipForward className="w-4 h-4 mr-1" /> Skip</Button>
-          </div>
+          <div className="mb-3 text-xs text-slate-400">Reviewing {pending.length - deferredCount} of {pending.length} pending · {deferredCount} passed</div>
           {saving ? (
             <div className="flex flex-col items-center py-20"><Loader2 className="w-8 h-8 text-emerald-500 animate-spin mb-2" /><div className="text-sm text-slate-500">Saving human review…</div></div>
-          ) : <VerificationCard key={currentSample.id} sample={currentSample} onVerify={handleVerify} />}
+          ) : <VerificationCard key={currentSample.id} sample={currentSample} onVerify={handleVerify} onSkip={handleSkip} />}
         </div>
       )}
 

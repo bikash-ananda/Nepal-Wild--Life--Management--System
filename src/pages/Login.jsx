@@ -23,7 +23,7 @@ export default function Login() {
     setLoading(true);
     try {
       await api.auth.loginViaEmailPassword(email, password);
-      window.location.href = returnTo;
+      window.location.href = returnTo === "/" ? "/ai-verification" : returnTo;
     } catch (err) {
       setError(err.message || "Invalid email or password");
     } finally {

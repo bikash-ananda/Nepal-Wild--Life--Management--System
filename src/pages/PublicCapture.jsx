@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
-  Satellite, Loader2, CheckCircle2, Leaf, ShieldCheck, Camera, RefreshCw, MapPin,
+  Satellite, Loader2, Camera, RefreshCw, MapPin,
 } from "lucide-react";
 import { api } from "@/api/apiClient";
 import CameraViewfinder from "@/components/field/CameraViewfinder";
@@ -9,23 +9,19 @@ import { useGeolocation } from "@/hooks/useGeolocation";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
-
-const NEPAL_PROVINCES = [
-  "Koshi", "Madhesh", "Bagmati", "Gandaki", "Lumbini", "Karnali", "Sudurpashchim",
-];
+import PokharaLogo from "@/components/PokharaLogo";
 
 const labels = {
   en: {
-    title: "Nepal Human–Wildlife Conflict Management System", subtitle: "Report wildlife from anywhere — no account needed",
+    title: "Human Wildlife Conflict Management System", subtitle: "Report wildlife from anywhere in the world — no account needed",
     gpsLoading: "Acquiring GPS…", gpsLocked: "GPS locked", noGps: "No GPS fix", enableGps: "Tap Get GPS and allow location access. HTTPS is required.", refreshGps: "Get / refresh GPS", gettingGps: "Getting location…", manualCoordinates: "Or enter coordinates manually", latitude: "Latitude", longitude: "Longitude", coordinatePair: "Enter both latitude and longitude, or leave both blank.", coordinateInvalid: "Check coordinates: latitude −90 to 90, longitude −180 to 180.",
-    captured: "Captured photo", retake: "Retake", name: "Your name (optional)", namePlaceholder: "e.g. Ram Sharma", province: "Province", selectProvince: "Select province", district: "District", districtPlaceholder: "e.g. Kaski", location: "Location / Area name", locationPlaceholder: "e.g. Farm, Ward 21", notes: "Notes (optional)", notesPlaceholder: "What was the animal doing?", submit: "Submit report for review", submitting: "Submitting report…", thankYou: "Thank you! Your report was received.", species: "Species:", unknown: "Unknown", behavior: "Behavior:", flagship: "Flagship species — alert sent to rangers", matched: "Matched to known individual:", pending: "New individual registered for ranger review.", privacy: "Photos are stored privately. By submitting, you help track wildlife across Nepal.", login: "Officer login →", submitted: "Your report was received for human review.", language: "नेपाली", consent: "I agree to share this photo and its location with authorized project reviewers for conflict research.",
+    captured: "Captured photo", retake: "Retake", name: "Your name (optional)", namePlaceholder: "e.g. Ram Sharma", country: "Country", countryPlaceholder: "e.g. Nepal", countryRequired: "Enter the country where this photo was taken.", province: "State / Province / Region (optional)", district: "District / County (optional)", location: "Location / Area name", locationPlaceholder: "City, village, farm or landmark", notes: "Notes (optional)", notesPlaceholder: "What was the animal doing?", submit: "Submit report for review", submitting: "Submitting report…", thankYou: "Thank you! Your report was received.", flagship: "Priority species — reviewer attention requested", privacy: "Photos are stored privately. Reports are reviewed before they are treated as confirmed.", submitted: "Your report was received for human review.", language: "नेपाली", consent: "I agree to share this photo and its location with authorized project reviewers for conflict research.", locationRequired: "Location is required. Allow GPS or enter both coordinates manually.", gpsPrecision: "GPS is an estimate. Check its displayed accuracy before sending.",
   },
   np: {
-    title: "नेपाल मानव–वन्यजन्तु द्वन्द्व व्यवस्थापन प्रणाली", subtitle: "कुनै पनि ठाउँबाट वन्यजन्तुको जानकारी दिनुहोस् — खाता आवश्यक छैन",
+    title: "मानव–वन्यजन्तु द्वन्द्व व्यवस्थापन प्रणाली", subtitle: "विश्वको जुनसुकै ठाउँबाट वन्यजन्तुको जानकारी दिनुहोस् — खाता आवश्यक छैन",
     gpsLoading: "GPS खोज्दै…", gpsLocked: "GPS प्राप्त भयो", noGps: "GPS स्थान प्राप्त भएन", enableGps: "GPS लिन थिच्नुहोस् र स्थान अनुमति दिनुहोस्। HTTPS आवश्यक छ।", refreshGps: "GPS लिनुहोस् / फेरि खोज्नुहोस्", gettingGps: "स्थान खोज्दै…", manualCoordinates: "वा निर्देशाङ्क आफैँ लेख्नुहोस्", latitude: "अक्षांश", longitude: "देशान्तर", coordinatePair: "अक्षांश र देशान्तर दुवै लेख्नुहोस् वा दुवै खाली छोड्नुहोस्।", coordinateInvalid: "निर्देशाङ्क जाँच्नुहोस्: अक्षांश −९० देखि ९० र देशान्तर −१८० देखि १८० सम्म।",
-    captured: "तस्बिर खिचियो", retake: "फेरि खिच्नुहोस्", name: "तपाईंको नाम (वैकल्पिक)", namePlaceholder: "जस्तै: राम शर्मा", province: "प्रदेश", selectProvince: "प्रदेश छान्नुहोस्", district: "जिल्ला", districtPlaceholder: "जस्तै: कास्की", location: "स्थान / क्षेत्र", locationPlaceholder: "जस्तै: खेत, वडा २१", notes: "टिप्पणी (वैकल्पिक)", notesPlaceholder: "जनावरले के गरिरहेको थियो?", submit: "समीक्षाका लागि पठाउनुहोस्", submitting: "पठाउँदै…", thankYou: "धन्यवाद! तपाईंको विवरण प्राप्त भयो।", species: "प्रजाति:", unknown: "अज्ञात", behavior: "व्यवहार:", flagship: "महत्त्वपूर्ण प्रजाति — वनकर्मीलाई सूचना पठाइयो", matched: "पहिचान भएको जनावरसँग मिल्यो:", pending: "नयाँ जनावर वनकर्मीको समीक्षाका लागि दर्ता भयो।", privacy: "तस्बिर निजी रूपमा सुरक्षित हुन्छ। तपाईंको जानकारीले नेपालभरिका वन्यजन्तुको अध्ययनमा सहयोग गर्छ।", login: "अधिकारी लगइन →", submitted: "तपाईंको विवरण मानव समीक्षाका लागि प्राप्त भयो।", language: "English", consent: "द्वन्द्व अनुसन्धानका लागि अधिकृत परियोजना समीक्षकसँग यो तस्बिर र स्थान साझा गर्न म सहमत छु।",
+    captured: "तस्बिर खिचियो", retake: "फेरि खिच्नुहोस्", name: "तपाईंको नाम (वैकल्पिक)", namePlaceholder: "जस्तै: राम शर्मा", country: "देश", countryPlaceholder: "जस्तै: नेपाल", countryRequired: "तस्बिर खिचिएको देश लेख्नुहोस्।", province: "प्रदेश / राज्य / क्षेत्र (वैकल्पिक)", district: "जिल्ला / काउन्टी (वैकल्पिक)", location: "स्थान / क्षेत्र", locationPlaceholder: "सहर, गाउँ, खेत वा चिनारीको स्थान", notes: "टिप्पणी (वैकल्पिक)", notesPlaceholder: "जनावरले के गरिरहेको थियो?", submit: "समीक्षाका लागि पठाउनुहोस्", submitting: "पठाउँदै…", thankYou: "धन्यवाद! तपाईंको विवरण प्राप्त भयो।", flagship: "प्राथमिक प्रजाति — समीक्षकले हेर्नुपर्ने", privacy: "तस्बिर निजी रूपमा सुरक्षित हुन्छ। पुष्टि भएको मान्नुअघि विवरण समीक्षा गरिन्छ।", submitted: "तपाईंको विवरण मानव समीक्षाका लागि प्राप्त भयो।", language: "English", consent: "द्वन्द्व अनुसन्धानका लागि अधिकृत परियोजना समीक्षकसँग यो तस्बिर र स्थान साझा गर्न म सहमत छु।", locationRequired: "स्थान आवश्यक छ। GPS अनुमति दिनुहोस् वा दुवै निर्देशाङ्क आफैँ लेख्नुहोस्।", gpsPrecision: "GPS अनुमानित हुन्छ। पठाउनुअघि देखाइएको शुद्धता जाँच्नुहोस्।",
   },
 };
 
@@ -36,6 +32,7 @@ export default function PublicCapture() {
   const { coords, error: gpsError, loading: gpsLoading, refresh: refreshGps, refreshing: gpsRefreshing } = useGeolocation();
   const [submitterName, setSubmitterName] = useState("");
   const [locationName, setLocationName] = useState("");
+  const [country, setCountry] = useState("");
   const [province, setProvince] = useState("");
   const [district, setDistrict] = useState("");
   const [manualLatitude, setManualLatitude] = useState("");
@@ -44,8 +41,8 @@ export default function PublicCapture() {
   const [pendingPhoto, setPendingPhoto] = useState(null);
   const [captureMetadata, setCaptureMetadata] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState(null);
   const [consent, setConsent] = useState(false);
+  const [captureLocationBusy, setCaptureLocationBusy] = useState(false);
 
   const localizeGpsError = (message) => {
     if (lang !== "np") return message;
@@ -75,18 +72,33 @@ export default function PublicCapture() {
     } catch { /* The hook exposes a clear, actionable GPS error in the status panel. */ }
   };
 
-  const handleCapture = (photoDataUrl) => {
+  const handleCapture = async (photoDataUrl) => {
+    const capturedAt = new Date().toISOString();
     setPendingPhoto(photoDataUrl);
-    setCaptureMetadata({ captured_at: new Date().toISOString(), coords: coords ? { ...coords } : null });
-    setResult(null);
+    const fixAge = coords?.timestamp ? Date.now() - Number(coords.timestamp) : Infinity;
+    const freshFix = coords && fixAge >= 0 && fixAge <= 30000 ? { ...coords } : null;
+    setCaptureMetadata({ captured_at: capturedAt, coords: freshFix });
+    if (freshFix) return;
+    setCaptureLocationBusy(true);
+    try {
+      const freshCoords = await refreshGps();
+      setCaptureMetadata((metadata) => metadata ? { ...metadata, coords: freshCoords } : metadata);
+    } catch {
+      // Keep the recent GPS fix, if any; its accuracy is shown to the reporter.
+    } finally {
+      setCaptureLocationBusy(false);
+    }
   };
 
   const handleSubmit = async () => {
     if (!pendingPhoto) return;
     setSubmitting(true);
-    setResult(null);
     try {
+      if (!country.trim()) throw new Error("COUNTRY_REQUIRED");
       const manualPoint = getManualPoint();
+      // Use the fix tied to this photo, never a stale background fix.
+      const point = manualPoint || captureMetadata?.coords;
+      if (!point) throw new Error("LOCATION_REQUIRED");
       // Upload the photo privately first (no login required on a public app)
       let photo_uri;
       try {
@@ -100,34 +112,33 @@ export default function PublicCapture() {
         return;
       }
 
-      const res = await api.functions.invoke("publicCapture", {
+      await api.functions.invoke("publicCapture", {
         photo_uri,
         consent,
-        latitude: manualPoint?.latitude ?? captureMetadata?.coords?.latitude ?? coords?.latitude ?? null,
-        longitude: manualPoint?.longitude ?? captureMetadata?.coords?.longitude ?? coords?.longitude ?? null,
-        accuracy: manualPoint ? null : captureMetadata?.coords?.accuracy ?? coords?.accuracy ?? null,
-        location_name: locationName,
+        latitude: point.latitude,
+        longitude: point.longitude,
+        accuracy: manualPoint ? null : point.accuracy ?? null,
+        location_name: [country.trim() ? `Country: ${country.trim()}` : "", locationName.trim()].filter(Boolean).join(" · "),
         province,
         district,
         submitter_name: submitterName,
         notes,
         captured_at: captureMetadata?.captured_at || new Date().toISOString(),
       });
-      setResult(res.data);
       setPendingPhoto(null);
       setCaptureMetadata(null);
       setConsent(false);
       setManualLatitude("");
       setManualLongitude("");
       toast({
-        title: "Report submitted!",
-        description: res.data?.classification?.species_name
-          ? `Identified as ${res.data.classification.species_name}`
-          : "Received — thank you",
+        title: t.submitted,
+        description: point.accuracy == null ? t.thankYou : `${t.gpsPrecision} (±${Math.round(point.accuracy)} m)`,
       });
     } catch (e) {
       const description = e.message === "COORDINATE_PAIR" ? t.coordinatePair
         : e.message === "COORDINATES_INVALID" ? t.coordinateInvalid
+          : e.message === "COUNTRY_REQUIRED" ? t.countryRequired
+          : e.message === "LOCATION_REQUIRED" ? t.locationRequired
           : localizeGpsError(e.message);
       toast({ title: "Submission failed", description, variant: "destructive" });
     } finally {
@@ -135,13 +146,13 @@ export default function PublicCapture() {
     }
   };
 
+  const displayedCoords = pendingPhoto ? captureMetadata?.coords : coords;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-white">
       <header className="sticky top-0 z-20 glass border-b border-emerald-100">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-sm">
-            <Leaf className="w-5 h-5" />
-          </div>
+          <Link to="/login" aria-label={lang === "np" ? "आधिकारिक लगइन खोल्नुहोस्" : "Open official login"} className="shrink-0"><PokharaLogo className="h-10 w-10 shadow-sm" /></Link>
           <div className="min-w-0">
             <h1 className="font-bold text-slate-800 leading-tight">{t.title}</h1>
             <p className="text-[11px] text-slate-500">{t.subtitle}</p>
@@ -156,10 +167,11 @@ export default function PublicCapture() {
           <div className="flex items-start gap-2.5">
             <Satellite className={`mt-0.5 h-4 w-4 shrink-0 ${coords ? "text-emerald-600" : "text-slate-400"}`} />
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-semibold text-slate-700">{gpsLoading ? t.gpsLoading : coords ? t.gpsLocked : t.noGps}</div>
+              <div className="text-sm font-semibold text-slate-700">{captureLocationBusy ? t.gettingGps : gpsLoading ? t.gpsLoading : displayedCoords ? t.gpsLocked : t.noGps}</div>
               <div className="break-words text-[11px] text-slate-500">
-                {coords ? `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)} (±${Math.round(coords.accuracy)}m)` : gpsError ? localizeGpsError(gpsError) : t.enableGps}
+                {displayedCoords ? `${displayedCoords.latitude.toFixed(6)}, ${displayedCoords.longitude.toFixed(6)} (±${Math.round(displayedCoords.accuracy)}m)` : gpsError ? localizeGpsError(gpsError) : t.enableGps}
               </div>
+              {displayedCoords && <a className="mt-1 inline-flex text-[11px] font-semibold text-emerald-800 underline" href={`https://www.openstreetmap.org/?mlat=${displayedCoords.latitude}&mlon=${displayedCoords.longitude}#map=18/${displayedCoords.latitude}/${displayedCoords.longitude}`} target="_blank" rel="noreferrer">{lang === "np" ? "नक्सामा स्थान जाँच्नुहोस्" : "Check this point on a map"}</a>}
             </div>
             <button type="button" onClick={handleRefreshGps} disabled={gpsRefreshing} className="shrink-0 rounded-full border border-emerald-900/15 bg-white px-3 py-2 text-xs font-semibold text-emerald-900 disabled:opacity-60">
               {gpsRefreshing ? t.gettingGps : t.refreshGps}
@@ -173,6 +185,7 @@ export default function PublicCapture() {
             <div className="relative w-full aspect-[3/4] sm:aspect-video rounded-3xl overflow-hidden bg-slate-900">
               <img src={pendingPhoto} alt={t.captured} className="w-full h-full object-cover" />
               <button
+                disabled={captureLocationBusy}
                 onClick={() => { setPendingPhoto(null); setCaptureMetadata(null); setConsent(false); }}
                 className="absolute top-3 right-3 flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-black/55 text-white backdrop-blur"
               >
@@ -192,21 +205,18 @@ export default function PublicCapture() {
             <Label className="text-xs text-slate-500">{t.name}</Label>
             <Input value={submitterName} onChange={(e) => setSubmitterName(e.target.value)} placeholder={t.namePlaceholder} />
           </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-slate-500">{t.country}</Label>
+            <Input value={country} onChange={(e) => setCountry(e.target.value)} autoComplete="country-name" placeholder={t.countryPlaceholder} required />
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs text-slate-500">{t.province}</Label>
-              <Select value={province} onValueChange={setProvince}>
-                <SelectTrigger><SelectValue placeholder={t.selectProvince} /></SelectTrigger>
-                <SelectContent>
-                  {NEPAL_PROVINCES.map((p) => (
-                    <SelectItem key={p} value={p}>{p}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input value={province} onChange={(e) => setProvince(e.target.value)} autoComplete="address-level1" />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs text-slate-500">{t.district}</Label>
-              <Input value={district} onChange={(e) => setDistrict(e.target.value)} placeholder={t.districtPlaceholder} />
+              <Input value={district} onChange={(e) => setDistrict(e.target.value)} autoComplete="address-level2" />
             </div>
           </div>
           <div className="space-y-1.5">
@@ -237,7 +247,7 @@ export default function PublicCapture() {
         {pendingPhoto && (
           <button
             onClick={handleSubmit}
-            disabled={submitting || !consent}
+            disabled={submitting || captureLocationBusy || !consent}
             className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-emerald-600 text-white font-semibold shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 active:scale-[0.99] transition-all disabled:opacity-60 mb-4"
           >
             {submitting ? (
@@ -248,45 +258,9 @@ export default function PublicCapture() {
           </button>
         )}
 
-        {result && (
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 mb-4">
-            <div className="flex items-center gap-2 mb-2">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-              <h3 className="font-semibold text-emerald-800">{t.thankYou}</h3>
-            </div>
-            <div className="text-sm text-slate-700 space-y-1">
-              <p>
-                <span className="text-slate-500">{t.species}</span>{" "}
-                <span className="font-medium">{result.classification?.species_name || t.unknown}</span>
-                {result.classification?.confidence ? ` (${Math.round(result.classification.confidence * 100)}%)` : ""}
-              </p>
-              {result.classification?.scientific_name && (
-                <p className="text-xs text-slate-500 italic">{result.classification.scientific_name}</p>
-              )}
-              {result.classification?.behavior && (
-                <p><span className="text-slate-500">{t.behavior}</span> {result.classification.behavior}</p>
-              )}
-              {result.flagship && (
-                <p className="text-amber-700 font-medium flex items-center gap-1">
-                  <ShieldCheck className="w-4 h-4" /> {t.flagship}
-                </p>
-              )}
-              {result.individual_match?.auto_linked && (
-                <p className="text-emerald-700 font-medium">
-                  {t.matched} {result.individual_match.auto_linked.nickname}
-                </p>
-              )}
-              {result.individual_match?.pending && (
-                <p className="text-slate-500 text-xs">{t.pending}</p>
-              )}
-            </div>
-          </div>
-        )}
-
         <p className="text-[11px] text-slate-400 text-center flex items-center justify-center gap-1">
           <MapPin className="w-3 h-3" />
-          {t.privacy}{" "}
-          <Link to="/login" className="text-emerald-600 underline ml-1">{t.login}</Link>
+          {t.privacy}
         </p>
         <div className="mt-3 text-center"><Link to="/welcome" className="text-xs font-semibold text-emerald-800 underline underline-offset-4">{lang === "np" ? "सार्वजनिक मुख्य पृष्ठमा फर्कनुहोस्" : "Back to the public home page"}</Link></div>
       </main>
