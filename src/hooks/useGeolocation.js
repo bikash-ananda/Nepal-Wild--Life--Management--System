@@ -23,8 +23,9 @@ export function useGeolocation() {
 
   const refresh = useCallback(() => new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
-      const cause = new Error("Location is not supported by this browser.");
+      const cause = new Error(locationUnavailableMessage());
       setError(cause.message);
+      setLoading(false);
       reject(cause);
       return;
     }
@@ -34,6 +35,7 @@ export function useGeolocation() {
       (cause) => {
         const message = geoErrorMessage(cause);
         setError(message);
+        setLoading(false);
         reject(new Error(message));
       },
       { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
@@ -63,8 +65,18 @@ export function useGeolocation() {
 }
 
 function geoErrorMessage(error) {
+  if (typeof window !== "undefined" && !window.isSecureContext) {
+    return "Location access requires HTTPS. Open the secure website address, then allow location in your browser.";
+  }
   if (error?.code === 1) return "Location permission is blocked. Allow location access in your browser settings.";
   if (error?.code === 2) return "The device could not determine its location. Move to an open area and try again.";
   if (error?.code === 3) return "Location took too long. Try again outdoors or enter coordinates manually.";
   return error?.message || "Could not read the device location.";
+}
+
+function locationUnavailableMessage() {
+  if (typeof window !== "undefined" && !window.isSecureContext) {
+    return "Location access requires HTTPS. Open the secure website address, then allow location in your browser.";
+  }
+  return "Location is not supported by this browser. Enter coordinates manually if you know them.";
 }

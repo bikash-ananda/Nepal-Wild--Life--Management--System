@@ -73,7 +73,7 @@ const AuthenticatedApp = () => {
   const { isLoadingAuth, isAuthenticated } = useAuth();
   const location = useLocation();
   const isPublicRoute = location.pathname === "/public-capture";
-  const isPublicHome = location.pathname === "/welcome" || (location.pathname === "/" && !isAuthenticated && !isLoadingAuth);
+  const isPublicHome = ["/welcome", "/public"].includes(location.pathname) || (location.pathname === "/" && !isAuthenticated && !isLoadingAuth);
   const isAuthRoute = ["/login", "/register", "/forgot-password", "/reset-password"].includes(location.pathname);
 
   if (isPublicRoute) return <PublicCapture />;

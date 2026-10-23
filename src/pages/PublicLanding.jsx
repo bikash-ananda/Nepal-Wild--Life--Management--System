@@ -13,7 +13,7 @@ const copy = {
     eyebrow: "POKHARA METROPOLITAN CITY · COMMUNITY PROTOTYPE", heroTitle: "Help make farms safer, one clear report at a time.", heroBody: "This prototype supports a study of human–monkey crop conflict in Pokhara Metropolitan City, Ward 21. Send a wildlife photo or tell us about farm damage. Project staff review each report to understand what is happening and where support may be needed.", capture: "Send a wildlife photo", report: "Report farm damage", pilot: "Pokhara Metropolitan City prototype · Ward 21", pilotNote: "For the Ward 21 study: share sightings and losses. A person reviews every submission; an AI alert alone is never treated as confirmed.", artAlt: "Illustration of a monkey near farms in Pokhara", illustration: "Study illustration", locationLabel: "STUDY AREA", areaLabel: "Ward 21 · Pokhara, Kaski", focusLabel: "Community study on monkey crop conflict", noticeSetup: "Choose the area for public notices",
     aboutTitle: "A local prototype for Ward 21", aboutBody: "The first study focuses on when and where monkeys affect farms in Ward 21. Residents can share a sighting or a loss; the project team reviews reports to learn from local experience.", howTitle: "How the prototype works", howPhoto: "Share what you saw", howPhotoBody: "Take or upload a wildlife photo, or describe crop damage.", howReview: "The team reviews it", howReviewBody: "A project reviewer checks reports before they are used as evidence.", howLearn: "Local learning builds", howLearnBody: "Reviewed reports help the study understand conflict patterns and response needs.",
     trustTitle: "Your report, handled with care", trustOne: "A person checks reports", trustOneBody: "Phone and camera reports remain unverified until a project reviewer checks them.", trustTwo: "Your exact location is protected", trustTwoBody: "Precise coordinates are visible only to authorized case reviewers.", trustThree: "No automatic deterrents", trustThreeBody: "This research prototype does not automatically trigger lights, sound, or electrical devices.",
-    reportTitle: "Tell us what happened", reportBody: "Your report helps researchers understand where conflict occurs and what support is needed. Fields marked required are needed to send it.", reportType: "Type of loss", crop: "Crop damage", livestock: "Livestock loss", both: "Crop and livestock", other: "Other wildlife damage", cropName: "Crop affected", livestockName: "Livestock affected", estimate: "Estimated loss (NPR)", details: "What happened?", detailsPlaceholder: "Tell us what was damaged, when it happened, and any details that may help the review.", name: "Your name (optional)", phone: "Phone (optional)", province: "Province", district: "District", municipality: "Municipality", ward: "Ward number", area: "Area or village (optional)", location: "Use my location", lookup: "Suggest area from GPS", gpsUnavailable: "Location unavailable. You can enter the area manually.", geocodeUnavailable: "Automatic area lookup is not configured. Please verify and enter the area yourself.", geocodeReview: "Area suggestions can be approximate. Please check them before submitting.", geocodePrivacy: "Your precise coordinates go to the configured area-lookup provider only when you request a suggestion.", consent: "I agree to share this report and its location with authorized project reviewers for conflict research and response.", submit: "Send report for review", sending: "Sending report…", submitted: "Thank you. Your report was received for human review.", reportError: "We could not send the report. Please try again.", gpsReady: "Location details", gpsAccuracy: "Estimated GPS accuracy", required: "Required",
+    reportTitle: "Tell us what happened", reportBody: "Your report helps researchers understand where conflict occurs and what support is needed. Fields marked required are needed to send it.", reportType: "Type of loss", crop: "Crop damage", livestock: "Livestock loss", both: "Crop and livestock", other: "Other wildlife damage", cropName: "Crop affected", livestockName: "Livestock affected", estimate: "Estimated loss (NPR)", details: "What happened?", detailsPlaceholder: "Tell us what was damaged, when it happened, and any details that may help the review.", name: "Your name (optional)", phone: "Phone (optional)", province: "Province", district: "District", municipality: "Municipality", ward: "Ward number", area: "Area or village (optional)", location: "Use my location", lookup: "Suggest area from GPS", gpsUnavailable: "Location unavailable. You can enter coordinates manually or continue without GPS.", gpsSecure: "Location requires a secure HTTPS website. Open this site using its HTTPS address, then allow location access.", gpsPermission: "Location permission is blocked. Allow it in your browser or device settings, then try again.", gpsTimeout: "Location took too long. Try again outdoors, or enter coordinates manually.", gpsTryAgain: "Could not read your location. Check device location settings or enter coordinates manually.", manualCoordinates: "Or enter coordinates manually", latitude: "Latitude", longitude: "Longitude", coordinatePair: "Enter both latitude and longitude, or leave both blank.", coordinateInvalid: "Enter valid coordinates: latitude −90 to 90, longitude −180 to 180.", geocodeUnavailable: "Automatic area lookup is not available. Please verify and enter the area yourself.", geocodeReview: "Area suggestions can be approximate. Please check them before submitting.", geocodePrivacy: "Your precise coordinates go to the configured area-lookup provider only when you request a suggestion.", consent: "I agree to share this report and its location with authorized project reviewers for conflict research and response.", submit: "Send report for review", sending: "Sending report…", submitted: "Thank you. Your report was received for human review.", reportError: "We could not send the report. Please try again.", gpsReady: "Location details", gpsAccuracy: "Estimated GPS accuracy", required: "Required",
     knowledgeEyebrow: "PRACTICAL FIELD GUIDANCE", knowledgeTitle: "Share space safely", knowledgeBody: "Simple, non-harmful steps can reduce risk while the local team learns from community reports.", monkey: "Monkeys", monkeyBody: "Keep food and waste covered. Avoid feeding, cornering, or chasing monkeys; move indoors if a group approaches.", elephant: "Elephants", elephantBody: "Keep a wide distance, never block a route, and follow instructions from local responders.", leopard: "Leopards", leopardBody: "Bring children and pets indoors at dusk. Do not approach an animal or its den; alert local officials.", boar: "Wild boar", boarBody: "Keep a safe barrier, avoid approaching piglets, and move away calmly if an animal is nearby.", helpTitle: "If anyone is in immediate danger", helpBody: "Move to a safe place and contact your local ward office, police, or the appropriate wildlife authority. This website is not an emergency dispatch service.",
     researchEyebrow: "LEARNING FROM THE FIELD", researchTitle: "Research and community learning", researchBody: "The initial study focuses on human–monkey crop-raiding reports in Pokhara Metropolitan City, Ward 21. Data supports careful research and review; reports are not published as verified incidents by default.", researchCard: "Ward 21 pilot focus", researchCardBody: "Document time, location, crop impact, and response so patterns can be reviewed with the community.", repository: "Research repository", repositoryBody: "Approved papers, summaries, and anonymized incident reports will be shared here when the project team publishes them.", status: "Repository materials will be added after review", footer: "A research pilot for safer coexistence in Nepal.", alertsLabel: "Community notice", noNotices: "No active public notices", dismiss: "Dismiss notice", noticeLabel: "Public safety notice", active: "Active notice", menu: "Open menu", closeMenu: "Close menu", viewGuides: "Read safety guides", scroll: "Explore the pilot",
   },
@@ -22,7 +22,7 @@ const copy = {
     eyebrow: "पोखरा महानगरपालिका · समुदायका लागि नमुना प्रणाली", heroTitle: "एउटा स्पष्ट जानकारीले खेत सुरक्षित बनाउन मद्दत गर्छ।", heroBody: "यो नमुना प्रणाली पोखरा महानगरपालिका वडा २१ मा मानव–बाँदर बाली द्वन्द्वको अध्ययनका लागि बनाइएको हो। बाँदर देखिएको तस्बिर पठाउनुहोस् वा खेतको क्षति बताउनुहोस्। परियोजनाको टोलीले जानकारी समीक्षा गरेर समस्या कहाँ र कहिले भइरहेको छ भन्ने बुझ्नेछ।", capture: "वन्यजन्तुको तस्बिर पठाउनुहोस्", report: "खेतको क्षति बताउनुहोस्", pilot: "पोखरा महानगरपालिकाको नमुना परियोजना · वडा २१", pilotNote: "वडा २१ को अध्ययनका लागि बाँदर देखिएको वा बालीमा भएको क्षतिको जानकारी दिनुहोस्। हरेक जानकारी मानिसले समीक्षा गर्छन्; एआईको सूचना मात्र पुष्टि भएको घटना मानिँदैन।", artAlt: "पोखराको खेत नजिक बाँदर देखाइएको चित्र", illustration: "अध्ययनका लागि बनाइएको चित्र", locationLabel: "अध्ययन क्षेत्र", areaLabel: "वडा २१ · पोखरा, कास्की", focusLabel: "बाँदर र बाली द्वन्द्वसम्बन्धी समुदाय अध्ययन", noticeSetup: "सार्वजनिक सूचना देखाउने क्षेत्र छान्नुहोस्",
     aboutTitle: "वडा २१ का लागि स्थानीय नमुना प्रणाली", aboutBody: "पहिलो अध्ययन वडा २१ मा बाँदरले खेतबालीमा असर गर्ने समय र स्थान बुझ्न केन्द्रित छ। बासिन्दाले वन्यजन्तु देखिएको वा क्षति भएको जानकारी दिन सक्छन्। स्थानीय अनुभवबाट सिक्न परियोजनाको टोलीले विवरण समीक्षा गर्छ।", howTitle: "यो नमुना प्रणाली कसरी चल्छ", howPhoto: "देखेको कुरा पठाउनुहोस्", howPhotoBody: "वन्यजन्तुको तस्बिर खिच्नुहोस् वा पठाउनुहोस्, अथवा बालीको क्षति लेख्नुहोस्।", howReview: "टोलीले समीक्षा गर्छ", howReviewBody: "परियोजनाको समीक्षकले विवरण जाँचेपछि मात्र यसलाई प्रमाणका रूपमा प्रयोग गर्छ।", howLearn: "स्थानीय जानकारी बढ्छ", howLearnBody: "समीक्षा भएका विवरणले द्वन्द्वको अवस्था र आवश्यक प्रतिक्रियाबारे अध्ययन गर्न मद्दत गर्छ।",
     trustTitle: "तपाईंको जानकारी सावधानीपूर्वक प्रयोग हुन्छ", trustOne: "मानिसले विवरण जाँच्छन्", trustOneBody: "परियोजनाको समीक्षकले नजाँचेसम्म फोन र क्यामेराका विवरण अपुष्ट रहन्छन्।", trustTwo: "ठ्याक्कै स्थान सुरक्षित राखिन्छ", trustTwoBody: "ठ्याक्कै GPS स्थान अधिकृत केस समीक्षकले मात्र हेर्न सक्छन्।", trustThree: "स्वचालित प्रतिकार हुँदैन", trustThreeBody: "यो अनुसन्धान नमुना प्रणालीले बत्ती, आवाज वा विद्युतीय उपकरण आफैँ चलाउँदैन।",
-    reportTitle: "के भयो हामीलाई बताउनुहोस्", reportBody: "तपाईंको जानकारीले द्वन्द्व कहाँ हुन्छ र कस्तो सहयोग चाहिन्छ भन्ने बुझ्न अनुसन्धानकर्तालाई मद्दत गर्छ। आवश्यक विवरण भर्नुहोस्।", reportType: "क्षतिको प्रकार", crop: "बाली क्षति", livestock: "पशुधन क्षति", both: "बाली र पशुधन", other: "अन्य वन्यजन्तु क्षति", cropName: "क्षति भएको बाली", livestockName: "क्षति भएको पशुधन", estimate: "अनुमानित क्षति (रु.)", details: "के भएको थियो?", detailsPlaceholder: "के क्षति भयो, कहिले भयो र समीक्षा गर्न सहयोग पुग्ने विवरण लेख्नुहोस्।", name: "तपाईंको नाम (वैकल्पिक)", phone: "फोन (वैकल्पिक)", province: "प्रदेश", district: "जिल्ला", municipality: "पालिका", ward: "वडा नम्बर", area: "टोल वा गाउँ (वैकल्पिक)", location: "मेरो स्थान प्रयोग गर्नुहोस्", lookup: "GPS बाट क्षेत्र सुझाव", gpsUnavailable: "स्थान पत्ता लागेन। तपाईं क्षेत्र आफैँ लेख्न सक्नुहुन्छ।", geocodeUnavailable: "स्वचालित क्षेत्र खोजी उपलब्ध छैन। कृपया क्षेत्र जाँचेर आफैँ भर्नुहोस्।", geocodeReview: "क्षेत्रका सुझाव अनुमानित हुन सक्छन्। पठाउनुअघि जाँच गर्नुहोस्।", geocodePrivacy: "क्षेत्र सुझाव माग्दा मात्र तपाईंको ठ्याक्कै GPS स्थान कन्फिगर गरिएको खोजी सेवामा पठाइन्छ।", consent: "द्वन्द्व अनुसन्धान र प्रतिक्रियाका लागि अधिकृत परियोजना समीक्षकसँग यो विवरण र स्थान साझा गर्न म सहमत छु।", submit: "समीक्षाका लागि पठाउनुहोस्", sending: "पठाउँदै…", submitted: "धन्यवाद। तपाईंको विवरण मानव समीक्षाका लागि प्राप्त भयो।", reportError: "विवरण पठाउन सकिएन। कृपया फेरि प्रयास गर्नुहोस्।", gpsReady: "स्थान विवरण", gpsAccuracy: "अनुमानित GPS शुद्धता", required: "आवश्यक", formLocationStatus: "स्थान प्रयोग गरिएको छैन",
+    reportTitle: "के भयो हामीलाई बताउनुहोस्", reportBody: "तपाईंको जानकारीले द्वन्द्व कहाँ हुन्छ र कस्तो सहयोग चाहिन्छ भन्ने बुझ्न अनुसन्धानकर्तालाई मद्दत गर्छ। आवश्यक विवरण भर्नुहोस्।", reportType: "क्षतिको प्रकार", crop: "बाली क्षति", livestock: "पशुधन क्षति", both: "बाली र पशुधन", other: "अन्य वन्यजन्तु क्षति", cropName: "क्षति भएको बाली", livestockName: "क्षति भएको पशुधन", estimate: "अनुमानित क्षति (रु.)", details: "के भएको थियो?", detailsPlaceholder: "के क्षति भयो, कहिले भयो र समीक्षा गर्न सहयोग पुग्ने विवरण लेख्नुहोस्।", name: "तपाईंको नाम (वैकल्पिक)", phone: "फोन (वैकल्पिक)", province: "प्रदेश", district: "जिल्ला", municipality: "पालिका", ward: "वडा नम्बर", area: "टोल वा गाउँ (वैकल्पिक)", location: "मेरो स्थान प्रयोग गर्नुहोस्", lookup: "GPS बाट क्षेत्र सुझाव", gpsUnavailable: "स्थान पत्ता लागेन। निर्देशाङ्क आफैँ लेख्न वा GPS बिना जारी राख्न सक्नुहुन्छ।", gpsSecure: "स्थानका लागि सुरक्षित HTTPS वेबसाइट चाहिन्छ। वेबसाइटको HTTPS ठेगाना खोल्नुहोस् र ब्राउजरमा स्थान अनुमति दिनुहोस्।", gpsPermission: "स्थान अनुमति रोकिएको छ। ब्राउजर वा फोनको सेटिङमा अनुमति दिएर फेरि प्रयास गर्नुहोस्।", gpsTimeout: "स्थान पत्ता लगाउन ढिलो भयो। बाहिर खुला ठाउँमा फेरि प्रयास गर्नुहोस् वा निर्देशाङ्क आफैँ लेख्नुहोस्।", gpsTryAgain: "स्थान पत्ता लगाउन सकिएन। फोनको स्थान सेटिङ जाँच्नुहोस् वा निर्देशाङ्क आफैँ लेख्नुहोस्।", manualCoordinates: "वा निर्देशाङ्क आफैँ लेख्नुहोस्", latitude: "अक्षांश", longitude: "देशान्तर", coordinatePair: "अक्षांश र देशान्तर दुवै लेख्नुहोस् वा दुवै खाली छोड्नुहोस्।", coordinateInvalid: "सही निर्देशाङ्क लेख्नुहोस्: अक्षांश −९० देखि ९० र देशान्तर −१८० देखि १८० सम्म।", geocodeUnavailable: "स्वचालित क्षेत्र खोजी उपलब्ध छैन। कृपया क्षेत्र जाँचेर आफैँ भर्नुहोस्।", geocodeReview: "क्षेत्रका सुझाव अनुमानित हुन सक्छन्। पठाउनुअघि जाँच गर्नुहोस्।", geocodePrivacy: "क्षेत्र सुझाव माग्दा मात्र तपाईंको ठ्याक्कै GPS स्थान कन्फिगर गरिएको खोजी सेवामा पठाइन्छ।", consent: "द्वन्द्व अनुसन्धान र प्रतिक्रियाका लागि अधिकृत परियोजना समीक्षकसँग यो विवरण र स्थान साझा गर्न म सहमत छु।", submit: "समीक्षाका लागि पठाउनुहोस्", sending: "पठाउँदै…", submitted: "धन्यवाद। तपाईंको विवरण मानव समीक्षाका लागि प्राप्त भयो।", reportError: "विवरण पठाउन सकिएन। कृपया फेरि प्रयास गर्नुहोस्।", gpsReady: "स्थान विवरण", gpsAccuracy: "अनुमानित GPS शुद्धता", required: "आवश्यक", formLocationStatus: "स्थान प्रयोग गरिएको छैन",
     knowledgeEyebrow: "व्यावहारिक सुरक्षा सुझाव", knowledgeTitle: "सुरक्षित रूपमा सहअस्तित्व", knowledgeBody: "समुदायका विवरणबाट स्थानीय टोलीले सिक्दै गर्दा सरल र अहिंसात्मक उपायले जोखिम घटाउन सक्छ।", monkey: "बाँदर", monkeyBody: "खाना र फोहोर छोपेर राख्नुहोस्। बाँदरलाई खाना नदिनुहोस्, नघेर्‍नुहोस् वा नलखेट्नुहोस्; समूह नजिक आए सुरक्षित ठाउँमा जानुहोस्।", elephant: "हात्ती", elephantBody: "टाढै रहनुहोस्, बाटो नछेक्नुहोस् र स्थानीय उद्धार टोलीको निर्देशन पालना गर्नुहोस्।", leopard: "चितुवा", leopardBody: "साँझपख बालबालिका र घरपालुवा जनावरलाई भित्र राख्नुहोस्। जनावर वा ओडार नजिक नजानुहोस्; स्थानीय अधिकारीलाई जानकारी दिनुहोस्।", boar: "बँदेल", boarBody: "सुरक्षित दूरी कायम गर्नुहोस्, बच्चासहितको बँदेल नजिक नजानुहोस् र जनावर देखिए शान्तपूर्वक टाढा जानुहोस्।", helpTitle: "तत्काल जोखिम भएमा", helpBody: "सुरक्षित ठाउँमा जानुहोस् र स्थानीय वडा कार्यालय, प्रहरी वा सम्बन्धित वन्यजन्तु निकायलाई सम्पर्क गर्नुहोस्। यो वेबसाइट आपतकालीन सेवा होइन।",
     researchEyebrow: "मैदानबाट सिकाइ", researchTitle: "अनुसन्धान र समुदायको सिकाइ", researchBody: "प्रारम्भिक अध्ययन पोखरा महानगरपालिका वडा २१ मा मानव–बाँदर बाली द्वन्द्वमा केन्द्रित छ। विवरण सावधानीपूर्वक अनुसन्धान र समीक्षाका लागि हो; स्वतः पुष्टि भएको घटना भनेर सार्वजनिक गरिँदैन।", researchCard: "वडा २१ अध्ययनको केन्द्र", researchCardBody: "समुदायसँग ढाँचाहरू समीक्षा गर्न समय, स्थान, बालीको क्षति र प्रतिक्रियाको विवरण राख्नुहोस्।", repository: "अनुसन्धान सामग्री", repositoryBody: "परियोजना टोलीले समीक्षा गरी प्रकाशन गरेपछि स्वीकृत लेख, सारांश र पहिचान हटाइएका घटना प्रतिवेदन यहाँ राखिनेछन्।", status: "समीक्षापछि अनुसन्धान सामग्री थपिनेछ", footer: "नेपालमा सुरक्षित सहअस्तित्वका लागि अनुसन्धान परियोजना।", alertsLabel: "समुदाय सूचना", noNotices: "हाल सार्वजनिक सूचना छैन", dismiss: "सूचना बन्द गर्नुहोस्", noticeLabel: "सार्वजनिक सुरक्षा सूचना", active: "सक्रिय सूचना", menu: "मेनु खोल्नुहोस्", closeMenu: "मेनु बन्द गर्नुहोस्", viewGuides: "सुरक्षा सुझाव हेर्नुहोस्", scroll: "अध्ययनबारे थप जान्नुहोस्",
   },
@@ -166,6 +166,28 @@ function getPosition() {
   });
 }
 
+function parseManualCoordinates(latitudeText, longitudeText) {
+  const hasLatitude = latitudeText.trim() !== "";
+  const hasLongitude = longitudeText.trim() !== "";
+  if (!hasLatitude && !hasLongitude) return null;
+  if (!hasLatitude || !hasLongitude) throw new Error("COORDINATE_PAIR");
+  const latitude = Number(latitudeText);
+  const longitude = Number(longitudeText);
+  if (!Number.isFinite(latitude) || Math.abs(latitude) > 90 || !Number.isFinite(longitude) || Math.abs(longitude) > 180) {
+    throw new Error("COORDINATES_INVALID");
+  }
+  return { latitude, longitude, accuracy: null };
+}
+
+function explainLocationError(error, t) {
+  if (error?.message === "COORDINATE_PAIR") return t.coordinatePair;
+  if (error?.message === "COORDINATES_INVALID") return t.coordinateInvalid;
+  if (typeof window !== "undefined" && !window.isSecureContext) return t.gpsSecure;
+  if (error?.code === 1) return t.gpsPermission;
+  if (error?.code === 3) return t.gpsTimeout;
+  return t.gpsTryAgain;
+}
+
 function MonkeyCursor() {
   const cursorRef = useRef(null);
 
@@ -275,6 +297,8 @@ export default function PublicLanding() {
   const [mobileNav, setMobileNav] = useState(false);
   const scrollProgressRef = useRef(null);
   const [gps, setGps] = useState(null);
+  const [manualLatitude, setManualLatitude] = useState("");
+  const [manualLongitude, setManualLongitude] = useState("");
   const [locationBusy, setLocationBusy] = useState(false);
   const [lookupMessage, setLookupMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -353,17 +377,25 @@ export default function PublicLanding() {
       setGps(position);
       setLookupMessage(`${t.gpsAccuracy}: ±${Math.round(position.accuracy)} m`);
       return position;
-    } catch {
-      setLookupMessage(t.gpsUnavailable);
+    } catch (error) {
+      setLookupMessage(explainLocationError(error, t));
       return null;
     } finally { setLocationBusy(false); }
   };
 
   const suggestArea = async () => {
     setLocationBusy(true);
+    setLookupMessage("");
+    let point;
     try {
-      const point = gps || await getPosition();
-      if (!gps) setGps(point);
+      point = parseManualCoordinates(manualLatitude, manualLongitude) || gps || await getPosition();
+      if (!gps && !manualLatitude.trim() && !manualLongitude.trim()) setGps(point);
+    } catch (error) {
+      setLookupMessage(explainLocationError(error, t));
+      setLocationBusy(false);
+      return;
+    }
+    try {
       const result = await api.public.reverseGeocode({ latitude: point.latitude, longitude: point.longitude });
       if (!result.configured) {
         setLookupMessage(t.geocodeUnavailable);
@@ -388,20 +420,23 @@ export default function PublicLanding() {
     setFormError("");
     setSubmitted(false);
     try {
+      const manualPoint = parseManualCoordinates(manualLatitude, manualLongitude);
       const payload = {
         ...form,
         consent: form.consent,
-        submission_id: crypto.randomUUID(),
-        latitude: gps?.latitude ?? null,
-        longitude: gps?.longitude ?? null,
-        accuracy: gps?.accuracy ?? null,
+        submission_id: globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        latitude: manualPoint?.latitude ?? gps?.latitude ?? null,
+        longitude: manualPoint?.longitude ?? gps?.longitude ?? null,
+        accuracy: manualPoint ? null : gps?.accuracy ?? null,
         reported_at: new Date().toISOString(),
       };
       await api.public.submitDamageReport(payload);
       setSubmitted(true);
       setForm((prior) => ({ ...prior, crop_type: "", livestock_type: "", estimated_loss_npr: "", description: "", reporter_name: "", reporter_phone: "", location_name: "", consent: false }));
+      setManualLatitude("");
+      setManualLongitude("");
     } catch (error) {
-      setFormError(error.message || t.reportError);
+      setFormError(error.message === "COORDINATE_PAIR" || error.message === "COORDINATES_INVALID" ? explainLocationError(error, t) : error.message || t.reportError);
     } finally { setSubmitting(false); }
   };
 
@@ -491,6 +526,13 @@ export default function PublicLanding() {
                 <label className="grid gap-1.5 text-sm font-medium text-slate-800">{t.ward}<input name="ward" value={form.ward} onChange={update} required inputMode="numeric" className="h-11 rounded-xl border border-slate-300 px-3 font-normal" /></label>
                 <label className="grid gap-1.5 text-sm font-medium text-slate-800 sm:col-span-2">{t.area}<input name="location_name" value={form.location_name} onChange={update} className="h-11 rounded-xl border border-slate-300 px-3 font-normal" /></label>
                 <label className="grid gap-1.5 text-sm font-medium text-slate-800">{t.phone}<input name="reporter_phone" value={form.reporter_phone} onChange={update} type="tel" autoComplete="tel" className="h-11 rounded-xl border border-slate-300 px-3 font-normal" /></label>
+              </div>
+              <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="mb-3 text-xs font-semibold text-slate-700">{t.manualCoordinates}</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="grid min-w-0 gap-1.5 text-xs font-medium text-slate-600">{t.latitude}<input aria-label={t.latitude} inputMode="decimal" value={manualLatitude} onChange={(event) => setManualLatitude(event.target.value)} placeholder="28.21" className="h-11 min-w-0 rounded-xl border border-slate-300 bg-white px-3 text-sm font-normal text-slate-800" /></label>
+                  <label className="grid min-w-0 gap-1.5 text-xs font-medium text-slate-600">{t.longitude}<input aria-label={t.longitude} inputMode="decimal" value={manualLongitude} onChange={(event) => setManualLongitude(event.target.value)} placeholder="83.99" className="h-11 min-w-0 rounded-xl border border-slate-300 bg-white px-3 text-sm font-normal text-slate-800" /></label>
+                </div>
               </div>
               <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-xl bg-slate-50 p-4 text-xs leading-5 text-slate-700"><input type="checkbox" name="consent" checked={form.consent} onChange={update} required className="mt-0.5 h-4 w-4 shrink-0 accent-emerald-800" />{t.consent}</label>
               {formError && <p className="mt-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-800" role="alert">{formError || t.reportError}</p>}

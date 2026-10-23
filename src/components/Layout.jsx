@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
-import { Bell, Menu, X, Leaf } from "lucide-react";
+import { Bell, Menu, X, Leaf, Globe2 } from "lucide-react";
 import { api } from "@/api/apiClient";
 import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
@@ -80,6 +80,10 @@ export default function Layout() {
           ))}
         </nav>
         <div className="p-4 border-t border-slate-800">
+          <Link to="/welcome" onClick={() => setSidebarOpen(false)} className="mb-4 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-emerald-300 transition-colors hover:bg-slate-800 hover:text-emerald-200">
+            <Globe2 className="h-4 w-4" />
+            Public landing page
+          </Link>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-semibold text-sm flex-shrink-0">
               {user?.full_name?.charAt(0) || user?.email?.charAt(0) || "A"}
