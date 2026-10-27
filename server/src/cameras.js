@@ -1,9 +1,9 @@
-import { createCipheriv, createDecipheriv, createHash, randomUUID, timingSafeEqual } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import dns from "node:dns/promises";
 import net from "node:net";
 import { addAudit } from "./db.js";
 import { canReadSite, createRecord, getRecord } from "./records.js";
-import { deleteCameraSnapshot, pruneCameraSnapshots, saveCameraSnapshot } from "./media.js";
+import { deleteCameraSnapshot, saveCameraSnapshot } from "./media.js";
 
 const managerRoles = new Set(["admin", "technician"]);
 const viewerRoles = new Set(["admin", "researcher", "reviewer", "technician"]);
@@ -614,6 +614,71 @@ function makePathName(cameraId) {
   return `cam_${String(cameraId).replace(/[^a-z0-9]/gi, "").slice(0, 36)}`;
 }
 
+function createOneTimeSecret() {
+  return randomBytes(32).toString("base64url");
+}
+
+function hashOneTimeSecret(secret) {
+  return createHash("sha256").update(String(secret)).digest("hex");
+}
+
+function matchesOneTimeSecret(secret, expectedHash) {
+  const supplied = String(secret || "");
+  if (!supplied || supplied.length > 128 || !/^[a-f0-9]{64}$/i.test(String(expectedHash || ""))) return false;
+  return timingSafeEqual(Buffer.from(hashOneTimeSecret(supplied), "hex"), Buffer.from(expectedHash, "hex"));
+}
+
+async function readCameraWebhookPayload(request) {
+  const fields = {};
+  let snapshot = null;
+  if (request.isMultipart()) {
+    for await (const part of request.parts({ limits: { fileSize: 8 * 1024 * 1024, files: 1 } })) {
+      if (part.type === "file") {
+        if (snapshot) {
+          part.file.resume();
+          throw httpError(400, "Send one JPEG snapshot per camera event.");
+        }
+        snapshot = await part.toBuffer();
+      } else {
+        fields[part.fieldname] = part.value;
+      }
+    }
+    return { fields, snapshot };
+  }
+
+  const contentType = String(request.headers["content-type"] || "").toLowerCase();
+  if (!contentType.startsWith("application/json")) throw httpError(415, "Send a multipart form or JSON camera event.");
+  Object.assign(fields, request.body && typeof request.body === "object" ? request.body : {});
+  let encoded = fields.snapshot_base64 || fields.image_base64 || fields.snapshot;
+  if (typeof encoded === "string") {
+    encoded = encoded.replace(/^data:image\/jpe?g;base64,/i, "").replace(/-/g, "+").replace(/_/g, "/");
+    if (!/^[A-Za-z0-9+/]*={0,2}$/.test(encoded)) throw httpError(400, "The JSON snapshot must be base64-encoded JPEG data.");
+    snapshot = Buffer.from(encoded, "base64");
+  }
+  return { fields, snapshot };
+}
+
+function cameraWebhookCredentials(request) {
+  let cameraId = String(request.headers["x-camera-id"] || "").trim();
+  let secret = String(request.headers["x-camera-webhook-token"] || "");
+  const authorization = String(request.headers.authorization || "");
+  if (/^Bearer\s+/i.test(authorization)) {
+    secret = authorization.replace(/^Bearer\s+/i, "").trim();
+  } else if (/^Basic\s+/i.test(authorization)) {
+    try {
+      const decoded = Buffer.from(authorization.replace(/^Basic\s+/i, "").trim(), "base64").toString("utf8");
+      const separator = decoded.indexOf(":");
+      if (separator > 0) {
+        cameraId = decoded.slice(0, separator).trim();
+        secret = decoded.slice(separator + 1);
+      }
+    } catch {
+      return { cameraId: "", secret: "" };
+    }
+  }
+  return { cameraId, secret };
+}
+
 const activePtzMoves = new Map();
 
 async function saveConnection(pool, camera, connection, userId, previous = null) {
@@ -664,8 +729,12 @@ async function applyStoredConnection(pool, row) {
 
 async function listCameraStatuses(app, pool, user) {
   const cameras = await pool.query(
-    `SELECT r.id, r.data, c.path_name, c.state, c.network_label, c.last_test_status, c.last_test_at, c.last_applied_at, c.last_error
+    `SELECT r.id, r.data, COALESCE(p.path_name,c.path_name) AS path_name,
+       CASE WHEN p.camera_id IS NOT NULL THEN 'configured' ELSE c.state END AS state,
+       CASE WHEN p.camera_id IS NOT NULL THEN 'RTMP publisher' ELSE c.network_label END AS network_label,
+       c.last_test_status, c.last_test_at, c.last_applied_at, c.last_error
      FROM app_records r LEFT JOIN camera_connections c ON c.camera_id = r.id
+     LEFT JOIN camera_publish_credentials p ON p.camera_id = r.id
      WHERE r.entity='Camera' ORDER BY r.created_at DESC LIMIT 1000`
   );
   const visible = cameras.rows.filter((row) => canReadSite(user, { ...row.data, id: row.id }));
@@ -690,6 +759,74 @@ async function listCameraStatuses(app, pool, user) {
 }
 
 export function registerCameraRoutes(app, pool, requireAuth, checkOrigin) {
+  app.post("/api/v1/camera/events", {
+    bodyLimit: 12 * 1024 * 1024,
+    config: { rateLimit: { max: 30, timeWindow: "1 minute" } },
+  }, async (request, reply) => {
+    const { cameraId, secret } = cameraWebhookCredentials(request);
+    if (!cameraId || !secret) return reply.code(401).send({ error: "Camera webhook authentication failed." });
+    const credentials = await pool.query(
+      "SELECT token_hash FROM camera_event_webhook_credentials WHERE camera_id=$1",
+      [cameraId]
+    );
+    if (!credentials.rowCount || !matchesOneTimeSecret(secret, credentials.rows[0].token_hash)) {
+      return reply.code(401).send({ error: "Camera webhook authentication failed." });
+    }
+    const camera = await getRecord(pool, "Camera", cameraId);
+    if (!camera) return reply.code(401).send({ error: "Camera webhook authentication failed." });
+
+    let payload;
+    try {
+      payload = await readCameraWebhookPayload(request);
+    } catch (error) {
+      if (error.code === "FST_REQ_FILE_TOO_LARGE") return reply.code(413).send({ error: "Camera snapshot exceeds the 8 MB limit." });
+      if (error.code === "FST_FILES_LIMIT") return reply.code(400).send({ error: "Send one JPEG snapshot per camera event." });
+      throw error;
+    }
+    const { fields, snapshot } = payload;
+    if (!Buffer.isBuffer(snapshot)) return reply.code(400).send({ error: "One JPEG snapshot is required for each camera event." });
+    if (snapshot.length < 4 || snapshot.length > 8 * 1024 * 1024 || snapshot[0] !== 0xff || snapshot[1] !== 0xd8 || snapshot[2] !== 0xff) {
+      return reply.code(415).send({ error: "The camera event snapshot must be a JPEG up to 8 MB." });
+    }
+
+    const rawTimestamp = fields.timestamp || fields.detected_at || fields.time || Date.now();
+    const detectedAt = new Date(rawTimestamp);
+    if (!Number.isFinite(detectedAt.getTime())) return reply.code(400).send({ error: "The event timestamp is invalid." });
+    const eventType = String(fields.event_type || fields.eventType || fields.code || fields.event || "camera_alarm").trim().slice(0, 120);
+    await pool.query("UPDATE camera_event_webhook_credentials SET last_used_at=now() WHERE camera_id=$1", [cameraId]);
+
+    const saved = await saveCameraSnapshot(pool, snapshot);
+    try {
+      const event = await createRecord(pool, "CameraEvent", {
+        camera_id: cameraId,
+        camera_name: String(camera.name || camera.camera_id || "Camera").slice(0, 120),
+        site_id: String(camera.site_id || ""),
+        site_name: String(camera.site_name || "Research site").slice(0, 120),
+        event_code: eventType,
+        event_type: eventType,
+        event_source: "http_alarm_center",
+        detection_type: "camera_alarm",
+        species: "unclassified",
+        status: "pending_review",
+        detected_at: detectedAt.toISOString(),
+        external_event_id: String(fields.event_id || fields.id || "").slice(0, 160),
+        photo_uri: saved.file_uri,
+        image_uri: saved.file_uri,
+        photo_url: saved.file_url,
+        snapshot_asset_id: saved.id,
+        snapshot_error: "",
+        confidence: null,
+        automated_deterrence_triggered: false,
+      });
+      publishCameraEvent(cameraId, event);
+      reply.header("Cache-Control", "no-store");
+      return reply.code(201).send({ success: true, event_id: event.id, image_path: saved.file_uri, detected_at: detectedAt.toISOString() });
+    } catch (error) {
+      await deleteCameraSnapshot(pool, saved.id).catch(() => {});
+      throw error;
+    }
+  });
+
   app.get("/api/cameras/status", { preHandler: requireAuth }, async (request) => ({ cameras: await listCameraStatuses(app, pool, request.user) }));
 
   app.get("/api/cameras/:id/connection", { preHandler: requireAuth }, async (request, reply) => {
@@ -1138,6 +1275,58 @@ export function registerCameraRoutes(app, pool, requireAuth, checkOrigin) {
     return { success: true };
   });
 
+  app.post("/api/cameras/:id/events/webhook-credentials", {
+    preHandler: requireAuth,
+    config: { rateLimit: { max: 5, timeWindow: "10 minutes" } },
+  }, async (request, reply) => {
+    requireManager(request.user);
+    if (!checkOrigin(request, reply)) return;
+    const camera = await authorizedCamera(pool, request.user, request.params.id);
+    const secret = createOneTimeSecret();
+    await pool.query(
+      `INSERT INTO camera_event_webhook_credentials (camera_id,token_hash,created_by,created_at,last_used_at)
+       VALUES ($1,$2,$3,now(),NULL)
+       ON CONFLICT (camera_id) DO UPDATE SET token_hash=EXCLUDED.token_hash,created_by=EXCLUDED.created_by,created_at=now(),last_used_at=NULL`,
+      [camera.id, hashOneTimeSecret(secret), request.user.id]
+    );
+    const origin = String(process.env.APP_ORIGIN || "").split(",")[0].trim().replace(/\/$/, "");
+    reply.header("Cache-Control", "no-store");
+    return reply.code(201).send({
+      endpoint: `${origin}/api/v1/camera/events`,
+      auth: "HTTP Basic",
+      username: camera.id,
+      password: secret,
+      note: "This password is shown once. Rotate it here if it is lost or exposed.",
+    });
+  });
+
+  app.post("/api/cameras/:id/rtmp-credentials", {
+    preHandler: requireAuth,
+    config: { rateLimit: { max: 5, timeWindow: "10 minutes" } },
+  }, async (request, reply) => {
+    requireManager(request.user);
+    if (!checkOrigin(request, reply)) return;
+    const camera = await authorizedCamera(pool, request.user, request.params.id);
+    const secret = createOneTimeSecret();
+    await pool.query(
+      `INSERT INTO camera_publish_credentials (camera_id,path_name,token_hash,created_by,created_at)
+       VALUES ($1,$2,$3,$4,now())
+       ON CONFLICT (camera_id) DO UPDATE SET path_name=EXCLUDED.path_name,token_hash=EXCLUDED.token_hash,created_by=EXCLUDED.created_by,created_at=now()`,
+      [camera.id, `${makePathName(camera.id)}_rtmp`, hashOneTimeSecret(secret), request.user.id]
+    );
+    const pathName = `${makePathName(camera.id)}_rtmp`;
+    const host = String(process.env.CAMERA_RTMP_PUBLIC_HOST || "bikasheng.com.np").trim();
+    const publishUrl = `rtmp://${host}:1935/${pathName}?user=${encodeURIComponent(camera.id)}&pass=${encodeURIComponent(secret)}`;
+    reply.header("Cache-Control", "no-store");
+    return reply.code(201).send({
+      path: pathName,
+      username: camera.id,
+      password: secret,
+      publish_url: publishUrl,
+      note: "This password is shown once. Standard RTMP on port 1935 is unencrypted; use only on a trusted VPN or where the camera supports RTMPS.",
+    });
+  });
+
   app.post("/api/cameras/:id/view-token", {
     preHandler: requireAuth,
     config: { rateLimit: { max: 30, timeWindow: "10 minutes" } },
@@ -1145,13 +1334,23 @@ export function registerCameraRoutes(app, pool, requireAuth, checkOrigin) {
     if (!checkOrigin(request, reply)) return;
     if (!viewerRoles.has(request.user.role)) return reply.code(403).send({ error: "Your role cannot view live camera streams." });
     const camera = await authorizedCamera(pool, request.user, request.params.id);
-    const row = await connectionFor(pool, camera.id);
-    if (!row || row.state !== "configured" || !row.enabled) return reply.code(409).send({ error: "This camera stream has not been applied to the server." });
+    const connection = await connectionFor(pool, camera.id);
+    const publisher = await pool.query("SELECT path_name FROM camera_publish_credentials WHERE camera_id=$1", [camera.id]);
+    const pathName = publisher.rows[0]?.path_name || connection?.path_name;
+    if (!pathName || (!publisher.rowCount && (connection.state !== "configured" || !connection.enabled))) {
+      return reply.code(409).send({ error: "This camera stream has not been applied to the server." });
+    }
     const token = request.server.jwt.sign({
-      sub: String(request.user.id), purpose: "camera_stream", camera_id: camera.id, path_name: row.path_name,
+      sub: String(request.user.id), purpose: "camera_stream", camera_id: camera.id, path_name: pathName,
     }, { expiresIn: "30m" });
     reply.header("Cache-Control", "no-store");
-    return { whep_url: `/media/${row.path_name}/whep`, token, expires_in: 1800, audio_enabled: row.audio_enabled === true };
+    return {
+      whep_url: `/media/${pathName}/whep`,
+      hls_url: `/hls/${pathName}/index.m3u8`,
+      token,
+      expires_in: 1800,
+      audio_enabled: publisher.rowCount ? false : connection.audio_enabled === true,
+    };
   });
 
   app.post("/api/cameras/media-auth", async (request, reply) => {
@@ -1166,15 +1365,31 @@ export function registerCameraRoutes(app, pool, requireAuth, checkOrigin) {
       if (userMatches && passwordMatches) return reply.code(200).send({ status: "ok" });
       return reply.code(401).send({ status: "error" });
     }
-    if (!body.token || body.action !== "read" || body.protocol !== "webrtc") return reply.code(401).send({ status: "error" });
+    if (body.action === "publish" && body.protocol === "rtmp") {
+      const cameraId = String(body.user || "");
+      const credentials = await pool.query("SELECT token_hash,path_name FROM camera_publish_credentials WHERE camera_id=$1", [cameraId]);
+      const camera = credentials.rowCount ? await getRecord(pool, "Camera", cameraId) : null;
+      const expectedPath = credentials.rows[0]?.path_name || "";
+      if (!camera || String(body.path || "") !== expectedPath || !matchesOneTimeSecret(body.password, credentials.rows[0].token_hash)) {
+        return reply.code(401).send({ status: "error" });
+      }
+      return reply.code(200).send({ status: "ok" });
+    }
+    const streamToken = body.token;
+    if (!streamToken || body.action !== "read" || !["webrtc", "hls"].includes(body.protocol)) return reply.code(401).send({ status: "error" });
     let claims;
-    try { claims = request.server.jwt.verify(String(body.token)); } catch { return reply.code(401).send({ status: "error" }); }
+    try { claims = request.server.jwt.verify(String(streamToken)); } catch { return reply.code(401).send({ status: "error" }); }
     if (claims.purpose !== "camera_stream" || claims.path_name !== body.path) return reply.code(401).send({ status: "error" });
     const camera = await getRecord(pool, "Camera", String(claims.camera_id || ""));
     const result = await pool.query(
-      `SELECT u.id,u.role,u.status,u.site_ids,c.path_name,c.enabled,c.state
-       FROM app_users u JOIN camera_connections c ON c.camera_id=$2 WHERE u.id=$1`,
-      [claims.sub, String(claims.camera_id || "")]
+      `SELECT u.id,u.role,u.status,u.site_ids,COALESCE(c.path_name,p.path_name) AS path_name,
+         COALESCE(c.enabled,p.camera_id IS NOT NULL,false) AS enabled,
+         COALESCE(c.state,'configured') AS state
+       FROM app_users u
+       LEFT JOIN camera_connections c ON c.camera_id=$2 AND c.path_name=$3
+       LEFT JOIN camera_publish_credentials p ON p.camera_id=$2 AND p.path_name=$3
+       WHERE u.id=$1 AND (c.camera_id IS NOT NULL OR p.camera_id IS NOT NULL)`,
+      [claims.sub, String(claims.camera_id || ""), String(body.path || "")]
     );
     if (!camera || !result.rowCount) return reply.code(401).send({ status: "error" });
     const user = result.rows[0];
@@ -1240,17 +1455,8 @@ export function startCameraEngine(app, pool) {
   void reconcile();
   const timer = setInterval(() => { void reconcile(); }, 10000);
   timer.unref();
-  const retentionTimer = setInterval(() => {
-    pruneCameraSnapshots(pool, process.env.CAMERA_SNAPSHOT_RETENTION_DAYS || 30)
-      .then((count) => { if (count) app.log.info({ count }, "Expired private camera snapshots removed"); })
-      .catch((error) => app.log.warn({ message: error.message }, "Camera snapshot retention cleanup failed"));
-  }, 6 * 60 * 60 * 1000);
-  retentionTimer.unref();
-  void pruneCameraSnapshots(pool, process.env.CAMERA_SNAPSHOT_RETENTION_DAYS || 30)
-    .catch((error) => app.log.warn({ message: error.message }, "Camera snapshot retention cleanup failed"));
   return async () => {
     clearInterval(timer);
-    clearInterval(retentionTimer);
     for (const worker of eventWorkers.values()) worker.controller.abort();
     eventWorkers.clear();
     for (const subscribers of cameraEventSubscribers.values()) for (const response of subscribers) response.end();

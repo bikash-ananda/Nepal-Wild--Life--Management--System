@@ -10,10 +10,15 @@ authMethod: http
 authHTTPAddress: http://api:3000/api/cameras/media-auth
 authHTTPExclude: []
 
-# Cameras are pulled as RTSP/RTSPS sources and delivered to browsers via WHEP.
+# RTSP sources can be pulled and remote cameras can publish authenticated RTMP paths.
 rtsp: false
-rtmp: false
-hls: false
+rtmp: true
+rtmpAddress: :1935
+hls: true
+hlsAddress: :8888
+hlsAllowOrigins:
+  - https://bikasheng.com.np
+hlsDirectory: ""
 webrtc: true
 webrtcAddress: :8889
 webrtcAllowOrigins:
@@ -28,3 +33,6 @@ webrtcAdditionalHosts:
   - 2a02:c207:2364:8298::1
 
 paths: {}
+pathDefaults:
+  # The pilot is live-only. HLS segments are transient in-memory transport buffers.
+  record: false

@@ -87,6 +87,28 @@ ALTER TABLE camera_connections ADD COLUMN IF NOT EXISTS audio_enabled boolean NO
 ALTER TABLE camera_connections ADD COLUMN IF NOT EXISTS siren_control_enabled boolean NOT NULL DEFAULT false;
 ALTER TABLE camera_connections ADD COLUMN IF NOT EXISTS light_control_enabled boolean NOT NULL DEFAULT false;
 
+-- One-time credentials for outbound camera publishing and camera Alarm Center webhooks.
+-- Only SHA-256 hashes of high-entropy secrets are stored; credentials are returned once.
+CREATE TABLE IF NOT EXISTS camera_publish_credentials (
+  camera_entity text NOT NULL DEFAULT 'Camera' CHECK (camera_entity = 'Camera'),
+  camera_id text PRIMARY KEY,
+  path_name text NOT NULL UNIQUE,
+  token_hash text NOT NULL,
+  created_by uuid REFERENCES app_users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  FOREIGN KEY (camera_entity, camera_id) REFERENCES app_records(entity, id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS camera_event_webhook_credentials (
+  camera_entity text NOT NULL DEFAULT 'Camera' CHECK (camera_entity = 'Camera'),
+  camera_id text PRIMARY KEY,
+  token_hash text NOT NULL,
+  created_by uuid REFERENCES app_users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  last_used_at timestamptz,
+  FOREIGN KEY (camera_entity, camera_id) REFERENCES app_records(entity, id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS audit_events (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   actor_id uuid REFERENCES app_users(id) ON DELETE SET NULL,

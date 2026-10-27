@@ -33,7 +33,7 @@ if (production && (!process.env.MEDIAMTX_API_USER || String(process.env.MEDIAMTX
 }
 
 const app = Fastify({
-  logger: { level: process.env.LOG_LEVEL || (production ? "info" : "debug"), redact: ["req.headers.cookie", "req.headers.authorization", "req.body.password", "req.body.connection.password", "req.body.token"] },
+  logger: { level: process.env.LOG_LEVEL || (production ? "info" : "debug"), redact: ["req.headers.cookie", "req.headers.authorization", "req.headers.x-camera-webhook-token", "req.body.password", "req.body.connection.password", "req.body.token"] },
   trustProxy: true,
   bodyLimit: 2 * 1024 * 1024,
 });

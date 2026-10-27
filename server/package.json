@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch src/server.js"
+    "dev": "node --watch src/server.js",
+    "cleanup:camera-events": "node src/cleanup-camera-events.js"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",

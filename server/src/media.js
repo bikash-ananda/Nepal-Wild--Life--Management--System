@@ -92,21 +92,55 @@ export async function pruneCameraSnapshots(pool, retentionDays = 30) {
   const requestedDays = Number(retentionDays);
   const days = Number.isFinite(requestedDays) ? Math.max(1, Math.min(365, requestedDays)) : 30;
   const result = await pool.query(
-    `SELECT r.id AS event_id, r.data, m.id AS media_id, m.storage_key
-     FROM app_records r JOIN media_assets m ON m.id::text = r.data->>'snapshot_asset_id'
-     WHERE r.entity='CameraEvent' AND r.created_at < now() - make_interval(days => $1::int)`, [days]
+    `SELECT r.id AS event_id, m.id AS media_id, m.storage_key,
+       CASE WHEN m.id IS NULL THEN false ELSE EXISTS (
+         SELECT 1 FROM app_records other
+         WHERE (other.entity <> 'CameraEvent' OR other.id <> r.id) AND (
+           other.data->>'image_uri' = 'media://' || m.id::text OR
+           other.data->>'photo_uri' = 'media://' || m.id::text OR
+           other.data->>'image_url' = '/api/media/' || m.id::text OR
+           other.data->>'photo_url' = '/api/media/' || m.id::text OR
+           other.data->>'media_asset_id' = m.id::text OR
+           other.data->'photos' @> jsonb_build_array('media://' || m.id::text) OR
+           other.data->'photos' @> jsonb_build_array('/api/media/' || m.id::text)
+         )
+       ) END AS externally_referenced
+     FROM app_records r LEFT JOIN media_assets m ON m.id::text = r.data->>'snapshot_asset_id'
+     WHERE r.entity='CameraEvent' AND r.created_at < now() - make_interval(days => $1::int)
+     ORDER BY r.created_at ASC`, [days]
   );
+  let deletedEvents = 0;
   for (const row of result.rows) {
-    await unlink(path.join(mediaRoot, path.basename(row.storage_key))).catch(() => {});
-    await pool.query("DELETE FROM media_assets WHERE id=$1", [row.media_id]);
-    await pool.query(
-      `UPDATE app_records SET data=jsonb_set(
-         data - 'photo_uri' - 'image_uri' - 'photo_url' - 'snapshot_asset_id',
-         '{snapshot_retention_expired}', 'true'::jsonb, true), updated_at=now()
-       WHERE entity='CameraEvent' AND id=$1`, [row.event_id]
-    );
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const deleted = await client.query(
+        `DELETE FROM app_records
+         WHERE entity='CameraEvent' AND id=$1 AND created_at < now() - make_interval(days => $2::int)
+         RETURNING id`, [row.event_id, days]
+      );
+      if (!deleted.rowCount) {
+        await client.query("COMMIT");
+        continue;
+      }
+      if (row.media_id && !row.externally_referenced) {
+        try {
+          await unlink(path.join(mediaRoot, path.basename(row.storage_key)));
+        } catch (error) {
+          if (error.code !== "ENOENT") throw error;
+        }
+        await client.query("DELETE FROM media_assets WHERE id=$1", [row.media_id]);
+      }
+      await client.query("COMMIT");
+      deletedEvents += 1;
+    } catch (error) {
+      await client.query("ROLLBACK").catch(() => {});
+      throw error;
+    } finally {
+      client.release();
+    }
   }
-  return result.rowCount;
+  return deletedEvents;
 }
 
 export function registerMediaRoutes(app, pool, requireAuth, checkOrigin) {

@@ -5,6 +5,11 @@ bikasheng.com.np {
 			header_down Location ^/ /media/
 		}
 	}
+	handle_path /hls/* {
+		reverse_proxy mediamtx:8888 {
+			header_down Location ^/ /hls/
+		}
+	}
 	@api path /api/*
 	reverse_proxy @api api:3000
 	reverse_proxy web:8080

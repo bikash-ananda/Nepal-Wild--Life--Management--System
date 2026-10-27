@@ -37,6 +37,7 @@ services:
       CAMERA_ENCRYPTION_KEY: ${CAMERA_ENCRYPTION_KEY:?Set CAMERA_ENCRYPTION_KEY in .env}
       CAMERA_VPN_CIDRS: ${CAMERA_VPN_CIDRS:-}
       CAMERA_SNAPSHOT_RETENTION_DAYS: ${CAMERA_SNAPSHOT_RETENTION_DAYS:-30}
+      CAMERA_RTMP_PUBLIC_HOST: ${CAMERA_RTMP_PUBLIC_HOST:-bikasheng.com.np}
       MEDIAMTX_API_URL: http://mediamtx:9997
       MEDIAMTX_API_USER: ${MEDIAMTX_API_USER:?Set MEDIAMTX_API_USER in .env}
       MEDIAMTX_API_PASSWORD: ${MEDIAMTX_API_PASSWORD:?Set MEDIAMTX_API_PASSWORD in .env}
@@ -118,6 +119,7 @@ services:
     restart: unless-stopped
     init: true
     ports:
+      - "1935:1935/tcp"
       - "8189:8189/udp"
       - "8189:8189/tcp"
     volumes:
