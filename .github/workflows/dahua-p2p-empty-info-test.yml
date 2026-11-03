@@ -7,6 +7,12 @@ on:
     paths:
       - "experimental/dahua-p2p-empty-info/**"
       - ".github/workflows/dahua-p2p-empty-info-test.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "experimental/dahua-p2p-empty-info/**"
+      - ".github/workflows/dahua-p2p-empty-info-test.yml"
   workflow_dispatch:
 
 permissions:
