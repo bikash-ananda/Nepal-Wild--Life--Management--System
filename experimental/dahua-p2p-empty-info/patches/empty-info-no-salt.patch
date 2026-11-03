@@ -1,9 +1,7 @@
 diff --git a/core/helpers.go b/core/helpers.go
 --- a/core/helpers.go
 +++ b/core/helpers.go
-@@ -147,15 +147,16 @@ func getAuth(username string, key []byte, nonce int, payload, randsalt string) string {
- // getAuthAt is getAuth with a fixed CreateDate — retransmissions keep the
- // original timestamp and refresh only the nonce/payload crypto.
+@@ -149,14 +149,14 @@
  func getAuthAt(username string, key []byte, nonce int, payload, randsalt string, created int64) string {
 -	salt := randsalt
 -	if salt == "" {
@@ -27,7 +25,7 @@ diff --git a/core/helpers.go b/core/helpers.go
 diff --git a/core/tunnel.go b/core/tunnel.go
 --- a/core/tunnel.go
 +++ b/core/tunnel.go
-@@ -2842,10 +2842,9 @@ func resolveAutoSalt(prof *appProfile, dtype int, randsalt string, payload []byte, logf func(string, ...any)) (string, error) {
+@@ -2842,4 +2842,4 @@
 -// Fail-closed: when the salt is REQUIRED for signing (autoSalt profile +
 -// Type 1 + no explicit --randsalt) every probe/parse/decrypt/missing-field
 -// failure is returned as an error, so callers never fall through to signing
@@ -36,7 +34,7 @@ diff --git a/core/tunnel.go b/core/tunnel.go
 +// firmware variant: it has no device salt. Continue with the empty-salt
 +// Type-1 key and omit RandSalt from the auth XML. A missing response or an
 +// invalid non-empty encrypted blob still fails closed.
-@@ -2880,8 +2879,11 @@ func randsaltFromInfo(payload []byte) (string, error) {
+@@ -2881,8 +2881,11 @@
 -	info := fields["Info"]
 -	if info == "" {
 +	info, present := fields["Info"]
@@ -47,7 +45,7 @@ diff --git a/core/tunnel.go b/core/tunnel.go
 +		return "", nil
 +	}
  	plain, err := decryptDevInfoInfo(info)
-@@ -2894,7 +2896,7 @@ func randsaltFromInfo(payload []byte) (string, error) {
+@@ -2894,8 +2894,8 @@
  	if err := json.Unmarshal(plain, &inner); err != nil {
  		return "", fmt.Errorf("info json: %v", err)
  	}
@@ -105,4 +103,3 @@ new file mode 100644
 +		t.Fatalf("non-empty RandSalt must be preserved: %s", got)
 +	}
 +}
-+
