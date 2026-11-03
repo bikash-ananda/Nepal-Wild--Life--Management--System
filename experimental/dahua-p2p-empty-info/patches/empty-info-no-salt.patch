@@ -1,0 +1,108 @@
+diff --git a/core/helpers.go b/core/helpers.go
+--- a/core/helpers.go
++++ b/core/helpers.go
+@@ -147,15 +147,16 @@ func getAuth(username string, key []byte, nonce int, payload, randsalt string) string {
+ // getAuthAt is getAuth with a fixed CreateDate — retransmissions keep the
+ // original timestamp and refresh only the nonce/payload crypto.
+ func getAuthAt(username string, key []byte, nonce int, payload, randsalt string, created int64) string {
+-	salt := randsalt
+-	if salt == "" {
+-		salt = DEFAULT_SALT
+-	}
+ 	msg := []byte(fmt.Sprintf("%d%d%s", nonce, created, payload))
+ 	mac := hmac.New(sha256.New, key)
+ 	mac.Write(msg)
+ 	auth := base64.StdEncoding.EncodeToString(mac.Sum(nil))
++	saltXML := ""
++	if randsalt != "" {
++		saltXML = fmt.Sprintf("<RandSalt>%s</RandSalt>", randsalt)
++	}
+ 	return fmt.Sprintf(
+-		"<CreateDate>%d</CreateDate><DevAuth>%s</DevAuth><Nonce>%d</Nonce><RandSalt>%s</RandSalt><UserName>%s</UserName>",
+-		created, auth, nonce, salt, username,
++		"<CreateDate>%d</CreateDate><DevAuth>%s</DevAuth><Nonce>%d</Nonce>%s<UserName>%s</UserName>",
++		created, auth, nonce, saltXML, username,
+ 	)
+ }
+diff --git a/core/tunnel.go b/core/tunnel.go
+--- a/core/tunnel.go
++++ b/core/tunnel.go
+@@ -2842,10 +2842,9 @@ func resolveAutoSalt(prof *appProfile, dtype int, randsalt string, payload []byte, logf func(string, ...any)) (string, error) {
+-// Fail-closed: when the salt is REQUIRED for signing (autoSalt profile +
+-// Type 1 + no explicit --randsalt) every probe/parse/decrypt/missing-field
+-// failure is returned as an error, so callers never fall through to signing
+-// with an empty salt — the request would be silently rejected with 403.
++// A successful Info response with an empty Info element is a documented
++// firmware variant: it has no device salt. Continue with the empty-salt
++// Type-1 key and omit RandSalt from the auth XML. A missing response or an
++// invalid non-empty encrypted blob still fails closed.
+@@ -2880,8 +2879,11 @@ func randsaltFromInfo(payload []byte) (string, error) {
+-	info := fields["Info"]
+-	if info == "" {
++	info, present := fields["Info"]
++	if !present {
+ 		return "", fmt.Errorf("Info field absent")
+ 	}
++	if strings.TrimSpace(info) == "" {
++		return "", nil
++	}
+ 	plain, err := decryptDevInfoInfo(info)
+@@ -2894,7 +2896,7 @@ func randsaltFromInfo(payload []byte) (string, error) {
+ 	if err := json.Unmarshal(plain, &inner); err != nil {
+ 		return "", fmt.Errorf("info json: %v", err)
+ 	}
+ 	if inner.RandSalt == "" {
+-		return "", fmt.Errorf("randsalt absent from the Info blob")
++		return "", nil
+ 	}
+ 	return inner.RandSalt, nil
+diff --git a/core/empty_info_test.go b/core/empty_info_test.go
+new file mode 100644
+--- /dev/null
++++ b/core/empty_info_test.go
+@@ -0,0 +1,43 @@
++package core
++
++import (
++	"strings"
++	"testing"
++)
++
++func TestRandsaltFromEmptyInfoElement(t *testing.T) {
++	for _, payload := range []string{
++		"<body><Info></Info></body>",
++		"<body><Info/></body>",
++	} {
++		salt, err := randsaltFromInfo([]byte(payload))
++		if err != nil {
++			t.Fatalf("empty Info element should mean no salt: %v", err)
++		}
++		if salt != "" {
++			t.Fatalf("expected empty salt, got %q", salt)
++		}
++	}
++}
++
++func TestRandsaltFromMissingInfoElementFails(t *testing.T) {
++	if _, err := randsaltFromInfo([]byte("<body><DevVersion>6.7</DevVersion></body>")); err == nil {
++		t.Fatal("missing Info element must remain an error")
++	}
++}
++
++func TestAuthOmitsRandSaltWhenEmpty(t *testing.T) {
++	got := getAuthAt("admin", []byte("test-key"), 123, "", "", 1700000000)
++	if strings.Contains(got, "<RandSalt>") {
++		t.Fatalf("empty salt must omit RandSalt XML element: %s", got)
++	}
++	if !strings.Contains(got, "<UserName>admin</UserName>") {
++		t.Fatalf("username missing from auth XML: %s", got)
++	}
++}
++
++func TestAuthIncludesNonEmptyRandSalt(t *testing.T) {
++	got := getAuthAt("admin", []byte("test-key"), 123, "", "abc123", 1700000000)
++	if !strings.Contains(got, "<RandSalt>abc123</RandSalt>") {
++		t.Fatalf("non-empty RandSalt must be preserved: %s", got)
++	}
++}
++
