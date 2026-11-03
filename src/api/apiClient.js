@@ -225,7 +225,7 @@ export const api = {
     rtmpCredentials: (id) =>
       request(
         `/api/cameras/${encodeURIComponent(id)}/rtmp-credentials`,
-        { method: "POST" }
+        { method: "POST", body: JSON.stringify({}) }
       ),
 
     configure: (id, payload) =>
