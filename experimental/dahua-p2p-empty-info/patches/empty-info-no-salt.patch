@@ -74,7 +74,7 @@ diff --git a/core/empty_info_test.go b/core/empty_info_test.go
 new file mode 100644
 --- /dev/null
 +++ b/core/empty_info_test.go
-@@ -0,0 +1,45 @@
+@@ -0,0 +1,44 @@
 +package core
 +
 +import (
