@@ -14,6 +14,7 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/dh-fwd .
 FROM alpine:3.22
 RUN apk add --no-cache ca-certificates socat  && addgroup -S camera  && adduser -S -D -H -G camera camera
 COPY --from=builder /out/dh-fwd /usr/local/bin/dh-fwd
+COPY --from=builder /src/LICENSE /usr/share/licenses/dh-fwd/LICENSE
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod 0555 /entrypoint.sh  && chmod 0555 /usr/local/bin/dh-fwd
 USER camera
