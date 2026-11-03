@@ -1,0 +1,23 @@
+name: Test Dahua P2P Empty-Info Compatibility
+
+on:
+  push:
+    branches:
+      - feature/dahua-p2p-empty-info-test
+    paths:
+      - "experimental/dahua-p2p-empty-info/**"
+      - ".github/workflows/dahua-p2p-empty-info-test.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build isolated bridge and run Go tests
+        run: |
+          docker build             --file experimental/dahua-p2p-empty-info/Dockerfile             --tag wildlife-dh-fwd:empty-info-test             experimental/dahua-p2p-empty-info
