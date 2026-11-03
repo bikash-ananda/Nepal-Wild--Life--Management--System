@@ -69,6 +69,7 @@ diff --git a/core/tunnel.go b/core/tunnel.go
 +		return "", nil
  	}
  	return inner.RandSalt, nil
+ }
 diff --git a/core/empty_info_test.go b/core/empty_info_test.go
 new file mode 100644
 --- /dev/null
