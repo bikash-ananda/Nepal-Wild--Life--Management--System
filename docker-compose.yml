@@ -36,6 +36,9 @@ services:
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
       CAMERA_ENCRYPTION_KEY: ${CAMERA_ENCRYPTION_KEY:?Set CAMERA_ENCRYPTION_KEY in .env}
       CAMERA_VPN_CIDRS: ${CAMERA_VPN_CIDRS:-}
+      CAMERA_P2P_BRIDGE_HOST: ${CAMERA_P2P_BRIDGE_HOST:-dh-fwd}
+      CAMERA_P2P_PORT_RANGE: ${CAMERA_P2P_PORT_RANGE:-}
+      CAMERA_P2P_DETERRENCE_ENABLED: ${CAMERA_P2P_DETERRENCE_ENABLED:-false}
       CAMERA_SNAPSHOT_RETENTION_DAYS: ${CAMERA_SNAPSHOT_RETENTION_DAYS:-30}
       CAMERA_RTMP_PUBLIC_HOST: ${CAMERA_RTMP_PUBLIC_HOST:-bikasheng.com.np}
       MEDIAMTX_API_URL: http://mediamtx:9997
@@ -128,6 +131,28 @@ services:
       - edge
       - camera_control
 
+  # Optional: unofficial Dahua P2P forwarder for camera CONTROL only (port 80 CGI). Start with:
+  #   docker compose --profile p2p up -d --build dh-fwd
+  # It publishes no host ports; only the API/MediaMTX on camera_control can reach it.
+  dh-fwd:
+    profiles: ["p2p"]
+    build:
+      context: ./infra/dh-fwd
+    restart: unless-stopped
+    init: true
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    volumes:
+      - ./secrets/p2p-cameras.conf:/run/p2p/cameras.conf:ro
+    networks:
+      - p2p_egress
+      - camera_control
+
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
@@ -155,6 +180,8 @@ networks:
     internal: true
   camera_control:
     internal: true
+  # Outbound-only network for the dh-fwd bridge to reach Dahua's cloud; nothing else joins it.
+  p2p_egress:
 
 volumes:
   postgres_data:

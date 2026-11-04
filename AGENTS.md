@@ -12,6 +12,7 @@
 - `src/` is the React/Vite frontend. `src/api/apiClient.js` is its same-origin REST boundary.
 - `server/` contains the Fastify API, PostgreSQL schema, authentication, records, and private media uploads.
 - `docker-compose.yml`, `Caddyfile`, and the Dockerfiles define VPS deployment. Keep PostgreSQL, API, and MediaMTX control ports private; publish application HTTPS and the configured WebRTC UDP media port only.
+- Optional camera control tunnel: `dh-fwd` runs as a private sidecar (see `docs/DH_FWD_CONTROL.md`); the API reaches only its bridge ports. Siren/light stay disabled server-side during the pilot.
 - Keep frontend requests on the API adapter. Never add hosted-backend SDKs or provider secrets to the browser.
 - Use environment variables for secrets. Never commit `.env`, passwords, tokens, camera credentials, or RTSP URLs containing credentials.
 

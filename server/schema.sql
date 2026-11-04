@@ -197,3 +197,22 @@ CREATE INDEX IF NOT EXISTS notification_deliveries_created_idx ON notification_d
 CREATE UNIQUE INDEX IF NOT EXISTS app_records_verified_alert_dedupe_idx
   ON app_records ((data->>'verification_sample_id'))
   WHERE entity = 'Alert' AND data ? 'verification_sample_id';
+
+-- Control-only profile for cameras reached through the dh-fwd P2P bridge. Video still arrives
+-- by RTMP publishing; this table only stores how the API reaches the camera's CGI port.
+CREATE TABLE IF NOT EXISTS camera_control_tunnels (
+  camera_entity text NOT NULL DEFAULT 'Camera' CHECK (camera_entity = 'Camera'),
+  camera_id text PRIMARY KEY,
+  bridge_port integer NOT NULL UNIQUE CHECK (bridge_port BETWEEN 1024 AND 65535),
+  username text NOT NULL DEFAULT '',
+  password_ciphertext text NOT NULL,
+  password_iv text NOT NULL,
+  password_tag text NOT NULL,
+  ptz_enabled boolean NOT NULL DEFAULT false,
+  siren_control_enabled boolean NOT NULL DEFAULT false,
+  light_control_enabled boolean NOT NULL DEFAULT false,
+  configured_by uuid REFERENCES app_users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  FOREIGN KEY (camera_entity, camera_id) REFERENCES app_records(entity, id) ON DELETE CASCADE
+);

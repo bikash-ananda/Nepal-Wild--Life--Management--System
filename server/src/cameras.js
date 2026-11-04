@@ -4,6 +4,7 @@ import net from "node:net";
 import { addAudit } from "./db.js";
 import { canReadSite, createRecord, getRecord } from "./records.js";
 import { deleteCameraSnapshot, saveCameraSnapshot } from "./media.js";
+import { deterrenceAllowed, normalizeTunnelProfile, p2pEnabled, p2pTarget, parsePortRange, privateControlRoute } from "./p2p-tunnel.js";
 
 const managerRoles = new Set(["admin", "technician"]);
 const viewerRoles = new Set(["admin", "researcher", "reviewer", "technician"]);
@@ -314,12 +315,17 @@ async function cameraPresetRequest(connection, password, presetId) {
 }
 
 async function dahuaGet(connection, password, requestPath, timeoutMs = 5000, signal = undefined, accept = "*/*") {
-  const controlHost = await validatedVpnCameraAddress(connection.host);
-  const urlHost = net.isIPv6(controlHost) ? `[${controlHost}]` : controlHost;
-  const url = new URL(requestPath, `http://${urlHost}:${connection.control_port || 80}`);
+  // P2P tunnel cameras are reached through the fixed dh-fwd bridge service; everything else must be inside the VPN CIDRs.
+  const viaTunnel = connection.network_mode === "p2p_tunnel";
+  const target = viaTunnel
+    ? p2pTarget(connection.control_port)
+    : { host: await validatedVpnCameraAddress(connection.host), port: connection.control_port || 80 };
+  const urlHost = net.isIPv6(target.host) ? `[${target.host}]` : target.host;
+  const url = new URL(requestPath, `http://${urlHost}:${target.port}`);
   const timeoutController = new AbortController();
   const requestSignal = signal ? AbortSignal.any([signal, timeoutController.signal]) : timeoutController.signal;
-  const timeout = setTimeout(() => timeoutController.abort(), timeoutMs);
+  // Digest auth needs two round trips and the Dahua cloud relay adds latency.
+  const timeout = setTimeout(() => timeoutController.abort(), viaTunnel ? Math.max(timeoutMs, 8000) : timeoutMs);
   const request = (authorization = "") => fetch(url, {
     method: "GET",
     redirect: "manual",
@@ -339,7 +345,7 @@ async function dahuaGet(connection, password, requestPath, timeoutMs = 5000, sig
   } catch (error) {
     clearTimeout(timeout);
     if (error.statusCode) throw error;
-    throw httpError(502, "The VPS could not reach the camera service over its private VPN route.");
+    throw httpError(502, "The VPS could not reach the camera service over its private control route.");
   }
   clearTimeout(timeout);
   if (response.status >= 300 && response.status < 400) {
@@ -610,6 +616,38 @@ async function connectionFor(pool, cameraId) {
   return result.rows[0] || null;
 }
 
+async function tunnelFor(pool, cameraId) {
+  const result = await pool.query("SELECT * FROM camera_control_tunnels WHERE camera_id = $1", [cameraId]);
+  return result.rows[0] || null;
+}
+
+// Presents a tunnel profile with the same fields the control routes already expect.
+function tunnelAsConnection(row) {
+  return { ...row, network_mode: "p2p_tunnel", host: "", enabled: true, state: "configured", control_port: row.bridge_port };
+}
+
+// Controls prefer the P2P tunnel profile when one exists; otherwise the VPN-routed stream connection is used.
+async function controlProfileFor(pool, cameraId) {
+  const tunnel = await tunnelFor(pool, cameraId);
+  return tunnel ? tunnelAsConnection(tunnel) : connectionFor(pool, cameraId);
+}
+
+function safeTunnel(row) {
+  return {
+    control_route: "p2p_tunnel",
+    network_mode: "p2p_tunnel",
+    configured: true,
+    state: "configured",
+    bridge_port: row.bridge_port,
+    username: row.username,
+    has_password: Boolean(row.password_ciphertext),
+    ptz_enabled: row.ptz_enabled === true,
+    siren_control_enabled: row.siren_control_enabled === true,
+    light_control_enabled: row.light_control_enabled === true,
+    updated_at: row.updated_at,
+  };
+}
+
 function makePathName(cameraId) {
   return `cam_${String(cameraId).replace(/[^a-z0-9]/gi, "").slice(0, 36)}`;
 }
@@ -834,10 +872,12 @@ export function registerCameraRoutes(app, pool, requireAuth, checkOrigin) {
     reply.header("Cache-Control", "no-store");
     await authorizedCamera(pool, request.user, request.params.id);
     const row = await connectionFor(pool, request.params.id);
-    if (!row) return { connection: safeConnection(null) };
+    const tunnel = await tunnelFor(pool, request.params.id);
+    const control = tunnel ? { control: safeTunnel(tunnel) } : {};
+    if (!row) return { connection: safeConnection(null), ...control };
     const status = await mediaRequest(`/v3/paths/get/${encodeURIComponent(row.path_name)}`).catch(() => null);
     const pathStatus = status?.ok ? await status.json().catch(() => ({})) : {};
-    return { connection: safeConnection(row, pathStatus.online === true) };
+    return { connection: safeConnection(row, pathStatus.online === true), ...control };
   });
 
   app.get("/api/cameras/:id/events", { preHandler: requireAuth }, async (request, reply) => {
@@ -1158,11 +1198,11 @@ export function registerCameraRoutes(app, pool, requireAuth, checkOrigin) {
     requireManager(request.user);
     if (!checkOrigin(request, reply)) return;
     const camera = await authorizedCamera(pool, request.user, request.params.id);
-    const connection = await connectionFor(pool, camera.id);
+    const connection = await controlProfileFor(pool, camera.id);
     if (!connection || !connection.enabled || connection.state !== "configured") throw httpError(409, "Apply a working camera stream route before using controls.");
     if (connection.ptz_enabled !== true) throw httpError(409, "Manual pan/tilt is not enabled for this camera. Configure it in camera setup first.");
     requireSupportedPtzAdapter(camera, true);
-    if (connection.network_mode !== "vpn_routed") throw httpError(409, "Camera controls require a private VPN route. Public camera control ports are not allowed.");
+    if (!privateControlRoute(connection)) throw httpError(409, "Camera controls require a private VPN route or the P2P control tunnel. Public camera control ports are not allowed.");
 
     const body = request.body || {};
     const action = String(body.action || "").toLowerCase();
@@ -1219,10 +1259,11 @@ export function registerCameraRoutes(app, pool, requireAuth, checkOrigin) {
     requireManager(request.user);
     if (!checkOrigin(request, reply)) return;
     const camera = await authorizedCamera(pool, request.user, request.params.id);
-    const connection = await connectionFor(pool, camera.id);
+    const connection = await controlProfileFor(pool, camera.id);
     if (!connection || !connection.enabled || connection.state !== "configured") throw httpError(409, "Apply a working camera stream route before using controls.");
-    if (connection.network_mode !== "vpn_routed") throw httpError(409, "Camera controls require a private VPN route. Public camera control ports are not allowed.");
+    if (!privateControlRoute(connection)) throw httpError(409, "Camera controls require a private VPN route or the P2P control tunnel. Public camera control ports are not allowed.");
     requireSupportedDahuaCamera(camera, true, "manual deterrence");
+    if (connection.network_mode === "p2p_tunnel" && !deterrenceAllowed()) throw httpError(409, "Manual siren/light control is disabled on this server.");
     const body = request.body || {};
     const device = String(body.device || "");
     const state = String(body.state || "").toLowerCase();
@@ -1259,6 +1300,78 @@ export function registerCameraRoutes(app, pool, requireAuth, checkOrigin) {
     }
     await addAudit(request.user.id, `camera.deterrence.${device}.${state}`, "Camera", camera.id, { device, state, manual: true });
     return { success: true, device, state, auto_off_seconds: device === "siren" && state === "on" ? 10 : 0 };
+  });
+
+  app.get("/api/cameras/:id/control-tunnel", { preHandler: requireAuth }, async (request, reply) => {
+    requireManager(request.user);
+    reply.header("Cache-Control", "no-store");
+    await authorizedCamera(pool, request.user, request.params.id);
+    const tunnel = await tunnelFor(pool, request.params.id);
+    const range = parsePortRange(process.env.CAMERA_P2P_PORT_RANGE);
+    return { enabled: p2pEnabled(), port_range: range, deterrence_allowed: deterrenceAllowed(), tunnel: tunnel ? safeTunnel(tunnel) : null };
+  });
+
+  app.put("/api/cameras/:id/control-tunnel", {
+    preHandler: requireAuth,
+    config: { rateLimit: { max: 8, timeWindow: "10 minutes" } },
+  }, async (request, reply) => {
+    requireManager(request.user);
+    if (!checkOrigin(request, reply)) return;
+    const camera = await authorizedCamera(pool, request.user, request.params.id);
+    requireSupportedDahuaCamera(camera, true, "P2P control tunnel");
+    encryptionKey();
+    const profile = normalizeTunnelProfile(request.body || {});
+    const previous = await tunnelFor(pool, camera.id);
+    const password = profile.password || (previous ? decryptPassword(previous) : "");
+    if (!password) throw httpError(400, "Enter the camera control account password.");
+    const encrypted = encryptPassword(password);
+    let row;
+    try {
+      const result = await pool.query(
+        `INSERT INTO camera_control_tunnels (camera_id,bridge_port,username,password_ciphertext,password_iv,password_tag,ptz_enabled,siren_control_enabled,light_control_enabled,configured_by)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+         ON CONFLICT (camera_id) DO UPDATE SET bridge_port=EXCLUDED.bridge_port, username=EXCLUDED.username,
+           password_ciphertext=EXCLUDED.password_ciphertext, password_iv=EXCLUDED.password_iv, password_tag=EXCLUDED.password_tag,
+           ptz_enabled=EXCLUDED.ptz_enabled, siren_control_enabled=EXCLUDED.siren_control_enabled,
+           light_control_enabled=EXCLUDED.light_control_enabled, configured_by=EXCLUDED.configured_by, updated_at=now()
+         RETURNING *`,
+        [camera.id, profile.bridge_port, profile.username, encrypted.ciphertext, encrypted.iv, encrypted.tag,
+          profile.ptz_enabled, profile.siren_control_enabled, profile.light_control_enabled, request.user.id]
+      );
+      row = result.rows[0];
+    } catch (error) {
+      if (error.code === "23505") throw httpError(409, "That tunnel port is already assigned to another camera.");
+      throw error;
+    }
+    await addAudit(request.user.id, "camera.control_tunnel.update", "Camera", camera.id, {
+      bridge_port: profile.bridge_port, ptz: profile.ptz_enabled, siren: profile.siren_control_enabled, light: profile.light_control_enabled,
+    });
+    return { tunnel: safeTunnel(row) };
+  });
+
+  app.post("/api/cameras/:id/control-tunnel/test", {
+    preHandler: requireAuth,
+    config: { rateLimit: { max: 10, timeWindow: "10 minutes" } },
+  }, async (request, reply) => {
+    requireManager(request.user);
+    if (!checkOrigin(request, reply)) return;
+    const camera = await authorizedCamera(pool, request.user, request.params.id);
+    const tunnel = await tunnelFor(pool, camera.id);
+    if (!tunnel) throw httpError(404, "This camera has no P2P control tunnel profile yet.");
+    // Read-only identity query: confirms the tunnel, the camera account and Digest auth without moving anything.
+    const response = await dahuaGet(tunnelAsConnection(tunnel), decryptPassword(tunnel), "/cgi-bin/magicBox.cgi?action=getDeviceType", 8000);
+    const text = (await response.text().catch(() => "")).trim().slice(0, 120);
+    await addAudit(request.user.id, "camera.control_tunnel.test", "Camera", camera.id, { result: "passed" });
+    return { success: true, device: text };
+  });
+
+  app.delete("/api/cameras/:id/control-tunnel", { preHandler: requireAuth }, async (request, reply) => {
+    requireManager(request.user);
+    if (!checkOrigin(request, reply)) return;
+    const camera = await authorizedCamera(pool, request.user, request.params.id);
+    await pool.query("DELETE FROM camera_control_tunnels WHERE camera_id=$1", [camera.id]);
+    await addAudit(request.user.id, "camera.control_tunnel.delete", "Camera", camera.id);
+    return reply.code(204).send();
   });
 
   app.delete("/api/cameras/:id/connection", {

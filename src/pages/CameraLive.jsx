@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { ArrowDown, ArrowDownLeft, ArrowDownRight, ArrowLeft, ArrowRight, ArrowUp, ArrowUpLeft, ArrowUpRight, Camera, Loader2, Radio, RefreshCw, ShieldAlert, Lightbulb, Home } from "lucide-react";
 import { api } from "@/api/apiClient";
 import WebRTCPlayer from "@/components/cameras/WebRTCPlayer";
+import P2PControlSetup from "@/components/cameras/P2PControlSetup";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/AuthContext";
@@ -121,7 +122,7 @@ export default function CameraLive() {
         setEventFeedError(status.last_error || "");
       }).catch(() => {});
       if (canControl) {
-        const savedConnection = await api.cameras.getConnection(id).catch(() => null);
+        const savedConnection = await api.cameras.getControlConnection(id).catch(() => null);
         setConnection(savedConnection);
       }
     } catch (cause) {
@@ -202,7 +203,8 @@ export default function CameraLive() {
   if (loading && !session) return <div className="flex min-h-60 items-center justify-center gap-2 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin" /> Connecting to camera…</div>;
   if (!camera && error) return <p className="py-20 text-center text-sm text-slate-500">Camera not found or access denied. <Link to="/cameras" className="text-emerald-700">Back to cameras</Link></p>;
 
-  const ptzEnabled = canControl && connection?.ptz_enabled && connection?.network_mode === "vpn_routed";
+  const privateControlRoute = ["vpn_routed", "p2p_tunnel"].includes(connection?.network_mode);
+  const ptzEnabled = canControl && connection?.ptz_enabled && privateControlRoute;
 
   return <main className="mx-auto max-w-6xl">
     <Link to={`/cameras/${id}`} className="mb-5 inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900"><ArrowLeft className="h-4 w-4" /> Camera details</Link>
@@ -228,7 +230,7 @@ export default function CameraLive() {
     {canControl && <section aria-label="Manual camera controls" className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div><h2 className="font-semibold text-slate-900">Camera direction</h2><p className="mt-1 text-sm text-slate-500">Manual pan and tilt controls for authorized technicians.</p></div>
-        {ptzEnabled && <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800"><Radio className="h-3.5 w-3.5" />Private VPN control</span>}
+        {ptzEnabled && <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800"><Radio className="h-3.5 w-3.5" />Private control route</span>}
       </div>
       {ptzEnabled ? <div className="mt-4 flex flex-col items-center gap-3 sm:flex-row sm:items-start">
         <div className="grid h-36 w-36 grid-cols-3 grid-rows-3 gap-2" onPointerLeave={() => { if (activeDirection.current) void stopPtz(); }}>
@@ -239,6 +241,7 @@ export default function CameraLive() {
       </div> : <div className="mt-4 flex flex-wrap items-start justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><p>{connection?.ptz_enabled ? "Manual controls require the server to reach this camera over its private VPN route." : "Manual controls are not enabled for this camera. Enable Dahua pan/tilt in camera setup and use a private VPN route."}</p><Button asChild variant="outline" size="sm"><Link to={`/cameras/${id}`}>Camera setup</Link></Button></div>}
       {(connection?.siren_control_enabled || connection?.light_control_enabled) && <div className="mt-5 border-t border-slate-200 pt-4"><div className="flex items-start gap-2"><ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" /><div><h3 className="font-medium text-slate-900">Manual deterrence controls</h3><p className="mt-1 text-xs text-slate-500">Only a direct admin/technician click can send these commands. Camera AI events never activate them. Consider the research protocol and people/animals nearby before use.</p></div></div><div className="mt-3 flex flex-wrap gap-2">{connection.siren_control_enabled && <Button type="button" disabled={Boolean(deterrenceBusy)} onClick={() => void setDeterrence("siren", sirenOn ? "off" : "on")} className={sirenOn ? "bg-rose-800 hover:bg-rose-900" : "bg-rose-600 hover:bg-rose-700"}>{deterrenceBusy?.startsWith("siren:") ? "Sending…" : sirenOn ? "Turn siren off" : "Activate siren · 10 sec"}</Button>}{connection.light_control_enabled && <Button type="button" variant="outline" disabled={Boolean(deterrenceBusy)} onClick={() => void setDeterrence("light", lightOn ? "off" : "manual")}><Lightbulb className="mr-2 h-4 w-4" />{deterrenceBusy?.startsWith("light:") ? "Sending…" : lightOn ? "Turn light off" : "Turn light on"}</Button>}</div></div>}
     </section>}
+    {canControl && <P2PControlSetup cameraId={id} onChanged={async () => setConnection(await api.cameras.getControlConnection(id).catch(() => null))} />}
   </main>;
 }
 

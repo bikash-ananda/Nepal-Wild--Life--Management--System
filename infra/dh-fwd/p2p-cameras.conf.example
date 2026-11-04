@@ -1,0 +1,4 @@
+# Copy to secrets/p2p-cameras.conf on the VPS, then:  sudo chown 10001:10001 secrets/p2p-cameras.conf && chmod 400 secrets/p2p-cameras.conf
+# serial|device_user|device_password|tunnel_port|bridge_port|profile(dmss|smartpss)
+# Never commit the real file.
+# 9A0123456789ABC|ctl_account|change-me|5080|15080|dmss

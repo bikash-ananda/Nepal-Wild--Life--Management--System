@@ -275,6 +275,33 @@ export const api = {
           body: JSON.stringify(payload),
         }
       ),
+
+    // Connection merged with the P2P control profile, for the live-control panel only.
+    getControlConnection: (id) =>
+      request(`/api/cameras/${encodeURIComponent(id)}/connection`).then(
+        (response) =>
+          response.control
+            ? { ...response.connection, ...response.control }
+            : response.connection
+      ),
+
+    controlTunnel: {
+      get: (id) =>
+        request(`/api/cameras/${encodeURIComponent(id)}/control-tunnel`),
+      save: (id, payload) =>
+        request(`/api/cameras/${encodeURIComponent(id)}/control-tunnel`, {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        }),
+      test: (id) =>
+        request(`/api/cameras/${encodeURIComponent(id)}/control-tunnel/test`, {
+          method: "POST",
+        }),
+      remove: (id) =>
+        request(`/api/cameras/${encodeURIComponent(id)}/control-tunnel`, {
+          method: "DELETE",
+        }),
+    },
   },
 
   ai: {
