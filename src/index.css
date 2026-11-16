@@ -392,3 +392,124 @@ html {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(100, 116, 139, 0.5);
 }
+
+/* Premium public landing refinements */
+.public-landing .hero-section {
+  isolation: isolate;
+}
+
+.public-landing .hero-copy {
+  max-width: 44rem;
+}
+
+.public-landing .hero-title {
+  max-width: 12.5ch;
+  text-wrap: balance;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, .12);
+}
+
+.public-landing .hero-description {
+  max-width: 62ch;
+  text-wrap: pretty;
+}
+
+.public-landing .hero-kicker {
+  min-height: 38px;
+  letter-spacing: .13em;
+}
+
+.public-landing .hero-trust-card {
+  max-width: 39rem;
+  border-radius: 1.15rem;
+}
+
+.public-landing .hero-proof-strip {
+  position: relative;
+  gap: .65rem;
+}
+
+.public-landing .hero-proof-strip > div {
+  display: flex;
+  min-width: 0;
+  min-height: 66px;
+  flex-direction: column;
+  justify-content: center;
+  gap: .25rem;
+  border: 1px solid rgba(235, 245, 221, .09);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, .035);
+  padding: .55rem .35rem;
+}
+
+.public-landing .hero-proof-strip > div strong {
+  letter-spacing: -.025em;
+}
+
+.public-landing .hero-proof-strip > div span {
+  line-height: 1.45;
+}
+
+.public-landing .hero-photo-frame {
+  border-color: rgba(236, 246, 226, .22);
+  box-shadow: 0 38px 110px -46px rgba(0, 0, 0, .9), 0 0 0 1px rgba(255, 255, 255, .035);
+}
+
+.public-landing .hero-photo-frame figcaption {
+  box-shadow: 0 18px 48px -24px rgba(0, 0, 0, .72), inset 0 1px rgba(255, 255, 255, .08);
+}
+
+.public-landing .public-header {
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.public-landing .public-mobile-nav a:focus-visible {
+  outline-offset: -2px;
+}
+
+@media (min-width: 1024px) {
+  .public-landing .hero-proof-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .85rem;
+    padding-top: 1.15rem;
+    padding-bottom: 1.15rem;
+  }
+
+  .public-landing .hero-proof-strip > div {
+    min-height: 72px;
+  }
+}
+
+@media (max-width: 640px) {
+  .public-landing .hero-title {
+    max-width: 11.5ch;
+    font-size: clamp(2.45rem, 12vw, 3.65rem);
+    line-height: 1.02;
+  }
+
+  .public-landing .hero-description {
+    max-width: 43ch;
+    font-size: 1rem;
+    line-height: 1.75;
+  }
+
+  .public-landing .hero-proof-strip {
+    gap: .4rem;
+    padding-top: .85rem;
+    padding-bottom: .85rem;
+  }
+
+  .public-landing .hero-proof-strip > div {
+    min-height: 68px;
+    border-radius: .8rem;
+    padding: .45rem .25rem;
+  }
+
+  .public-landing .hero-proof-strip > div strong {
+    font-size: .78rem;
+  }
+
+  .public-landing .hero-proof-strip > div span {
+    font-size: .62rem;
+  }
+}
+
