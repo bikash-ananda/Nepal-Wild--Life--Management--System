@@ -14,7 +14,7 @@ const WildlifeHero3D = lazy(() => import("@/components/3d/WildlifeHero3D"));
 
 const copy = {
   en: {
-    system: "Pokhara Human–Wildlife Conflict Study", installApp: "Install app", installHelpTitle: "Install WAMS", installHelpAndroid: "Open your browser menu and choose “Install app” or “Add to Home screen”.", installHelpIOS: "In Safari, tap Share, then choose “Add to Home Screen”.", installHelpOther: "Use your browser menu to add WAMS to your home screen.", closeInstallHelp: "Close install help", navAbout: "About the project", navGuides: "Wildlife safety", navSpecies: "Wildlife guide", navReport: "Report crop damage", viewLibrary: "Explore the species library", language: "नेपाली", noticeScope: "Show notices for", noticeWard: "Ward", noticeMunicipality: "Municipality",
+    system: "Pokhara Human–Wildlife Conflict Study", installApp: "Install app", installHelpTitle: "Install WAMS", installHelpAndroid: "In Chrome, tap ⋮ (top right) and choose “Install app”. If that option is not shown, choose “Add to Home screen” and confirm.", installHelpIOS: "In Safari, tap Share, then choose “Add to Home Screen”.", installHelpOther: "Use your browser menu to add WAMS to your home screen.", closeInstallHelp: "Close install help", navAbout: "About the project", navGuides: "Wildlife safety", navSpecies: "Wildlife guide", navReport: "Report crop damage", viewLibrary: "Explore the species library", language: "नेपाली", noticeScope: "Show notices for", noticeWard: "Ward", noticeMunicipality: "Municipality",
     eyebrow: "POKHARA METROPOLITAN CITY · WARD 21 PILOT STUDY", heroTitle: "Monkeys damaging your crops? Share a report.", heroBody: "Help us understand crop damage caused by monkeys in Pokhara. Our first field study is in Ward 21; observations from across the city are welcome.", capture: "Share a wildlife photo", captureShort: "Add photo", report: "Submit a crop-damage report", reportShort: "Report damage", pilot: "First study area · Ward 21, Pokhara", pilotNote: "Ward 21 is the first study area. Observations from across Pokhara are welcome and are reviewed before use.", artAlt: "Rhesus macaque photographed in Nepal", illustration: "FIELD REFERENCE · GOKARNA FOREST, NEPAL", locationLabel: "FIRST FIELD STUDY", areaLabel: "Pokhara Metropolitan City · 33 wards", focusLabel: "Monkey crop impact · Ward 21 pilot", noticeSetup: "Choose an area for public notices",
     aboutTitle: "Understanding human–monkey conflict in Pokhara", aboutBody: "We study when and where monkeys damage crops in Pokhara. The field pilot is in Ward 21, and relevant observations from across the city are welcome.", howTitle: "How a community report is used", howPhoto: "1. Share what you observed", howPhotoBody: "Tell us what was affected, when and where. Add a photo only if it is safe; never approach wildlife.", howReview: "2. A reviewer checks the report", howReviewBody: "A project reviewer checks each report. Submissions are not automatically verified or used to identify an animal.", howLearn: "3. Support local research", howLearnBody: "Reviewed reports help researchers understand crop-damage patterns and farmers’ experiences.",
     trustTitle: "Your report, handled with care", trustOne: "Every report is reviewed", trustOneBody: "Reports are checked by a project reviewer before they are used in the study.", trustTwo: "Location and contact details are protected", trustTwoBody: "Only authorized reviewers can access exact GPS coordinates and contact details. Share only what is needed.", trustThree: "This is a reporting and research platform", trustThreeBody: "This is not an emergency-response service. If anyone is in immediate danger, contact local emergency services.",
@@ -23,7 +23,7 @@ const copy = {
     researchEyebrow: "THE WARD 21 FIELD PILOT", researchTitle: "Understand crop damage through local evidence", researchBody: "The pilot studies monkey-related crop damage in Ward 21. Reports from across Pokhara help build context and identify where and when damage occurs.", researchCard: "What the study records", researchCardBody: "When and where damage occurs, affected crops and farmers’ observations.", repository: "Research and findings", repositoryBody: "Reviewed summaries, approved papers and anonymized findings will be published here when they are ready to share.", status: "Findings will be published after review", footer: "Community research on human–monkey conflict in Pokhara, Nepal.", alertsLabel: "Community notice", noNotices: "No active public notices", dismiss: "Dismiss notice", noticeLabel: "Public safety notice", active: "Active notice", menu: "Open menu", closeMenu: "Close menu", viewGuides: "Read safety guides", scroll: "Explore the pilot", countdownSeconds: "seconds remaining", photoCredit: "Photo credit",
   },
   np: {
-    system: "पोखरा मानव–वन्यजन्तु द्वन्द्व अध्ययन", installApp: "एप इन्स्टल", installHelpTitle: "WAMS मोबाइलमा राख्नुहोस्", installHelpAndroid: "ब्राउजरको मेनु खोलेर “Install app” वा “Add to Home screen” छान्नुहोस्।", installHelpIOS: "Safari मा Share थिचेर “Add to Home Screen” छान्नुहोस्।", installHelpOther: "ब्राउजरको मेनुबाट WAMS लाई Home Screen मा थप्नुहोस्।", closeInstallHelp: "निर्देशन बन्द गर्नुहोस्", navAbout: "परियोजनाबारे", navGuides: "वन्यजन्तुबाट सुरक्षित रहने उपाय", navSpecies: "वन्यजन्तु परिचय", viewLibrary: "वन्यजन्तुबारे जान्नुहोस्", navReport: "बाली क्षतिको विवरण दिनुहोस्", language: "English", noticeScope: "सूचना देखाउने क्षेत्र", noticeWard: "वडा", noticeMunicipality: "पालिका",
+    system: "पोखरा मानव–वन्यजन्तु द्वन्द्व अध्ययन", installApp: "एप इन्स्टल", installHelpTitle: "WAMS मोबाइलमा राख्नुहोस्", installHelpAndroid: "Chrome मा माथिको ⋮ मेनु थिचेर “Install app” छान्नुहोस्। त्यो विकल्प नदेखिए “Add to Home screen” छानेर पुष्टि गर्नुहोस्।", installHelpIOS: "Safari मा Share थिचेर “Add to Home Screen” छान्नुहोस्।", installHelpOther: "ब्राउजरको मेनुबाट WAMS लाई Home Screen मा थप्नुहोस्।", closeInstallHelp: "निर्देशन बन्द गर्नुहोस्", navAbout: "परियोजनाबारे", navGuides: "वन्यजन्तुबाट सुरक्षित रहने उपाय", navSpecies: "वन्यजन्तु परिचय", viewLibrary: "वन्यजन्तुबारे जान्नुहोस्", navReport: "बाली क्षतिको विवरण दिनुहोस्", language: "English", noticeScope: "सूचना देखाउने क्षेत्र", noticeWard: "वडा", noticeMunicipality: "पालिका",
     eyebrow: "पोखरा महानगरपालिका · वडा नं. २१ मा प्रारम्भिक अध्ययन", heroTitle: "बाँदरले बालीमा क्षति पुर्‍यायो? विवरण दिनुहोस्।", heroBody: "पोखरामा बाँदरले बालीमा पुर्‍याउने क्षतिबारे बुझ्न हामीलाई सहयोग गर्नुहोस्। पहिलो स्थलगत अध्ययन वडा नं. २१ मा केन्द्रित छ; पोखराका अन्य वडाबाट पनि विवरण पठाउन सकिन्छ।", capture: "वन्यजन्तुको तस्बिर पठाउनुहोस्", captureShort: "तस्बिर पठाउनुहोस्", report: "बाली क्षतिको विवरण पठाउनुहोस्", reportShort: "क्षति रिपोर्ट", pilot: "पहिलो अध्ययन क्षेत्र · पोखरा वडा नं. २१", pilotNote: "पहिलो अध्ययन पोखरा महानगरपालिका वडा नं. २१ मा केन्द्रित छ। अन्य वडाबाट पनि विवरण पठाउन सकिन्छ। समीक्षकले जाँच गरेपछि मात्र विवरण अध्ययनमा प्रयोग हुन्छ।", artAlt: "नेपालमा खिचिएको रिसस मकाक बाँदर", illustration: "क्षेत्रीय सन्दर्भ तस्बिर · गोकर्ण वन, नेपाल", locationLabel: "पहिलो क्षेत्रीय अध्ययन", areaLabel: "पोखरा महानगरपालिका · ३३ वडा", focusLabel: "बालीमा बाँदरको असर · वडा २१ नमुना", noticeSetup: "सार्वजनिक सूचना देखाउने क्षेत्र छान्नुहोस्",
     aboutTitle: "पोखरामा मानव–बाँदर द्वन्द्वको अध्ययन", aboutBody: "पोखरामा बाँदरले बालीमा क्षति पुर्‍याउने समय र स्थानबारे यो अध्ययन केन्द्रित छ। पहिलो अध्ययन वडा नं. २१ मा हुँदैछ; अन्य वडाबाट पनि सम्बन्धित विवरण पठाउन सकिन्छ।", howTitle: "तपाईंले पठाएको विवरण कसरी प्रयोग हुन्छ?", howPhoto: "१. आफूले देखेको कुरा लेख्नुहोस्", howPhotoBody: "कुन बालीमा, कहिले र कहाँ क्षति भयो लेख्नुहोस्। सुरक्षित भए मात्र तस्बिर थप्नुहोस्; वन्यजन्तुको नजिक नजानुहोस्।", howReview: "२. परियोजनाको टोलीले विवरण जाँच्छ", howReviewBody: "परियोजनाको समीक्षकले विवरण जाँच गर्छन्। विवरण पठाएकै आधारमा घटना पुष्टि वा वन्यजन्तुको पहिचान हुँदैन।", howLearn: "३. स्थानीय अध्ययनमा सहयोग गर्नुहोस्", howLearnBody: "समीक्षा भएका विवरणले क्षतिको ढाँचा र किसानका अनुभव बुझ्न मद्दत गर्छन्।",
     trustTitle: "तपाईंको विवरणको जिम्मेवार व्यवस्थापन", trustOne: "हरेक विवरणको मानवीय समीक्षा", trustOneBody: "अध्ययनमा प्रयोग गर्नुअघि परियोजनाका समीक्षकले विवरण जाँच गर्छन्।", trustTwo: "स्थान र सम्पर्क विवरण सुरक्षित", trustTwoBody: "GPS निर्देशाङ्क र सम्पर्क विवरण अधिकृत समीक्षकले मात्र हेर्न पाउँछन्। आवश्यक जानकारी मात्र दिनुहोस्।", trustThree: "यो विवरण तथा अनुसन्धानको प्लेटफर्म हो", trustThreeBody: "यो आपतकालीन सेवा होइन। कसैको ज्यानमा तत्काल जोखिम भए स्थानीय आपतकालीन निकायलाई सम्पर्क गर्नुहोस्।",
@@ -333,21 +333,24 @@ export default function PublicLanding() {
   }, [lang]);
 
   useEffect(() => {
-    const standalone = window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator.standalone === true;
+    const standalone = window.matchMedia?.("(display-mode: standalone)")?.matches
+      || window.navigator.standalone === true;
     setIsAppInstalled(Boolean(standalone));
-    const onBeforeInstall = (event) => {
-      event.preventDefault();
-      setInstallPrompt(event);
+    setInstallPrompt(window.__wamsDeferredInstallPrompt || null);
+
+    const onPromptAvailable = () => {
+      setInstallPrompt(window.__wamsDeferredInstallPrompt || null);
     };
     const onInstalled = () => {
+      window.__wamsDeferredInstallPrompt = null;
       setIsAppInstalled(true);
       setInstallPrompt(null);
       setShowInstallHelp(false);
     };
-    window.addEventListener("beforeinstallprompt", onBeforeInstall);
+    window.addEventListener("wams-install-prompt-available", onPromptAvailable);
     window.addEventListener("appinstalled", onInstalled);
     return () => {
-      window.removeEventListener("beforeinstallprompt", onBeforeInstall);
+      window.removeEventListener("wams-install-prompt-available", onPromptAvailable);
       window.removeEventListener("appinstalled", onInstalled);
     };
   }, []);
@@ -381,14 +384,20 @@ export default function PublicLanding() {
   const activeNotice = notices.find((notice) => !dismissed.has(notice.id));
 
   const handleInstallApp = async () => {
-    if (installPrompt) {
-      await installPrompt.prompt();
-      const choice = await installPrompt.userChoice;
-      if (choice?.outcome === "accepted") setShowInstallHelp(false);
+    const promptEvent = installPrompt || window.__wamsDeferredInstallPrompt;
+    if (promptEvent?.prompt) {
+      window.__wamsDeferredInstallPrompt = null;
       setInstallPrompt(null);
+      try {
+        await promptEvent.prompt();
+        const choice = await promptEvent.userChoice;
+        setShowInstallHelp(choice?.outcome !== "accepted");
+      } catch {
+        setShowInstallHelp(true);
+      }
       return;
     }
-    setShowInstallHelp((visible) => !visible);
+    setShowInstallHelp(true);
   };
   const dismissNotice = useCallback((id) => setDismissed((prior) => new Set(prior).add(id)), []);
 
