@@ -276,6 +276,7 @@ export default function PublicLanding() {
   const [lookupMessage, setLookupMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
+  const [alertSaved, setAlertSaved] = useState(false);
   const [guideRatings, setGuideRatings] = useState(() => {
     try {
       const saved = JSON.parse(window.sessionStorage.getItem("nws-form-guide-feedback-v1") || "{}");
@@ -497,7 +498,7 @@ export default function PublicLanding() {
         <div ref={scrollProgressRef} className="absolute inset-x-0 bottom-0 h-[2px] origin-left scale-x-0 bg-lime-500" aria-hidden="true" />
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
           <Link to="/login" className="group flex min-w-0 items-center gap-3" aria-label={lang === "np" ? "आधिकारिक लगइन खोल्नुहोस्" : "Open official login"}>
-            <img src="/icons/wildlife.svg" alt="Nepal Wildlife Management System logo" className="h-11 w-11 shrink-0 rounded-xl shadow-sm transition-transform duration-300 group-hover:scale-105" />
+            <img src="/wams-logo.webp" alt="Nepal Wildlife Management System logo" className="h-11 w-11 shrink-0 rounded-xl shadow-sm transition-transform duration-300 group-hover:scale-105" />
             <span className="min-w-0"><span className="block max-w-[220px] truncate text-sm font-bold leading-tight text-slate-950 sm:max-w-md">{t.system}</span><span className="mt-0.5 block text-[9px] font-bold uppercase tracking-[.14em] text-emerald-800 sm:text-[10px]">{lang === "np" ? "नेपाल · वन्यजन्तु व्यवस्थापन" : "NEPAL · WILDLIFE MANAGEMENT"}</span></span>
           </Link>
           <nav className="hidden items-center gap-7 lg:flex" aria-label={lang === "np" ? "मुख्य नेभिगेसन" : "Main navigation"}>
@@ -568,6 +569,55 @@ export default function PublicLanding() {
                 </article>
               </div>
             </div>
+          </div>
+        </section>
+
+
+        <section id="early-alerts" className="scroll-mt-20 bg-[#102b21] py-14 text-white sm:py-20">
+          <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[.8fr_1.2fr] lg:px-8">
+            <div className="lg:sticky lg:top-28 lg:self-start">
+              <p className="text-xs font-bold uppercase tracking-[.16em] text-lime-300">{lang === "np" ? "अग्रिम सूचना प्राथमिकता" : "EARLY-WARNING PREFERENCES"}</p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{lang === "np" ? "जोखिमबारे समयमै जानकारी पाउन तयार हुनुहोस्" : "Get prepared for local wildlife-risk updates"}</h2>
+              <p className="mt-4 text-sm leading-7 text-emerald-50/75">{lang === "np" ? "आफ्नो क्षेत्र र सम्पर्क माध्यम छान्नुहोस्। भविष्यमा उपलब्ध हुने सूचना सेवाका लागि आफ्नो प्राथमिकता तयार गर्न सक्नुहुन्छ।" : "Choose the areas and contact channels that matter to you. Prepare your preferences for the planned local early-warning service."}</p>
+              <div className="mt-6 rounded-2xl border border-white/15 bg-white/[.06] p-4">
+                <div className="flex items-center gap-2 text-sm font-semibold text-lime-200"><ShieldCheck className="h-4 w-4" />{lang === "np" ? "स्थान गोपनीयता र सहमति" : "Location privacy and consent"}</div>
+                <p className="mt-2 text-xs leading-6 text-emerald-50/70">{lang === "np" ? "GPS अनुमति बिना स्थान प्रयोग हुँदैन। यो पृष्ठले निरन्तर background tracking गर्दैन। अहिले प्राथमिकता यही उपकरणमा मात्र सुरक्षित हुन्छ; वास्तविक SMS, इमेल वा WhatsApp सूचना पठाउने सेवा जोडिएको छैन।" : "GPS is not accessed without browser permission. This page does not continuously track your device in the background. Preferences are stored only on this device; live SMS, email and WhatsApp delivery is not connected yet."}</p>
+              </div>
+            </div>
+            <form className="rounded-[1.75rem] border border-white/10 bg-white p-5 text-slate-900 shadow-2xl sm:p-8" onSubmit={(event) => {
+              event.preventDefault();
+              const data = new FormData(event.currentTarget);
+              const profile = {
+                name: String(data.get("alert_name") || "").trim(),
+                phone: String(data.get("alert_phone") || "").trim(),
+                email: String(data.get("alert_email") || "").trim(),
+                province: String(data.get("alert_province") || "").trim(),
+                district: String(data.get("alert_district") || "").trim(),
+                municipality: String(data.get("alert_municipality") || "").trim(),
+                ward: String(data.get("alert_ward") || "").trim(),
+                channels: data.getAll("alert_channel"),
+                risks: data.getAll("alert_risk"),
+                locationConsent: data.get("alert_location") === "on"
+              };
+              try { window.localStorage.setItem("wams-alert-preferences-v1", JSON.stringify(profile)); setAlertSaved(true); }
+              catch { setAlertSaved(false); }
+            }}>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="grid gap-1.5 text-sm font-semibold sm:col-span-2">{lang === "np" ? "नाम" : "Your name"}<input name="alert_name" required autoComplete="name" className="min-h-12 rounded-xl border border-slate-300 px-3 font-normal" /></label>
+                <label className="grid gap-1.5 text-sm font-semibold">{lang === "np" ? "फोन नम्बर" : "Phone number"}<input name="alert_phone" type="tel" autoComplete="tel" className="min-h-12 rounded-xl border border-slate-300 px-3 font-normal" placeholder="+977 ..." /></label>
+                <label className="grid gap-1.5 text-sm font-semibold">Email<input name="alert_email" type="email" autoComplete="email" className="min-h-12 rounded-xl border border-slate-300 px-3 font-normal" placeholder="name@example.com" /></label>
+                <label className="grid gap-1.5 text-sm font-semibold">{lang === "np" ? "प्रदेश" : "Province"}<input name="alert_province" className="min-h-12 rounded-xl border border-slate-300 px-3 font-normal" /></label>
+                <label className="grid gap-1.5 text-sm font-semibold">{lang === "np" ? "जिल्ला" : "District"}<input name="alert_district" className="min-h-12 rounded-xl border border-slate-300 px-3 font-normal" /></label>
+                <label className="grid gap-1.5 text-sm font-semibold">{lang === "np" ? "पालिका / गाउँपालिका" : "Municipality / Rural municipality"}<input name="alert_municipality" className="min-h-12 rounded-xl border border-slate-300 px-3 font-normal" /></label>
+                <label className="grid gap-1.5 text-sm font-semibold">{lang === "np" ? "वडा नं." : "Ward number"}<input name="alert_ward" inputMode="numeric" className="min-h-12 rounded-xl border border-slate-300 px-3 font-normal" /></label>
+                <fieldset className="grid gap-2 sm:col-span-2"><legend className="text-sm font-semibold">{lang === "np" ? "सूचना पाउने माध्यम" : "Preferred notification channels"}</legend><div className="grid grid-cols-3 gap-2 text-sm">{[["email","Email"],["sms","SMS"],["whatsapp","WhatsApp"]].map(([value,label]) => <label key={value} className="flex min-h-12 items-center gap-2 rounded-xl border border-slate-200 px-3"><input type="checkbox" name="alert_channel" value={value} className="h-4 w-4 accent-emerald-800" />{label}</label>)}</div></fieldset>
+                <fieldset className="grid gap-2 sm:col-span-2"><legend className="text-sm font-semibold">{lang === "np" ? "कुन जोखिमको सूचना चाहिन्छ?" : "Which wildlife risks interest you?"}</legend><div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">{(lang === "np" ? [["crop","बाली क्षति"],["livestock","पशुधनमा आक्रमण"],["elephant","हात्ती"],["rhino","गैँडा"],["tiger","बाघ"],["leopard","चितुवा"],["monkey","बाँदर"],["other","अन्य"]] : [["crop","Crop damage"],["livestock","Livestock attacks"],["elephant","Elephants"],["rhino","Rhinos"],["tiger","Tigers"],["leopard","Leopards"],["monkey","Monkeys"],["other","Other"]]).map(([value,label]) => <label key={value} className="flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 px-3"><input type="checkbox" name="alert_risk" value={value} className="h-4 w-4 accent-emerald-800" />{label}</label>)}</div></fieldset>
+                <label className="flex items-start gap-3 rounded-xl bg-emerald-50 p-3 text-xs leading-5 text-slate-700 sm:col-span-2"><input type="checkbox" name="alert_location" className="mt-1 h-4 w-4 accent-emerald-800" /><span>{lang === "np" ? "स्थानमा आधारित सूचना सुविधाका लागि अनुमति मागिएको बेला मात्र उपकरणको स्थान प्रयोग गर्न सहमत छु।" : "I consent to location access only when requested for location-based alerts; this does not enable continuous background tracking."}</span></label>
+                <p className="text-xs leading-5 text-slate-500 sm:col-span-2">{lang === "np" ? "फोन वा इमेलमध्ये कम्तीमा एउटा राख्नुहोस्। अहिले विवरण यही ब्राउजरमा मात्र सुरक्षित हुन्छ; वास्तविक सूचना पठाउन backend सेवा सक्रिय गर्न बाँकी छ।" : "Provide at least one contact method. Preferences are currently stored only in this browser; backend activation is still required before alerts can be delivered."}</p>
+                <button type="submit" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-900 px-5 text-sm font-bold text-white hover:bg-emerald-800 sm:col-span-2">{lang === "np" ? "सूचना प्राथमिकता सुरक्षित गर्नुहोस्" : "Save alert preferences"}<ArrowRight className="h-4 w-4" /></button>
+                {alertSaved && <p role="status" className="text-sm font-semibold text-emerald-800 sm:col-span-2">{lang === "np" ? "प्राथमिकता यो उपकरणमा सुरक्षित भयो। वास्तविक सूचना सेवा अझै सक्रिय छैन।" : "Preferences saved on this device. Live notification delivery is not active yet."}</p>}
+              </div>
+            </form>
           </div>
         </section>
 
