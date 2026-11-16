@@ -1,13 +1,20 @@
 {
-  "name": "Human Wildlife Conflict Management System",
-  "short_name": "Wildlife Conflict",
-  "description": "Global wildlife conflict reporting and human review.",
+  "id": "/",
+  "name": "Nepal Wildlife Management System",
+  "short_name": "WAMS",
+  "description": "Community reporting and research on human–wildlife conflict in Pokhara, Nepal.",
+  "lang": "en",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#f8fafc",
-  "theme_color": "#064e3b",
+  "background_color": "#0b241b",
+  "theme_color": "#0b241b",
   "icons": [
-    { "src": "/icons/wildlife.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    {
+      "src": "/icons/wildlife.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
   ]
 }
