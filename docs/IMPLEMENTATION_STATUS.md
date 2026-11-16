@@ -23,7 +23,7 @@ This note records verified implementation boundaries for the master development 
 
 ## Incomplete or externally dependent
 
-- Nepali translation coverage is partial. Navigation and the incident/HWC capture forms, including report types, validation, and photo controls, use the centralized catalog; other screens still contain English labels.
+- Nepali translation coverage remains partial. Navigation, incident/HWC capture, and the notification-management screen now use the centralized English/Nepali catalog; authentication and many other screens still contain English labels. Fluent Nepali review of the new notification wording remains needed.
 - Current AI service supports image detection only. There is no conversational text-report model, automatic speech transcription fallback, or AI-generated structured incident draft. No report text or exact coordinates are sent to an external AI provider; a provider destination and data-sharing scope still need configuration and approval.
 - Incident and HWC forms can assign a report to one of the reporter's authorized sites. The server then creates an in-app alert for active field/government officers assigned to that same site; the alert opens the site-scoped report in WAMS and contains no description or coordinates. This uses assigned-site routing, not a geographic nearest-office calculation, and no external AI monitoring server is connected.
 - Notification rules and contacts are stored as configuration; a general rule executor is not connected. SMS, WhatsApp, email alerts, and automated calls are not implemented. Browser push requires VAPID configuration and user permission. See `docs/PILOT_PLAN.md` for provider, consent, delivery, and operations requirements.
@@ -32,6 +32,7 @@ This note records verified implementation boundaries for the master development 
 - The repository-wide TypeScript check currently reports many project and dependency errors. Lint passes. The production build passes from the OneDrive checkout with Vite's `--configLoader runner` option; the default config bundler cannot read ancestor directories from this environment's filesystem boundary.
 - Local backend tests pass without a PostgreSQL service, but audit-event writes emit connection-refused warnings. Database-backed behavior still needs a configured database test run.
 - Latest verification: frontend lint passes, 10 frontend tests pass, 28 backend tests pass, and Vite production build passes with the runner config loader when output is directed to the writable Codex workspace. Rewriting the OneDrive checkout's existing `dist` folder is not permitted in this environment. Android device/browser acceptance has not been run.
+- Notification localization slice: 9 language tests pass, ESLint passes on `Notifications.jsx`, and the production Vite build passes in an isolated workspace copy with the slice applied.
 - Off-host backups, restore drills, monitoring, and real Android/offline acceptance remain unchecked in `docs/PILOT_ACCEPTANCE.md`.
 
 ## Current incremental changes
@@ -47,10 +48,11 @@ This note records verified implementation boundaries for the master development 
 - Common unfiltered record lists now use database-side pagination and authorization-aware row filters.
 - New incident and HWC reports can route privacy-limited in-app review alerts to active authorized officers assigned to the selected site.
 - Species details show an English/Nepali source section with publication year, report pages, and a review date; source validation has a focused test.
+- Notification contact/rule settings use the central English/Nepali catalog, provide accessible names for activate/deactivate/delete controls, and show localized failure feedback. Configured rules are still stored only; no execution worker is connected.
 
 ## Recommended next work
 
-1. Complete the approved English/Nepali translation catalog for mobile reporting, validation, consent, and notification screens; verify with fluent Nepali review.
+1. Extend the central English/Nepali catalog to authentication and remaining public, field, and admin screens; review all new wording with a fluent Nepali speaker.
 2. Configure and approve a specific private AI report provider and data-sharing scope before implementing text transmission. Keep drafts editable and require explicit submission.
 3. Implement only consented notification channels with provider-specific configuration, delivery records, duplicate suppression, cooldowns, and explicit cost notices.
 4. Add reviewed species sources and editorial controls before publishing conservation facts.
