@@ -1,5 +1,5 @@
-const CACHE_NAME = "nws-shell-v1";
-const SHELL = ["/", "/index.html", "/manifest.json", "/icons/wildlife.svg"];
+const CACHE_NAME = "nws-shell-v2";
+const SHELL = ["/", "/index.html", "/manifest.json", "/icons/wildlife.svg?v=2"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -40,8 +40,8 @@ self.addEventListener("push", (event) => {
     ? message.url : "/notifications";
   event.waitUntil(self.registration.showNotification(title, {
     body,
-    icon: "/icons/wildlife.svg",
-    badge: "/icons/wildlife.svg",
+    icon: "/icons/wildlife.svg?v=2",
+    badge: "/icons/wildlife.svg?v=2",
     tag: String(message.tag || "wildlife-update").slice(0, 100),
     data: { path },
     renotify: false,
