@@ -235,6 +235,11 @@ export default function PublicCapture() {
           </div>
         )}
 
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-emerald-50 px-3 py-3">
+          <p className="text-xs leading-5 text-emerald-950">{lang === "np" ? "जनावरको पहिचान वा व्यवहारबारे जान्न चाहनुहुन्छ?" : "Want to learn about the animal or compare species?"}</p>
+          <a href={"/species-library?lang=" + lang} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center rounded-full border border-emerald-900/15 bg-white px-3 text-xs font-semibold text-emerald-900 underline-offset-2 hover:underline">{lang === "np" ? "वन्यजन्तु परिचय खोल्नुहोस्" : "Open wildlife guide"}</a>
+        </div>
+
         {/* Optional details: no name or profile required for a public wildlife photo */}
         <details className="mb-4 rounded-2xl border border-slate-200 bg-white p-3">
           <summary className="cursor-pointer text-sm font-semibold text-slate-700">{lang === "np" ? "थप विवरण (ऐच्छिक)" : "Add optional details"}</summary>
