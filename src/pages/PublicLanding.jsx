@@ -657,6 +657,30 @@ export default function PublicLanding() {
           </div>
         </section>
 
+        <section id="wildlife-gallery" className="border-y border-emerald-950/5 bg-[#fafbf8] py-14 sm:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="max-w-2xl">
+              <p className="text-xs font-bold uppercase tracking-[.16em] text-emerald-800">{lang === "np" ? "नेपालका वन्यजन्तु" : "WILDLIFE OF NEPAL"}</p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">{lang === "np" ? "विविध वन्यजन्तु, साझा सहअस्तित्व" : "Diverse wildlife. Shared landscapes."}</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-600">{lang === "np" ? "यी तस्बिरहरू वन्यजन्तु परिचयका लागि हुन्। कुनै तस्बिरले आफैँ घटना वा प्रजातिको पुष्टि गर्दैन।" : "These photographs introduce wildlife relevant to human–wildlife coexistence. An image alone does not verify a reported incident or species identification."}</p>
+            </div>
+            <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+              {species.map((animal) => (
+                <article key={animal.key} className="group overflow-hidden rounded-2xl border border-emerald-950/10 bg-white shadow-[0_16px_36px_-30px_rgba(15,45,32,.45)]">
+                  <div className="aspect-[4/5] overflow-hidden bg-emerald-950/5">
+                    <img src={animal.image} alt={t[animal.key]} loading="lazy" decoding="async" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]" />
+                  </div>
+                  <div className="p-3 sm:p-4">
+                    <h3 className="font-semibold text-slate-950">{t[animal.key]}</h3>
+                    <p className="mt-1 text-xs leading-5 text-slate-600">{t[animal.key + "Body"]}</p>
+                    <a href={animal.source} target="_blank" rel="noreferrer" className="mt-3 inline-flex text-[10px] font-semibold text-emerald-800 underline underline-offset-2">{lang === "np" ? "तस्बिर स्रोत" : "Photo source"} · {animal.credit}</a>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section id="report" className="scroll-mt-24 bg-[#f0f5ef] py-16 sm:py-20">
           <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[.75fr_1.25fr] lg:px-8">
             <div className="lg:sticky lg:top-28 lg:self-start"><p className="text-xs font-bold uppercase tracking-[.16em] text-emerald-800">{t.navReport}</p><h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">{t.reportTitle}</h2><p className="mt-4 max-w-md text-sm leading-7 text-slate-600">{t.reportBody}</p><div className="mt-6 rounded-2xl border border-emerald-900/10 bg-white p-4"><div className="flex items-center gap-2 text-sm font-semibold text-slate-900"><LocateFixed className="h-4 w-4 text-emerald-800" />{t.gpsReady}</div><p className="mt-2 text-xs leading-5 text-slate-600">{gps ? `${gps.latitude.toFixed(6)}, ${gps.longitude.toFixed(6)} · ±${Math.round(gps.accuracy)} m` : t.gpsUnavailable}</p>{gps && <a className="mt-1 inline-flex text-xs font-semibold text-emerald-800 underline" href={`https://www.openstreetmap.org/?mlat=${gps.latitude}&mlon=${gps.longitude}#map=18/${gps.latitude}/${gps.longitude}`} target="_blank" rel="noreferrer">{lang === "np" ? "नक्सामा स्थान हेर्नुहोस्" : "Check this point on a map"}</a>}<p className="mt-2 text-xs leading-5 text-slate-500">{t.gpsPrecision}</p><div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={locate} disabled={locationBusy} className="rounded-full bg-emerald-900 px-3.5 py-2 text-xs font-semibold text-white hover:bg-emerald-800 disabled:opacity-50">{locationBusy ? "…" : t.location}</button><button type="button" onClick={suggestArea} disabled={locationBusy} className="rounded-full border border-slate-300 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">{t.lookup}</button></div><p className="mt-2 text-xs leading-5 text-slate-500">{t.geocodePrivacy}</p>{lookupMessage && <p className="mt-2 text-xs text-slate-600" role="status">{lookupMessage}</p>}</div><div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4"><div className="flex items-center gap-2 text-sm font-semibold text-amber-950"><Clock3 className="h-4 w-4" />{t.helpTitle}</div><p className="mt-2 text-xs leading-5 text-amber-900">{t.helpBody}</p></div></div>
