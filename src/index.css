@@ -513,3 +513,97 @@ html {
   }
 }
 
+
+
+/* Android-first public landing usability */
+.public-landing {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overscroll-behavior-x: none;
+  scroll-padding-top: 5.5rem;
+}
+
+.public-landing :is(a, button, summary, input, select, textarea) {
+  touch-action: manipulation;
+}
+
+.public-landing :is(button, a, summary) {
+  min-height: 44px;
+}
+
+.public-landing #report :is(input:not([type="checkbox"]), select, textarea) {
+  min-height: 48px;
+  width: 100%;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.public-landing #report textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.public-landing #report button {
+  min-height: 48px;
+  padding-inline: 1rem;
+}
+
+.public-landing #report input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  margin-top: .1rem;
+}
+
+.public-landing .public-mobile-nav a {
+  min-height: 48px;
+  font-size: 15px;
+}
+
+.public-landing .mobile-action-dock a {
+  min-height: 52px;
+  line-height: 1.25;
+}
+
+.public-landing :is(p, li, label) {
+  overflow-wrap: anywhere;
+}
+
+html[lang="ne-NP"] .public-landing {
+  font-family: "Noto Sans Devanagari", "Mukta", system-ui, sans-serif;
+}
+
+html[lang="ne-NP"] .public-landing .hero-title {
+  max-width: 15ch;
+  line-height: 1.2;
+  letter-spacing: -.025em;
+}
+
+@media (max-width: 640px) {
+  .public-landing {
+    padding-bottom: calc(6.5rem + env(safe-area-inset-bottom));
+  }
+
+  .public-landing #report form {
+    padding: 1rem;
+    border-radius: 1.25rem;
+  }
+
+  .public-landing #report form > .grid {
+    gap: 1rem;
+  }
+
+  .public-landing .hero-title {
+    overflow-wrap: normal;
+  }
+
+  .public-landing .mobile-action-dock {
+    padding-bottom: max(.5rem, env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-landing .hero-photo-frame > img {
+    animation: none;
+  }
+}
