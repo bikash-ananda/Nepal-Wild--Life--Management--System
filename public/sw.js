@@ -40,8 +40,8 @@ self.addEventListener("push", (event) => {
     ? message.url : "/notifications";
   event.waitUntil(self.registration.showNotification(title, {
     body,
-    icon: "/icons/wildlife.svg",
-    badge: "/icons/wildlife.svg",
+    icon: "/icons/wildlife.svg?v=2",
+    badge: "/icons/wildlife.svg?v=2",
     tag: String(message.tag || "wildlife-update").slice(0, 100),
     data: { path },
     renotify: false,
