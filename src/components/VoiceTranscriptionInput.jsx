@@ -17,6 +17,7 @@ export default function VoiceTranscriptionInput({ value, onChange }) {
   const baseTextRef = useRef("");
 
   useEffect(() => () => recognitionRef.current?.abort(), []);
+  useEffect(() => setVoiceLanguage(lang), [lang]);
 
   const start = () => {
     const SpeechRecognition = recognitionConstructor();
