@@ -607,3 +607,67 @@ html[lang="ne-NP"] .public-landing .hero-title {
     animation: none;
   }
 }
+
+
+/* Public WAMS bilingual typography and mobile report-entry polish */
+.public-landing {
+  font-family: var(--font-body);
+  line-height: 1.65;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+.public-landing :is(h1, h2, h3, h4) {
+  font-family: var(--font-heading);
+  text-wrap: balance;
+}
+
+.public-landing #pilot article {
+  min-width: 0;
+}
+
+.public-landing #report form {
+  scroll-margin-top: 6rem;
+}
+
+.public-landing #report textarea {
+  min-height: 132px;
+  line-height: 1.75;
+}
+
+.public-landing #report form .mt-2.space-y-1 > button {
+  min-height: 48px;
+  border-color: #cbd8ce;
+  border-radius: 999px;
+  background: #f7faf6;
+  color: #123b2b;
+  font-weight: 700;
+}
+
+.public-landing #report form .mt-2.space-y-1 > button:hover {
+  border-color: #6b9478;
+  background: #edf5ec;
+}
+
+.public-landing #report form .mt-2.space-y-1 [role="status"] {
+  line-height: 1.55;
+}
+
+@media (max-width: 640px) {
+  .public-landing #pilot {
+    padding-block: 3rem;
+  }
+
+  .public-landing #pilot h2 {
+    font-size: clamp(1.55rem, 7vw, 2rem);
+    line-height: 1.25;
+  }
+
+  .public-landing #report form {
+    padding: 1rem;
+  }
+
+  .public-landing #report form button[type="submit"] {
+    width: 100%;
+  }
+}
