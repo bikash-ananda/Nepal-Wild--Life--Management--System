@@ -1,5 +1,5 @@
-const CACHE_NAME = "nws-shell-v1";
-const SHELL = ["/", "/index.html", "/manifest.json", "/icons/wildlife.svg"];
+const CACHE_NAME = "nws-shell-v2";
+const SHELL = ["/", "/index.html", "/manifest.json", "/icons/wildlife.svg?v=2"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));
