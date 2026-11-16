@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Bell, Plus, Trash2, Users, Workflow, Phone, Mail, MessageCircle, Smartphone, Loader2 } from "lucide-react";
 import { api } from "@/api/apiClient";
 import { useAuth } from "@/lib/AuthContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,7 @@ export default function Notifications() {
   const [pushStatus, setPushStatus] = useState("checking");
   const [pushBusy, setPushBusy] = useState(false);
   const { user } = useAuth();
+  const { t: translateText } = useLanguage();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -165,6 +167,7 @@ export default function Notifications() {
           <div>
             <h2 className="font-semibold text-slate-800">Browser alerts for assigned sites</h2>
             <p className="mt-1 text-sm text-slate-500">Push is sent only after a reviewer confirms a monkey label. The message omits exact farm coordinates. Your account needs a site assignment.</p>
+            <p className="mt-2 max-w-2xl text-xs text-slate-500">{translateText("notifications.costDisclosure")}</p>
             <p className="mt-1 text-xs text-slate-400">Assigned sites: {user?.site_ids?.length ? user.site_ids.length : "none"}</p>
           </div>
           {pushStatus === "enabled" ? (

@@ -8,7 +8,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogTitle,
 } from "@/components/ui/dialog";
 import PokharaLogo from "@/components/PokharaLogo";
-import { speciesGroups, speciesLibrary } from "@/data/speciesLibrary";
+import { speciesGroups, speciesLibrary, speciesReferenceSources, speciesSourcesReviewedOn } from "@/data/speciesLibrary";
 
 const getLanguage = (searchParams) => {
   const requested = searchParams.get("lang");
@@ -25,6 +25,7 @@ const ui = {
     facts: "At a glance", habitat: "Habitat", diet: "Food", safety: "If you see one", photo: "Reference photo", photoLocation: "Photo location", credit: "Photo", photoBy: "Photo by", license: "License",
     important: "Stay safe. Do not approach, feed, chase or try to scare wildlife. Keep a safe distance and follow local officials' advice.",
     photoNote: "Educational reference image, resized/cropped for display. It is not evidence from a live sighting or a camera connected to this system.",
+    references: "Species and ecology references", referenceNote: "These publications support species identity and Nepal ecology details. Publication years are shown; older conservation categories are not presented as current.", pages: "pp.", sourceReview: "References reviewed",
     collectionNote: "This starter collection includes selected species found in Nepal and is not a complete global species list. Species identification in submitted reports remains subject to human review.",
     home: "Home", library: "Species library", close: "Close species guide", countLabel: "Showing",
   },
@@ -36,6 +37,7 @@ const ui = {
     facts: "छोटो जानकारी", habitat: "बासस्थान", diet: "खाना", safety: "देखिएमा के गर्ने", photo: "सन्दर्भ तस्बिर", photoLocation: "तस्बिर खिचिएको ठाउँ", credit: "तस्बिर", photoBy: "तस्बिर", license: "इजाजत",
     important: "सुरक्षित रहनुहोस्। वन्यजन्तु नजिक नजानुहोस्, खाना नदिनुहोस्, नलखेट्नुहोस् र डराउने प्रयास नगर्नुहोस्। सुरक्षित दूरी राख्नुहोस् र स्थानीय अधिकारीको सल्लाह मान्नुहोस्।",
     photoNote: "जानकारीका लागि राखिएको तस्बिर हो; वेबसाइटमा देखाउन आकार मिलाइएको छ। यो हालै देखिएको वा यस प्रणालीको क्यामेराबाट आएको प्रमाण होइन।",
+    references: "प्रजाति र पारिस्थितिकीका सन्दर्भ", referenceNote: "यी प्रकाशनले प्रजातिको पहिचान र नेपालसम्बन्धी पारिस्थितिक जानकारीलाई आधार दिन्छन्। प्रकाशन वर्ष देखाइएको छ; पुरानो संरक्षण श्रेणीलाई वर्तमान अवस्थाका रूपमा प्रस्तुत गरिएको छैन।", pages: "पृ.", sourceReview: "सन्दर्भ जाँच मिति",
     collectionNote: "यो सुरुआती सूचीमा नेपालमा पाइने केही प्रजाति छन्; यो विश्वका सबै प्रजातिको पूर्ण सूची होइन। पठाइएका विवरणमा जनावरको पहिचान मानिसले समीक्षा गरेपछि मात्र पुष्टि हुन्छ।",
     home: "मुख्य पृष्ठ", library: "प्रजाति पुस्तकालय", close: "प्रजातिको जानकारी बन्द गर्नुहोस्", countLabel: "देखाइएका",
   },
@@ -79,6 +81,25 @@ function SpeciesDetails({ animal, lang, text }) {
             {" · "}<a className="text-emerald-900 underline underline-offset-2" href={animal.license === "CC BY-SA 3.0" ? "https://creativecommons.org/licenses/by-sa/3.0/" : "https://creativecommons.org/licenses/by-sa/4.0/"} target="_blank" rel="noreferrer">{animal.license}</a>
             {" · "}{text.photoNote}
           </p>
+          {animal.references?.length > 0 && (
+            <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-4" aria-labelledby="species-references-heading">
+              <h3 id="species-references-heading" className="text-sm font-bold text-slate-900">{text.references}</h3>
+              <p className="mt-1 text-xs leading-5 text-slate-600">{text.referenceNote}</p>
+              <ul className="mt-3 grid gap-3">
+                {animal.references.map(({ sourceId, pages }) => {
+                  const reference = speciesReferenceSources[sourceId];
+                  if (!reference) return null;
+                  return (
+                    <li key={sourceId} className="text-xs leading-5">
+                      <a className="font-semibold text-emerald-900 underline underline-offset-2" href={reference.url} target="_blank" rel="noreferrer">{reference.title}</a>
+                      <p className="mt-0.5 text-slate-600">{reference.publisher} · {reference.year}{pages ? ` · ${text.pages} ${pages}` : ""}</p>
+                    </li>
+                  );
+                })}
+              </ul>
+              <p className="mt-3 text-[11px] text-slate-500">{text.sourceReview}: {speciesSourcesReviewedOn}</p>
+            </section>
+          )}
         </div>
       </div>
     </DialogContent>

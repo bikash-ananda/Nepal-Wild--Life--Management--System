@@ -70,6 +70,8 @@ Start with a responsive installable web app (PWA) for personal phones. Capture G
 
 **Goal:** Make existing automation features dependable and understandable.
 
+**Status: rules are stored and validated only; no executor fires them. Browser push and password-reset email are the only delivery channels.**
+
 - Implement a versioned rule engine with typed triggers and allowlisted actions. Do not run arbitrary code entered in the UI.
 - Start with low-risk workflows: assign a review task, notify an assigned field officer, remind a reviewer about an overdue case, and send a daily operations summary.
 - Let residents opt in by site or plot group and choose supported notification channels. Keep the message local-language friendly and avoid exposing exact animal locations to the wider public.
@@ -119,18 +121,21 @@ Start with a responsive installable web app (PWA) for personal phones. Capture G
 
 **Goal:** Let authorized staff configure different cameras on different farm routers, test the stream from the VPS, and then expand from live view into research evidence capture.
 
+**Status: route profiles, WHEP/HLS live delivery, Dahua PTZ/event capture, authenticated RTMP publish ingest, the HTTP Alarm Center webhook, and 30-day snapshot cleanup are implemented. Camera firmware support for direct RTMP publishing, event review UI, notification, and camera-health reporting remain to be verified or built. Recording is disabled.**
+
 - Implemented camera identity and site setup, per-camera public/DDNS or VPN route profiles, RTSP/RTSPS and HLS source types, VPS-side connection testing, encrypted server-side passwords, MediaMTX path configuration, and authenticated WebRTC live view.
 - Each camera stores an independent router/network name, host, mapped port, stream path, credentials, and transport. One farm's route does not determine another camera's connection.
 - Test farm routing, exact model/firmware, stream path, codec, camera credentials, router access rules, and playback on the live Contabo server before field use. A UI connection profile cannot create a router port forward or VPN on its own.
 - When using public port forwarding, restrict inbound source addresses to the VPS, use a dedicated least-privilege camera account, require encrypted transport where supported, and monitor/revoke the rule after the pilot. Never put camera credentials in browser code or logs.
 - If the site is behind CGNAT, either use a router-supported outbound VPN/tunnel or defer camera integration. DDNS and Dahua's server-side event subscription do not create a route through CGNAT by themselves.
 - Measure end-to-end latency on the actual farm uplink instead of promising a fixed sub-500 ms result. UDP 8189 must reach the VPS for WebRTC media; configure TURN only if field networks block direct UDP.
-- Implement event subscription, sampled-frame analysis, still-image capture, and upload into the existing private review pipeline as a separate stage. Verify event names and snapshot endpoints against the exact firmware first; camera motion events do not mean a monkey was detected.
+- Event subscription (`eventManager.cgi`), the authenticated HTTP Alarm Center webhook, snapshot storage into private media, daily 30-day cleanup, and manual PTZ/siren/light are implemented. The CGI listener and physical controls require a `vpn_routed` connection and are rejected on public port-forward routes. Remaining: surface `CameraEvent` in the review queue, convert confirmed events into observations, notify, and add camera-health reporting. Verify event names and snapshot endpoints against the exact firmware first; camera motion events do not mean a monkey was detected.
 - Verify PTZ, speaker/light, and other firmware commands against the exact unit before adding any operator controls. Keep physical response actions supervised and outside automatic rules during this research pilot. Never connect high-voltage or hazardous actuators to this application.
+- MediaMTX RTMP ingest is enabled on port 1935 with per-camera publish credentials, and HLS is proxied through HTTPS. Whether the DH-P3I-PV can publish RTMP directly remains unverified; use the RTSP/VPN route where the firmware does not offer RTMP.
 - Add camera health and research-effort reporting so outages are not misread as absence of monkeys.
 - Keep live streaming optional; it is not required for the research image-ingest workflow.
 
-**Acceptance:** An authorized administrator can configure and test two cameras on different routes, the site-scoped viewer can open only permitted streams, credentials do not reach the browser or logs, and a service restart restores active paths. Event-triggered snapshots remain a separate acceptance gate.
+**Acceptance:** An authorized administrator can configure and test two cameras on different routes, the site-scoped viewer can open only permitted streams, credentials do not reach the browser or logs, and a service restart restores active paths. Event-triggered snapshots are stored but not yet reviewable in the app, so that review/notification gate remains open.
 
 ## Recommended implementation order
 

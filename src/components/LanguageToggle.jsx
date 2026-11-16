@@ -6,18 +6,21 @@ import { cn } from "@/lib/utils";
 export default function LanguageToggle({ className }) {
   const { lang, setLang } = useLanguage();
   return (
-    <div className={cn("flex items-center gap-0.5 bg-slate-100 rounded-lg p-0.5", className)}>
-      {languages.map((l) => (
+    <div className={cn("flex items-center gap-0.5 rounded-lg bg-slate-100 p-0.5", className)} role="group" aria-label="Language / भाषा">
+      {languages.map((language) => (
         <button
-          key={l.code}
-          onClick={() => setLang(l.code)}
+          key={language.code}
+          type="button"
+          onClick={() => setLang(language.code)}
           className={cn(
-            "px-2 py-1 rounded-md text-xs font-medium transition-colors",
-            lang === l.code ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            "min-h-10 rounded-md px-3 py-2 text-xs font-medium transition-colors",
+            lang === language.code ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"
           )}
-          title={l.label}
+          aria-pressed={lang === language.code}
+          lang={language.code === "ne" ? "ne-NP" : "en"}
+          title={language.label}
         >
-          {l.native}
+          {language.native}
         </button>
       ))}
     </div>

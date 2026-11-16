@@ -56,7 +56,7 @@ export default function Sightings() {
         observer_name: me?.full_name || me?.email || "Field Observer",
         verified: false,
         observed_at: new Date().toISOString(),
-        is_demo: true,
+        is_demo: false,
       });
       toast({ title: "Sighting recorded", variant: "success" });
       setOpen(false);

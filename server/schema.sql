@@ -26,6 +26,10 @@ CREATE TABLE IF NOT EXISTS app_records (
   PRIMARY KEY (entity, id)
 );
 CREATE INDEX IF NOT EXISTS app_records_entity_created_idx ON app_records (entity, created_at DESC);
+CREATE INDEX IF NOT EXISTS app_records_entity_site_idx
+  ON app_records (entity, (data->>'site_id'));
+CREATE INDEX IF NOT EXISTS app_records_entity_alert_recipient_idx
+  ON app_records (entity, (data->>'recipient_user_id'), created_at DESC);
 CREATE INDEX IF NOT EXISTS app_records_data_gin_idx ON app_records USING gin (data jsonb_path_ops);
 CREATE UNIQUE INDEX IF NOT EXISTS wildlife_observation_capture_id_uniq
   ON app_records ((data->>'capture_id'))

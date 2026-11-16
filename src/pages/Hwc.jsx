@@ -8,6 +8,8 @@ import SeverityBadge from "@/components/SeverityBadge";
 import StatusBadge from "@/components/StatusBadge";
 import DemoBadge from "@/components/DemoBadge";
 import PhotoUpload from "@/components/PhotoUpload";
+import VoiceTranscriptionInput from "@/components/VoiceTranscriptionInput";
+import CurrentLocationButton from "@/components/CurrentLocationButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,7 +28,8 @@ export default function Hwc() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ conflict_type: "crop_damage", species: "", description: "", latitude: "", longitude: "", location_name: "", affected_crop: "", affected_livestock: "", livestock_count: 0, estimated_damage: "", human_casualties: "", urgency: "medium", occurred_at: "" });
+  const [form, setForm] = useState({ conflict_type: "crop_damage", species: "", description: "", latitude: "", longitude: "", location_name: "", affected_crop: "", affected_livestock: "", livestock_count: 0, estimated_damage: "", human_casualties: "", urgency: "medium", occurred_at: "", site_id: "" });
+  const [sites, setSites] = useState([]);
   const [photos, setPhotos] = useState([]);
   const [creating, setCreating] = useState(false);
 
@@ -34,7 +37,13 @@ export default function Hwc() {
     setLoading(true);
     api.entities.HwcCase.list("-created_date", 200).then(setItems).catch(() => {}).finally(() => setLoading(false));
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    Promise.all([api.entities.Site.list({ limit: 500 }), api.auth.me()]).then(([availableSites, me]) => {
+      const assigned = (me?.site_ids || []).map(String);
+      setSites(availableSites.filter((site) => ["admin", "researcher"].includes(me?.role) || assigned.includes(String(site.id))));
+    }).catch(() => setSites([]));
+  }, []);
 
   const filtered = items.filter((i) => {
     const ms = (i.location_name || i.description || i.conflict_type || "").toLowerCase().includes(search.toLowerCase()) || (i.case_id || "").toLowerCase().includes(search.toLowerCase());
@@ -46,14 +55,16 @@ export default function Hwc() {
     setCreating(true);
     try {
       const me = await api.auth.me().catch(() => null);
-      await api.entities.HwcCase.create({
+      const result = await api.entities.HwcCase.create({
         case_id: "HWC-" + Date.now().toString(36).toUpperCase(),
         conflict_type: form.conflict_type,
         species: form.species,
         description: form.description,
         latitude: form.latitude ? Number(form.latitude) : undefined,
         longitude: form.longitude ? Number(form.longitude) : undefined,
+        location_accuracy_m: form.location_accuracy_m || undefined,
         location_name: form.location_name,
+        site_id: form.site_id || undefined,
         photos,
         affected_crop: form.affected_crop,
         affected_livestock: form.affected_livestock,
@@ -66,14 +77,14 @@ export default function Hwc() {
         reporter_name: me?.full_name || me?.email || "Field Report",
         reporter_role: me?.role || "",
         occurred_at: form.occurred_at ? new Date(form.occurred_at).toISOString() : new Date().toISOString(),
-        is_demo: true,
+        is_demo: false,
       });
-      toast({ title: "HWC case reported", variant: "success" });
+      toast({ title: t("hwc.reportedToast"), description: result.office_routing?.routed ? t("hwc.sentToOfficers", { count: result.office_routing.routed }) : undefined, variant: "success" });
       setOpen(false);
       setPhotos([]);
       load();
     } catch {
-      toast({ title: "Failed to report HWC case", variant: "destructive" });
+      toast({ title: t("hwc.failedToast"), variant: "destructive" });
     } finally { setCreating(false); }
   };
 
@@ -103,7 +114,7 @@ export default function Hwc() {
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search HWC cases…" className="pl-9" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("hwc.search")} className="pl-9" />
         </div>
         <div className="flex gap-1.5 bg-slate-100 rounded-lg p-1 flex-wrap">
           {[{ k: "all", l: "All" }, { k: "critical", l: "Critical" }, { k: "crop_damage", l: "Crop" }, { k: "livestock_attack", l: "Livestock" }, { k: "reported", l: "Reported" }, { k: "resolved", l: "Resolved" }].map((f) => (
@@ -145,61 +156,71 @@ export default function Hwc() {
           <DialogHeader><DialogTitle>{t("hwc.new")}</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-2">
             <div className="col-span-2 space-y-1.5">
-              <Label>Conflict Type *</Label>
+              <Label>{t("hwc.conflictType")}</Label>
               <Select value={form.conflict_type} onValueChange={(v) => setForm({ ...form, conflict_type: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{CONFLICT_TYPES.map((tp) => <SelectItem key={tp} value={tp}>{tp.replace(/_/g, " ")}</SelectItem>)}</SelectContent>
+                <SelectContent>{CONFLICT_TYPES.map((tp) => <SelectItem key={tp} value={tp}>{t(`conflictType.${tp}`)}</SelectItem>)}</SelectContent>
               </Select>
             </div>
+            {sites.length > 0 && <div className="col-span-2 space-y-1.5">
+              <Label>{t("common.assignedSiteOptional")}</Label>
+              <Select value={form.site_id || "none"} onValueChange={(site_id) => setForm((current) => ({ ...current, site_id: site_id === "none" ? "" : site_id }))}>
+                <SelectTrigger><SelectValue placeholder={t("common.chooseSite")} /></SelectTrigger>
+                <SelectContent><SelectItem value="none">{t("common.noSite")}</SelectItem>{sites.map((site) => <SelectItem key={site.id} value={String(site.id)}>{site.site_name || site.name || site.id}</SelectItem>)}</SelectContent>
+              </Select>
+              <p className="text-xs text-slate-500">{t("common.siteAlertHint")}</p>
+            </div>}
             <div className="space-y-1.5">
-              <Label>Species</Label>
+              <Label>{t("common.species")}</Label>
               <Input value={form.species} onChange={(e) => setForm({ ...form, species: e.target.value })} placeholder="e.g. Elephant" />
             </div>
             <div className="space-y-1.5">
-              <Label>Urgency *</Label>
+              <Label>{t("common.urgencyRequired")}</Label>
               <Select value={form.urgency} onValueChange={(v) => setForm({ ...form, urgency: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{["critical", "high", "medium", "low"].map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                <SelectContent>{["critical", "high", "medium", "low"].map((s) => <SelectItem key={s} value={s}>{t(`common.${s}`)}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="col-span-2 space-y-1.5">
-              <Label>Description</Label>
+              <Label>{t("common.description")}</Label>
               <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} />
+              <VoiceTranscriptionInput value={form.description} onChange={(description) => setForm((current) => ({ ...current, description }))} />
             </div>
             <div className="space-y-1.5">
-              <Label>Latitude</Label>
+              <Label>{t("common.latitude")}</Label>
               <Input value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} placeholder="28.2096" />
             </div>
             <div className="space-y-1.5">
-              <Label>Longitude</Label>
+              <Label>{t("common.longitude")}</Label>
               <Input value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} placeholder="83.9856" />
+              <CurrentLocationButton onCapture={({ latitude, longitude, accuracy }) => setForm((current) => ({ ...current, latitude: String(latitude), longitude: String(longitude), location_accuracy_m: accuracy }))} />
             </div>
             <div className="col-span-2 space-y-1.5">
-              <Label>Location / Area</Label>
+              <Label>{t("common.locationArea")}</Label>
               <Input value={form.location_name} onChange={(e) => setForm({ ...form, location_name: e.target.value })} placeholder="e.g. Hemja, Kaski" />
             </div>
             <div className="space-y-1.5">
-              <Label>Affected Crop</Label>
+              <Label>{t("hwc.affectedCrop")}</Label>
               <Input value={form.affected_crop} onChange={(e) => setForm({ ...form, affected_crop: e.target.value })} placeholder="e.g. Maize" />
             </div>
             <div className="space-y-1.5">
-              <Label>Affected Livestock</Label>
+              <Label>{t("hwc.affectedLivestock")}</Label>
               <Input value={form.affected_livestock} onChange={(e) => setForm({ ...form, affected_livestock: e.target.value })} placeholder="e.g. Goat" />
             </div>
             <div className="space-y-1.5">
-              <Label>Estimated Damage (NPR)</Label>
+              <Label>{t("hwc.estimatedDamage")}</Label>
               <Input value={form.estimated_damage} onChange={(e) => setForm({ ...form, estimated_damage: e.target.value })} placeholder="e.g. 15000" />
             </div>
             <div className="space-y-1.5">
-              <Label>Human Casualties</Label>
+              <Label>{t("hwc.humanCasualties")}</Label>
               <Input value={form.human_casualties} onChange={(e) => setForm({ ...form, human_casualties: e.target.value })} placeholder="e.g. 1 injured" />
             </div>
             <div className="col-span-2 space-y-1.5">
-              <Label>Date & Time</Label>
+              <Label>{t("common.dateTime")}</Label>
               <Input type="datetime-local" value={form.occurred_at} onChange={(e) => setForm({ ...form, occurred_at: e.target.value })} />
             </div>
             <div className="col-span-2">
-              <Label className="block mb-2">Evidence Photos</Label>
+              <Label className="block mb-2">{t("common.evidencePhotos")}</Label>
               <PhotoUpload value={photos} onChange={setPhotos} />
             </div>
           </div>

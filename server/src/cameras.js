@@ -2,7 +2,7 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes, randomUUID, 
 import dns from "node:dns/promises";
 import net from "node:net";
 import { addAudit } from "./db.js";
-import { canReadSite, createRecord, getRecord } from "./records.js";
+import { canReadRecord, canReadSite, createRecord, getRecord } from "./records.js";
 import { deleteCameraSnapshot, saveCameraSnapshot } from "./media.js";
 import { deterrenceAllowed, normalizeTunnelProfile, p2pEnabled, p2pTarget, parsePortRange, privateControlRoute } from "./p2p-tunnel.js";
 
@@ -1009,7 +1009,7 @@ export function registerCameraRoutes(app, pool, requireAuth, checkOrigin) {
     const body = request.body || {};
     const site = await getRecord(pool, "Site", String(body.site_id || ""));
     if (!site) return reply.code(400).send({ error: "Select an existing research site first." });
-    if (!canReadSite(request.user, site)) return reply.code(403).send({ error: "You do not have access to this site's camera network." });
+    if (!canReadRecord(request.user, "Site", site)) return reply.code(403).send({ error: "You do not have access to this site's camera network." });
     const connection = normalizeConnection(body.connection);
     const existingCamera = body.camera_id ? await authorizedCamera(pool, request.user, String(body.camera_id)) : null;
     if (existingCamera && String(existingCamera.site_id) !== String(site.id)) return reply.code(400).send({ error: "The selected site must match this camera's site." });
@@ -1049,7 +1049,7 @@ export function registerCameraRoutes(app, pool, requireAuth, checkOrigin) {
     const siteId = String(metadata.site_id || "");
     const site = await getRecord(pool, "Site", siteId);
     if (!name || !site) return reply.code(400).send({ error: "Camera name and an existing research site are required." });
-    if (!canReadSite(request.user, site)) return reply.code(403).send({ error: "You do not have access to this site's camera network." });
+    if (!canReadRecord(request.user, "Site", site)) return reply.code(403).send({ error: "You do not have access to this site's camera network." });
     const requestedLabel = String(metadata.camera_id || "").trim();
     const cameraLabel = (requestedLabel || `CAM-${randomUUID().slice(0, 8).toUpperCase()}`).slice(0, 80);
     const duplicateLabel = await pool.query("SELECT 1 FROM app_records WHERE entity='Camera' AND data->>'camera_id'=$1 LIMIT 1", [cameraLabel]);

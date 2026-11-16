@@ -1,20 +1,31 @@
-import React, { createContext, useContext, useCallback } from "react";
-import { translations } from "./translations";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { getInitialLanguage, LANGUAGE_STORAGE_KEY, normalizeLanguage, translate } from "./language";
 
-const LanguageContext = createContext({ lang: "en", setLang: () => {}, t: (k) => k });
+const LanguageContext = createContext({ lang: "en", setLang: () => {}, t: (key) => translate("en", key) });
 
 export function LanguageProvider({ children }) {
-  const setLang = useCallback(() => {}, []);
+  const [lang, setLanguage] = useState(() => getInitialLanguage());
 
-  const t = useCallback((key) => {
-    return translations.en[key] || key;
+  const setLang = useCallback((value) => {
+    const nextLanguage = normalizeLanguage(value);
+    setLanguage(nextLanguage);
+    try {
+      globalThis.localStorage?.setItem(LANGUAGE_STORAGE_KEY, nextLanguage);
+    } catch {
+      // The in-memory language choice remains usable when storage is disabled.
+    }
   }, []);
 
-  return (
-    <LanguageContext.Provider value={{ lang: "en", setLang, t }}>
-      {children}
-    </LanguageContext.Provider>
-  );
+  useEffect(() => {
+    if (globalThis.document?.documentElement) {
+      document.documentElement.lang = lang === "ne" ? "ne-NP" : "en";
+    }
+  }, [lang]);
+
+  const t = useCallback((key, values) => translate(lang, key, values), [lang]);
+  const contextValue = useMemo(() => ({ lang, setLang, t }), [lang, setLang, t]);
+
+  return <LanguageContext.Provider value={contextValue}>{children}</LanguageContext.Provider>;
 }
 
 export function useLanguage() {

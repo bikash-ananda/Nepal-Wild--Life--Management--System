@@ -4,9 +4,11 @@ import { Bell, Menu, X, Leaf, Globe2 } from "lucide-react";
 import { api } from "@/api/apiClient";
 import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/lib/LanguageContext";
+import { translateWithFallback } from "@/lib/language";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { getFilteredNavGroups, mobileNavItems, roleLabels } from "@/lib/navigation";
+import LanguageToggle from "@/components/LanguageToggle";
 
 export default function Layout() {
   const location = useLocation();
@@ -16,9 +18,13 @@ export default function Layout() {
   const [showNotifications, setShowNotifications] = useState(false);
 
   const userRole = user?.role || null;
-  const filteredGroups = getFilteredNavGroups(userRole);
-  const roleLabel = roleLabels[userRole] || "User";
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const filteredGroups = getFilteredNavGroups(userRole).map((group) => ({
+    ...group,
+    label: translateWithFallback(lang, `nav.group.${group.label}`, group.label),
+    items: group.items.map((item) => ({ ...item, label: translateWithFallback(lang, `nav.item.${item.label}`, item.label) })),
+  }));
+  const roleLabel = translateWithFallback(lang, `role.${userRole}`, roleLabels[userRole] || "User");
 
   useEffect(() => {
     const loadAlerts = () => api.entities.Alert.list("-triggered_at", 20).then(setAlerts).catch(() => {});
@@ -118,9 +124,11 @@ export default function Layout() {
               </h1>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <LanguageToggle className="shrink-0" />
             <div className="relative">
               <button
+                aria-label="Notifications"
                 onClick={() => setShowNotifications(!showNotifications)}
                 className="relative p-2 rounded-lg hover:bg-slate-100"
               >
@@ -140,7 +148,7 @@ export default function Layout() {
                     <div className="px-4 py-6 text-center text-sm text-slate-400">No alerts</div>
                   )}
                   {alerts.slice(0, 10).map((a) => (
-                    <div key={a.id} className="px-4 py-3 border-b border-slate-50 hover:bg-slate-50">
+                    <Link key={a.id} to={a.url?.startsWith("/incidents/") || a.url?.startsWith("/hwc/") ? a.url : "/notifications"} onClick={() => setShowNotifications(false)} className="block px-4 py-3 border-b border-slate-50 hover:bg-slate-50">
                       <div className="flex items-start gap-2">
                         <span
                           className={cn(
@@ -159,7 +167,7 @@ export default function Layout() {
                           <div className="text-xs text-slate-500 truncate">{a.message}</div>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               )}
@@ -199,7 +207,7 @@ export default function Layout() {
               )}
             >
               <Icon className="w-5 h-5" />
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <span className="text-[10px] font-medium">{translateWithFallback(lang, `nav.item.${item.label}`, item.label)}</span>
             </Link>
           );
         })}

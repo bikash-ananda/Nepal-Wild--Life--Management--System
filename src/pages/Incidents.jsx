@@ -8,6 +8,8 @@ import SeverityBadge from "@/components/SeverityBadge";
 import StatusBadge from "@/components/StatusBadge";
 import DemoBadge from "@/components/DemoBadge";
 import PhotoUpload from "@/components/PhotoUpload";
+import VoiceTranscriptionInput from "@/components/VoiceTranscriptionInput";
+import CurrentLocationButton from "@/components/CurrentLocationButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,7 +28,8 @@ export default function Incidents() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ type: "poaching", severity: "medium", species: "", description: "", latitude: "", longitude: "", location_name: "", occurred_at: "" });
+  const [form, setForm] = useState({ type: "poaching", severity: "medium", species: "", description: "", latitude: "", longitude: "", location_name: "", occurred_at: "", site_id: "" });
+  const [sites, setSites] = useState([]);
   const [photos, setPhotos] = useState([]);
   const [creating, setCreating] = useState(false);
 
@@ -34,7 +37,13 @@ export default function Incidents() {
     setLoading(true);
     api.entities.Incident.list("-created_date", 200).then(setItems).catch(() => {}).finally(() => setLoading(false));
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    Promise.all([api.entities.Site.list({ limit: 500 }), api.auth.me()]).then(([availableSites, me]) => {
+      const assigned = (me?.site_ids || []).map(String);
+      setSites(availableSites.filter((site) => ["admin", "researcher"].includes(me?.role) || assigned.includes(String(site.id))));
+    }).catch(() => setSites([]));
+  }, []);
 
   const filtered = items.filter((i) => {
     const ms = (i.location_name || i.description || i.type || "").toLowerCase().includes(search.toLowerCase()) || (i.incident_id || "").toLowerCase().includes(search.toLowerCase());
@@ -50,11 +59,11 @@ export default function Incidents() {
   };
 
   const handleCreate = async () => {
-    if (!form.type) { toast({ title: "Incident type is required", variant: "destructive" }); return; }
+    if (!form.type) { toast({ title: t("incidents.typeRequired"), variant: "destructive" }); return; }
     setCreating(true);
     try {
       const me = await api.auth.me().catch(() => null);
-      await api.entities.Incident.create({
+      const result = await api.entities.Incident.create({
         incident_id: "INC-" + Date.now().toString(36).toUpperCase(),
         type: form.type,
         severity: form.severity,
@@ -62,22 +71,24 @@ export default function Incidents() {
         description: form.description,
         latitude: form.latitude ? Number(form.latitude) : undefined,
         longitude: form.longitude ? Number(form.longitude) : undefined,
+        location_accuracy_m: form.location_accuracy_m || undefined,
         location_name: form.location_name,
+        site_id: form.site_id || undefined,
         photos,
         reported_by: me?.id || "",
         reporter_name: me?.full_name || me?.email || "Field Report",
         reporter_role: me?.role || "",
         status: "reported",
         occurred_at: form.occurred_at ? new Date(form.occurred_at).toISOString() : new Date().toISOString(),
-        is_demo: true,
+        is_demo: false,
       });
-      toast({ title: "Incident reported", variant: "success" });
+      toast({ title: t("incidents.reportedToast"), description: result.office_routing?.routed ? t("incidents.sentToOfficers", { count: result.office_routing.routed }) : undefined, variant: "success" });
       setOpen(false);
-      setForm({ type: "poaching", severity: "medium", species: "", description: "", latitude: "", longitude: "", location_name: "", occurred_at: "" });
+      setForm({ type: "poaching", severity: "medium", species: "", description: "", latitude: "", longitude: "", location_name: "", occurred_at: "", site_id: "" });
       setPhotos([]);
       load();
     } catch {
-      toast({ title: "Failed to report incident", variant: "destructive" });
+      toast({ title: t("incidents.failedToast"), variant: "destructive" });
     } finally { setCreating(false); }
   };
 
@@ -107,7 +118,7 @@ export default function Incidents() {
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search incidents…" className="pl-9" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("incidents.search")} className="pl-9" />
         </div>
         <div className="flex gap-1.5 bg-slate-100 rounded-lg p-1 flex-wrap">
           {[{ k: "all", l: "All" }, { k: "critical", l: "Critical" }, { k: "high", l: "High" }, { k: "reported", l: "Reported" }, { k: "resolved", l: "Resolved" }].map((f) => (
@@ -148,45 +159,55 @@ export default function Incidents() {
           <DialogHeader><DialogTitle>{t("incidents.new")}</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-2">
             <div className="col-span-2 space-y-1.5">
-              <Label>Incident Type *</Label>
+              <Label>{t("incidents.typeLabel")}</Label>
               <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{TYPES.map((tp) => <SelectItem key={tp} value={tp}>{tp.replace(/_/g, " ")}</SelectItem>)}</SelectContent>
+                <SelectContent>{TYPES.map((tp) => <SelectItem key={tp} value={tp}>{t(`incidentType.${tp}`)}</SelectItem>)}</SelectContent>
               </Select>
             </div>
+            {sites.length > 0 && <div className="col-span-2 space-y-1.5">
+              <Label>{t("common.assignedSiteOptional")}</Label>
+              <Select value={form.site_id || "none"} onValueChange={(site_id) => setForm((current) => ({ ...current, site_id: site_id === "none" ? "" : site_id }))}>
+                <SelectTrigger><SelectValue placeholder={t("common.chooseSite")} /></SelectTrigger>
+                <SelectContent><SelectItem value="none">{t("common.noSite")}</SelectItem>{sites.map((site) => <SelectItem key={site.id} value={String(site.id)}>{site.site_name || site.name || site.id}</SelectItem>)}</SelectContent>
+              </Select>
+              <p className="text-xs text-slate-500">{t("common.siteAlertHint")}</p>
+            </div>}
             <div className="space-y-1.5">
-              <Label>Severity *</Label>
+              <Label>{t("common.severityRequired")}</Label>
               <Select value={form.severity} onValueChange={(v) => setForm({ ...form, severity: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{["critical", "high", "medium", "low"].map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                <SelectContent>{["critical", "high", "medium", "low"].map((s) => <SelectItem key={s} value={s}>{t(`common.${s}`)}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Species (if known)</Label>
+              <Label>{t("incidents.speciesKnown")}</Label>
               <Input value={form.species} onChange={(e) => setForm({ ...form, species: e.target.value })} placeholder="e.g. Leopard" />
             </div>
             <div className="col-span-2 space-y-1.5">
-              <Label>Description</Label>
+              <Label>{t("common.description")}</Label>
               <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} />
+              <VoiceTranscriptionInput value={form.description} onChange={(description) => setForm((current) => ({ ...current, description }))} />
             </div>
             <div className="space-y-1.5">
-              <Label>Latitude</Label>
+              <Label>{t("common.latitude")}</Label>
               <Input value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} placeholder="28.2096" />
             </div>
             <div className="space-y-1.5">
-              <Label>Longitude</Label>
+              <Label>{t("common.longitude")}</Label>
               <Input value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} placeholder="83.9856" />
+              <CurrentLocationButton onCapture={({ latitude, longitude, accuracy }) => setForm((current) => ({ ...current, latitude: String(latitude), longitude: String(longitude), location_accuracy_m: accuracy }))} />
             </div>
             <div className="col-span-2 space-y-1.5">
-              <Label>Location / Area</Label>
+              <Label>{t("common.locationArea")}</Label>
               <Input value={form.location_name} onChange={(e) => setForm({ ...form, location_name: e.target.value })} placeholder="e.g. Kaskikot, Ward 7" />
             </div>
             <div className="col-span-2 space-y-1.5">
-              <Label>Date & Time</Label>
+              <Label>{t("common.dateTime")}</Label>
               <Input type="datetime-local" value={form.occurred_at} onChange={(e) => setForm({ ...form, occurred_at: e.target.value })} />
             </div>
             <div className="col-span-2">
-              <Label className="block mb-2">Evidence Photos</Label>
+              <Label className="block mb-2">{t("common.evidencePhotos")}</Label>
               <PhotoUpload value={photos} onChange={setPhotos} />
             </div>
           </div>

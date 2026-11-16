@@ -57,7 +57,7 @@ export default function Patrols() {
         assigned_rangers: form.assigned_rangers ? form.assigned_rangers.split(",").map((r) => r.trim()).filter(Boolean) : [],
         objectives: form.objectives,
         created_by: me?.id || "",
-        is_demo: true,
+        is_demo: false,
       });
       toast({ title: "Patrol created", variant: "success" });
       setOpen(false);

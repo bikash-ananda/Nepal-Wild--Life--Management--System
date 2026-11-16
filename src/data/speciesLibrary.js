@@ -1,3 +1,26 @@
+export const speciesReferenceSources = {
+  nepalMammals2011: {
+    title: "The Status of Nepal’s Mammals: The National Red List Series",
+    publisher: "Department of National Parks and Wildlife Conservation, Government of Nepal",
+    year: "2011",
+    url: "https://www.ntnc.org.np/sites/default/files/doc_publication/2018-11/The%20Status%20of%20Nepal%27s%20Mammals%20-%20Red%20List.pdf",
+  },
+  dnpwcProfiles2017: {
+    title: "Profiling of Protected and Human Wildlife Conflicts Associated Wild Animals in Nepal",
+    publisher: "Prepared for DNPWC by Conservation Development Foundation (CODEFUND)",
+    year: "2017 (Ashadh 2074)",
+    url: "https://dnpwc.gov.np/media/files/Profiling_of_Protected_and_Human__Wildlife_Conflicts_-Final_Report.pdf",
+  },
+  snowLeopardPlan2024: {
+    title: "Snow Leopard Conservation and Action Plan 2024–2030",
+    publisher: "Department of National Parks and Wildlife Conservation, Government of Nepal",
+    year: "2024–2030",
+    url: "https://dnpwc.gov.np/media/publication/Snow_Leopard_Conservation_Action_Plan__2024-2030.pdf",
+  },
+};
+
+export const speciesSourcesReviewedOn = "2026-11-16";
+
 export const speciesLibrary = [
   {
     id: "rhesus-macaque",
@@ -17,6 +40,7 @@ export const speciesLibrary = [
     photoCredit: "Charles J. Sharp",
     license: "CC BY-SA 4.0",
     source: "https://commons.wikimedia.org/wiki/File:Rhesus_macaque_(Macaca_mulatta)_Gokarna_3.jpg",
+    references: [{ sourceId: "nepalMammals2011", pages: "114–115" }],
   },
   {
     id: "nepal-gray-langur",
@@ -36,6 +60,7 @@ export const speciesLibrary = [
     photoCredit: "Aditya Pal",
     license: "CC BY-SA 4.0",
     source: "https://commons.wikimedia.org/wiki/File:Nepal_gray_langur_at_Manag.jpg",
+    references: [{ sourceId: "nepalMammals2011", pages: "116–117" }],
   },
   {
     id: "asian-elephant",
@@ -55,6 +80,7 @@ export const speciesLibrary = [
     photoCredit: "Aditya Pal",
     license: "CC BY-SA 4.0",
     source: "https://commons.wikimedia.org/wiki/File:Asian_Elephant_in_Koshi.jpg",
+    references: [{ sourceId: "dnpwcProfiles2017", pages: "89–90" }],
   },
   {
     id: "bengal-tiger",
@@ -74,6 +100,7 @@ export const speciesLibrary = [
     photoCredit: "Robirob4433",
     license: "CC BY-SA 4.0",
     source: "https://commons.wikimedia.org/wiki/File:Bengal_tiger_walking_in_tall_grass_in_Dalla_Community_Forest,_Bardia,_Nepal.png",
+    references: [{ sourceId: "dnpwcProfiles2017", pages: "93–95" }],
   },
   {
     id: "greater-one-horned-rhino",
@@ -93,6 +120,7 @@ export const speciesLibrary = [
     photoCredit: "Aditya Pal",
     license: "CC BY-SA 4.0",
     source: "https://commons.wikimedia.org/wiki/File:Greater_one-horned_rhinoceros_at_Chitwan.jpg",
+    references: [{ sourceId: "dnpwcProfiles2017", pages: "92–93" }],
   },
   {
     id: "red-panda",
@@ -112,6 +140,7 @@ export const speciesLibrary = [
     photoCredit: "Sunuwargr",
     license: "CC BY-SA 4.0",
     source: "https://commons.wikimedia.org/wiki/File:Curious_Red_Panda_Cub_in_Langtang_National_Park.jpg",
+    references: [{ sourceId: "dnpwcProfiles2017", pages: "48–50" }],
   },
   {
     id: "wild-boar",
@@ -131,6 +160,7 @@ export const speciesLibrary = [
     photoCredit: "Aditya Pal",
     license: "CC BY-SA 4.0",
     source: "https://commons.wikimedia.org/wiki/File:Wild_boar_at_Parsa_Wildlife_Reserve.jpg",
+    references: [{ sourceId: "dnpwcProfiles2017", pages: "110–111" }],
   },
   {
     id: "snow-leopard",
@@ -150,6 +180,10 @@ export const speciesLibrary = [
     photoCredit: "Haseebamjad88",
     license: "CC BY-SA 3.0",
     source: "https://commons.wikimedia.org/wiki/File:The_Snow_Leopard.jpg",
+    references: [
+      { sourceId: "dnpwcProfiles2017", pages: "95–96" },
+      { sourceId: "snowLeopardPlan2024" },
+    ],
   },
   {
     id: "leopard",
@@ -169,6 +203,7 @@ export const speciesLibrary = [
     photoCredit: "Adhish Dulal",
     license: "CC BY-SA 4.0",
     source: "https://commons.wikimedia.org/wiki/File:Panthera_Pardus.jpg",
+    references: [{ sourceId: "dnpwcProfiles2017", pages: "122–123" }],
   },
 ];
 
