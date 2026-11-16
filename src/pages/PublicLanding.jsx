@@ -477,8 +477,8 @@ export default function PublicLanding() {
           <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 pb-12 pt-9 sm:px-6 sm:pb-20 sm:pt-14 lg:grid-cols-[1.02fr_.98fr] lg:gap-14 lg:px-8 lg:pb-24 lg:pt-16">
             <div className="hero-copy">
               <div className="hero-kicker inline-flex max-w-full items-center gap-2 rounded-full border px-3.5 py-2 text-[9px] font-bold uppercase tracking-[.11em] sm:text-[10px]"><span className="h-2 w-2 shrink-0 rounded-full bg-lime-300 ring-4 ring-lime-300/15" />{t.eyebrow}</div>
-              <h1 className="mt-5 max-w-3xl text-[clamp(2.55rem,9vw,5rem)] font-semibold leading-[.99] tracking-[-.055em] text-white sm:mt-7">{t.heroTitle}</h1>
-              <p className="mt-5 max-w-2xl text-[15px] leading-7 text-emerald-50/75 sm:mt-6 sm:text-lg sm:leading-8">{t.heroBody}</p>
+              <h1 className="hero-title mt-5 max-w-3xl text-[clamp(2.55rem,9vw,5rem)] font-semibold leading-[.99] tracking-[-.055em] text-white sm:mt-7">{t.heroTitle}</h1>
+              <p className="hero-description mt-5 max-w-2xl text-[15px] leading-7 text-emerald-50/75 sm:mt-6 sm:text-lg sm:leading-8">{t.heroBody}</p>
               <div className="mt-6 grid gap-3 sm:mt-8 sm:flex sm:flex-wrap">
                 <Link to={`/public-capture?lang=${lang}`} className="group inline-flex min-h-[56px] items-center justify-center gap-2.5 rounded-2xl bg-lime-300 px-5 py-3 text-center text-sm font-bold text-[#10261e] shadow-[0_12px_36px_-16px_rgba(190,242,100,.8)] transition duration-300 hover:-translate-y-0.5 hover:bg-lime-200 active:scale-[.99] sm:rounded-full sm:px-6"><Camera className="h-4 w-4" />{t.capture}<ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></Link>
                 <a href="#report" className="inline-flex min-h-[56px] items-center justify-center gap-2 rounded-2xl border border-white/20 bg-white/[.06] px-5 py-3 text-center text-sm font-semibold text-white transition hover:border-white/40 hover:bg-white/10 active:scale-[.99] sm:rounded-full sm:px-6">{t.report}<ArrowDown className="h-4 w-4" /></a>
@@ -488,7 +488,7 @@ export default function PublicLanding() {
             </div>
             <div className="hero-art relative mx-auto w-full max-w-xl lg:ml-auto"><div className="hero-photo-halo absolute -inset-4 -z-10 rounded-[2rem] blur-2xl" /><PilotIllustration t={t} /></div>
           </div>
-          <div className="mx-auto grid max-w-7xl grid-cols-3 gap-2 border-t border-white/10 px-4 py-4 text-center sm:px-6 sm:py-5 lg:px-8">
+          <div className="hero-proof-strip mx-auto grid max-w-7xl grid-cols-3 gap-2 border-t border-white/10 px-4 py-4 text-center sm:px-6 sm:py-5 lg:px-8">
             <div><strong className="block text-sm font-semibold text-white sm:text-base">{lang === "np" ? "विश्वव्यापी" : "Worldwide"}</strong><span className="text-[9px] text-emerald-50/55 sm:text-[10px]">{lang === "np" ? "समुदायका विवरण" : "community reports"}</span></div>
             <div className="border-x border-white/10"><strong className="block text-sm font-semibold text-white sm:text-base">{lang === "np" ? "३३ वडा" : "33 wards"}</strong><span className="text-[9px] text-emerald-50/55 sm:text-[10px]">{lang === "np" ? "पोखरा महानगरपालिका" : "Pokhara Metropolitan City"}</span></div>
             <div><strong className="block text-sm font-semibold text-white sm:text-base">{lang === "np" ? "मानव समीक्षा" : "Human reviewed"}</strong><span className="text-[9px] text-emerald-50/55 sm:text-[10px]">{lang === "np" ? "पुष्टि गर्नुअघि" : "before confirmation"}</span></div>
