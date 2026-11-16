@@ -5,12 +5,10 @@ import {
 } from "lucide-react";
 import { api } from "@/api/apiClient";
 import CameraViewfinder from "@/components/field/CameraViewfinder";
-import { useGeolocation } from "@/hooks/useGeolocation";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
-import PokharaLogo from "@/components/PokharaLogo";
 
 const labels = {
   en: {
@@ -29,7 +27,10 @@ export default function PublicCapture() {
   const [searchParams, setSearchParams] = useSearchParams();
   const lang = searchParams.get("lang") === "np" ? "np" : "en";
   const t = labels[lang];
-  const { coords, error: gpsError, loading: gpsLoading, refresh: refreshGps, refreshing: gpsRefreshing } = useGeolocation();
+  const [coords, setCoords] = useState(null);
+  const [gpsError, setGpsError] = useState(null);
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [gpsRefreshing, setGpsRefreshing] = useState(false);
   const [submitterName, setSubmitterName] = useState("");
   const [locationName, setLocationName] = useState("");
   const [country, setCountry] = useState("");
@@ -52,6 +53,43 @@ export default function PublicCapture() {
     if (message?.includes("not supported")) return "यो ब्राउजरले GPS उपलब्ध गराउँदैन। निर्देशाङ्क आफैँ लेख्नुहोस्।";
     return message;
   };
+
+  const refreshGps = () => new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      const error = new Error("Location is not supported by this browser.");
+      setGpsError(error.message);
+      reject(error);
+      return;
+    }
+    setGpsLoading(true);
+    setGpsRefreshing(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const point = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+          timestamp: position.timestamp || Date.now(),
+        };
+        setCoords(point);
+        setGpsError(null);
+        resolve(point);
+      },
+      (cause) => {
+        const message = !window.isSecureContext ? "Location access requires HTTPS."
+          : cause?.code === 1 ? "Location permission is blocked."
+          : cause?.code === 2 ? "The device could not determine its location."
+          : cause?.code === 3 ? "Location took too long."
+          : "Could not read the device location.";
+        setGpsError(message);
+        reject(new Error(message));
+      },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
+    );
+  }).finally(() => {
+    setGpsLoading(false);
+    setGpsRefreshing(false);
+  });
 
   const getManualPoint = () => {
     const hasLatitude = manualLatitude.trim() !== "";
@@ -84,7 +122,7 @@ export default function PublicCapture() {
       const freshCoords = await refreshGps();
       setCaptureMetadata((metadata) => metadata ? { ...metadata, coords: freshCoords } : metadata);
     } catch {
-      // Keep the recent GPS fix, if any; its accuracy is shown to the reporter.
+      // The reporter can retry GPS or add coordinates manually if needed.
     } finally {
       setCaptureLocationBusy(false);
     }
@@ -94,7 +132,6 @@ export default function PublicCapture() {
     if (!pendingPhoto) return;
     setSubmitting(true);
     try {
-      if (!country.trim()) throw new Error("COUNTRY_REQUIRED");
       const manualPoint = getManualPoint();
       // Use the fix tied to this photo, never a stale background fix.
       const point = manualPoint || captureMetadata?.coords;
@@ -137,7 +174,6 @@ export default function PublicCapture() {
     } catch (e) {
       const description = e.message === "COORDINATE_PAIR" ? t.coordinatePair
         : e.message === "COORDINATES_INVALID" ? t.coordinateInvalid
-          : e.message === "COUNTRY_REQUIRED" ? t.countryRequired
           : e.message === "LOCATION_REQUIRED" ? t.locationRequired
           : localizeGpsError(e.message);
       toast({ title: "Submission failed", description, variant: "destructive" });
@@ -152,7 +188,7 @@ export default function PublicCapture() {
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-white">
       <header className="sticky top-0 z-20 glass border-b border-emerald-100">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
-          <Link to="/login" aria-label={lang === "np" ? "आधिकारिक लगइन खोल्नुहोस्" : "Open official login"} className="shrink-0"><PokharaLogo className="h-10 w-10 shadow-sm" /></Link>
+          <Link to="/" aria-label={lang === "np" ? "WAMS मुख्य पृष्ठ" : "WAMS home"} className="shrink-0"><img src="/wams-logo.webp?v=4" alt="WAMS" width="52" height="52" fetchPriority="high" className="h-12 w-12 rounded-xl bg-white object-contain p-0.5 shadow-sm ring-1 ring-emerald-900/10" /></Link>
           <div className="min-w-0">
             <h1 className="font-bold text-slate-800 leading-tight">{t.title}</h1>
             <p className="text-[11px] text-slate-500">{t.subtitle}</p>
@@ -199,42 +235,27 @@ export default function PublicCapture() {
           </div>
         )}
 
-        {/* Optional details */}
-        <div className="space-y-3 mb-4">
-          <div className="space-y-1.5">
-            <Label className="text-xs text-slate-500">{t.name}</Label>
-            <Input value={submitterName} onChange={(e) => setSubmitterName(e.target.value)} placeholder={t.namePlaceholder} />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs text-slate-500">{t.country}</Label>
-            <Input value={country} onChange={(e) => setCountry(e.target.value)} autoComplete="country-name" placeholder={t.countryPlaceholder} required />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs text-slate-500">{t.province}</Label>
-              <Input value={province} onChange={(e) => setProvince(e.target.value)} autoComplete="address-level1" />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-slate-500">{t.district}</Label>
-              <Input value={district} onChange={(e) => setDistrict(e.target.value)} autoComplete="address-level2" />
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs text-slate-500">{t.location}</Label>
-            <Input value={locationName} onChange={(e) => setLocationName(e.target.value)} placeholder={t.locationPlaceholder} />
-          </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-3">
-            <p className="mb-2 text-xs font-semibold text-slate-600">{t.manualCoordinates}</p>
+        {/* Optional details: no name or profile required for a public wildlife photo */}
+        <details className="mb-4 rounded-2xl border border-slate-200 bg-white p-3">
+          <summary className="cursor-pointer text-sm font-semibold text-slate-700">{lang === "np" ? "थप विवरण (ऐच्छिक)" : "Add optional details"}</summary>
+          <div className="mt-4 space-y-3">
+            <div className="space-y-1.5"><Label className="text-xs text-slate-500">{t.name}</Label><Input value={submitterName} onChange={(e) => setSubmitterName(e.target.value)} placeholder={t.namePlaceholder} /></div>
+            <div className="space-y-1.5"><Label className="text-xs text-slate-500">{t.country} ({lang === "np" ? "ऐच्छिक" : "optional"})</Label><Input value={country} onChange={(e) => setCountry(e.target.value)} autoComplete="country-name" placeholder={t.countryPlaceholder} /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="min-w-0 space-y-1.5"><Label className="text-xs text-slate-500">{t.latitude}</Label><Input inputMode="decimal" value={manualLatitude} onChange={(event) => setManualLatitude(event.target.value)} placeholder="28.21" /></div>
-              <div className="min-w-0 space-y-1.5"><Label className="text-xs text-slate-500">{t.longitude}</Label><Input inputMode="decimal" value={manualLongitude} onChange={(event) => setManualLongitude(event.target.value)} placeholder="83.99" /></div>
+              <div className="space-y-1.5"><Label className="text-xs text-slate-500">{t.province}</Label><Input value={province} onChange={(e) => setProvince(e.target.value)} autoComplete="address-level1" /></div>
+              <div className="space-y-1.5"><Label className="text-xs text-slate-500">{t.district}</Label><Input value={district} onChange={(e) => setDistrict(e.target.value)} autoComplete="address-level2" /></div>
             </div>
+            <div className="space-y-1.5"><Label className="text-xs text-slate-500">{t.location}</Label><Input value={locationName} onChange={(e) => setLocationName(e.target.value)} placeholder={t.locationPlaceholder} /></div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <p className="mb-2 text-xs font-semibold text-slate-600">{t.manualCoordinates}</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="min-w-0 space-y-1.5"><Label className="text-xs text-slate-500">{t.latitude}</Label><Input inputMode="decimal" value={manualLatitude} onChange={(event) => setManualLatitude(event.target.value)} placeholder="28.21" /></div>
+                <div className="min-w-0 space-y-1.5"><Label className="text-xs text-slate-500">{t.longitude}</Label><Input inputMode="decimal" value={manualLongitude} onChange={(event) => setManualLongitude(event.target.value)} placeholder="83.99" /></div>
+              </div>
+            </div>
+            <div className="space-y-1.5"><Label className="text-xs text-slate-500">{t.notes}</Label><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder={t.notesPlaceholder} /></div>
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs text-slate-500">{t.notes}</Label>
-            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder={t.notesPlaceholder} />
-          </div>
-        </div>
+        </details>
 
         {/* Submit */}
         {pendingPhoto && (
