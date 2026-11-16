@@ -635,7 +635,7 @@ html[lang="ne-NP"] .public-landing .hero-title {
   line-height: 1.75;
 }
 
-.public-landing #report form .mt-2.space-y-1 > button {
+.public-landing #report form .mt-2.grid.gap-2 > button {
   min-height: 48px;
   border-color: #cbd8ce;
   border-radius: 999px;
@@ -644,12 +644,12 @@ html[lang="ne-NP"] .public-landing .hero-title {
   font-weight: 700;
 }
 
-.public-landing #report form .mt-2.space-y-1 > button:hover {
+.public-landing #report form .mt-2.grid.gap-2 > button:hover {
   border-color: #6b9478;
   background: #edf5ec;
 }
 
-.public-landing #report form .mt-2.space-y-1 [role="status"] {
+.public-landing #report form .mt-2.grid.gap-2 [role="status"] {
   line-height: 1.55;
 }
 
