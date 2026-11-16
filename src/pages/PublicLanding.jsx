@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { api } from "@/api/apiClient";
 import { useToast } from "@/components/ui/use-toast";
+import { useLanguage } from "@/lib/LanguageContext";
 import PokharaLogo from "@/components/PokharaLogo";
 
 const WildlifeHero3D = lazy(() => import("@/components/3d/WildlifeHero3D"));
@@ -255,7 +256,8 @@ function PilotIllustration({ t }) {
   );
 }
 export default function PublicLanding() {
-  const [lang, setLang] = useState(() => window.localStorage.getItem("nws-public-language") === "np" ? "np" : "en");
+  const { lang: appLanguage, setLang } = useLanguage();
+  const lang = appLanguage === "ne" ? "np" : "en";
   const { toast } = useToast();
   const [notices, setNotices] = useState([]);
   const [noticeWard, setNoticeWard] = useState(() => window.localStorage.getItem("nws-notice-ward-v2") || "");
@@ -324,7 +326,7 @@ export default function PublicLanding() {
   }, [noticeWard, noticeMunicipality]);
 
   useEffect(() => {
-    document.documentElement.lang = lang === "np" ? "ne" : "en";
+    document.documentElement.lang = lang === "np" ? "ne-NP" : "en";
   }, [lang]);
 
   useEffect(() => {
@@ -350,9 +352,7 @@ export default function PublicLanding() {
   }, []);
 
   const setLanguage = (next) => {
-    setLang(next);
-    window.localStorage.setItem("nws-public-language", next);
-    document.documentElement.lang = next === "np" ? "ne" : "en";
+    setLang(next === "np" ? "ne" : "en");
   };
 
   const activeNotice = notices.find((notice) => !dismissed.has(notice.id));
