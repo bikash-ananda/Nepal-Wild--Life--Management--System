@@ -590,6 +590,14 @@ export default function PublicLanding() {
             <form className="rounded-[1.75rem] border border-white/10 bg-white p-5 text-slate-900 shadow-2xl sm:p-8" onSubmit={(event) => {
               event.preventDefault();
               const data = new FormData(event.currentTarget);
+              const phoneField = event.currentTarget.elements.namedItem("alert_phone");
+              const emailValue = String(data.get("alert_email") || "").trim();
+              if (!String(data.get("alert_phone") || "").trim() && !emailValue) {
+                phoneField.setCustomValidity(lang === "np" ? "फोन नम्बर वा इमेलमध्ये कम्तीमा एउटा राख्नुहोस्।" : "Enter a phone number or email address.");
+                phoneField.reportValidity();
+                return;
+              }
+              phoneField.setCustomValidity("");
               const profile = {
                 name: String(data.get("alert_name") || "").trim(),
                 phone: String(data.get("alert_phone") || "").trim(),
