@@ -11,11 +11,13 @@ function recognitionConstructor() {
 export default function VoiceTranscriptionInput({ value, onChange }) {
   const { lang, t } = useLanguage();
   const [listening, setListening] = useState(false);
+  const [voiceLanguage, setVoiceLanguage] = useState(lang);
   const [error, setError] = useState("");
   const recognitionRef = useRef(null);
   const baseTextRef = useRef("");
 
   useEffect(() => () => recognitionRef.current?.abort(), []);
+  useEffect(() => setVoiceLanguage(lang), [lang]);
 
   const start = () => {
     const SpeechRecognition = recognitionConstructor();
@@ -26,7 +28,7 @@ export default function VoiceTranscriptionInput({ value, onChange }) {
 
     setError("");
     const recognition = new SpeechRecognition();
-    recognition.lang = lang === "ne" ? "ne-NP" : "en-US";
+    recognition.lang = voiceLanguage === "ne" ? "ne-NP" : "en-US";
     recognition.continuous = false;
     recognition.interimResults = false;
     baseTextRef.current = value.trim();
@@ -55,7 +57,20 @@ export default function VoiceTranscriptionInput({ value, onChange }) {
   const stop = () => recognitionRef.current?.stop();
 
   return (
-    <div className="mt-2 space-y-1">
+    <div className="mt-2 grid gap-2 sm:flex sm:flex-wrap sm:items-center">
+      <label className="flex min-h-10 items-center gap-2 text-xs font-semibold text-slate-600">
+        <span>भाषा / Language</span>
+        <select
+          value={voiceLanguage}
+          onChange={(event) => setVoiceLanguage(event.target.value)}
+          disabled={listening}
+          className="min-h-10 rounded-full border border-slate-300 bg-white px-3 text-sm font-medium text-slate-800"
+          aria-label="Voice input language"
+        >
+          <option value="ne">नेपाली / Nepali</option>
+          <option value="en">English</option>
+        </select>
+      </label>
       <Button type="button" variant="outline" onClick={listening ? stop : start} className="min-h-11 w-full justify-center sm:w-auto" aria-live="polite">
         {listening ? <MicOff className="mr-2 h-4 w-4" /> : <Mic className="mr-2 h-4 w-4" />}
         {listening ? t("voice.stop") : t("voice.start")}
