@@ -498,7 +498,7 @@ export default function PublicLanding() {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
           <Link to="/login" className="group flex min-w-0 items-center gap-3" aria-label={lang === "np" ? "आधिकारिक लगइन खोल्नुहोस्" : "Open official login"}>
             <img src="/icons/wildlife.svg" alt="Nepal Wildlife Management System logo" className="h-11 w-11 shrink-0 rounded-xl shadow-sm transition-transform duration-300 group-hover:scale-105" />
-            <span className="min-w-0"><span className="block max-w-[220px] truncate text-sm font-bold leading-tight text-slate-950 sm:max-w-md">{t.system}</span><span className="mt-0.5 block text-[9px] font-bold uppercase tracking-[.14em] text-emerald-800 sm:text-[10px]">{lang === "np" ? "पोखरा · वडा नं. २१" : "Pokhara · Ward 21"}</span></span>
+            <span className="min-w-0"><span className="block max-w-[220px] truncate text-sm font-bold leading-tight text-slate-950 sm:max-w-md">{t.system}</span><span className="mt-0.5 block text-[9px] font-bold uppercase tracking-[.14em] text-emerald-800 sm:text-[10px]">{lang === "np" ? "नेपाल · वन्यजन्तु व्यवस्थापन" : "NEPAL · WILDLIFE MANAGEMENT"}</span></span>
           </Link>
           <nav className="hidden items-center gap-7 lg:flex" aria-label={lang === "np" ? "मुख्य नेभिगेसन" : "Main navigation"}>
             <a className="text-sm font-medium text-slate-600 hover:text-emerald-800" href="#about">{t.navAbout}</a>
@@ -535,9 +535,39 @@ export default function PublicLanding() {
             <div className="hero-art relative mx-auto w-full max-w-xl lg:ml-auto"><div className="hero-photo-halo absolute -inset-4 -z-10 rounded-[2rem] blur-2xl" /><PilotIllustration t={t} /></div>
           </div>
           <div className="hero-proof-strip mx-auto grid max-w-7xl grid-cols-3 gap-2 border-t border-white/10 px-4 py-4 text-center sm:px-6 sm:py-5 lg:px-8">
-            <div><strong className="block text-sm font-semibold text-white sm:text-base">{lang === "np" ? "वडा २१" : "Ward 21"}</strong><span className="text-[9px] text-emerald-50/55 sm:text-[10px]">{lang === "np" ? "पहिलो अध्ययन क्षेत्र" : "first study area"}</span></div>
-            <div className="border-x border-white/10"><strong className="block text-sm font-semibold text-white sm:text-base">{lang === "np" ? "३३ वडा" : "33 wards"}</strong><span className="text-[9px] text-emerald-50/55 sm:text-[10px]">{lang === "np" ? "पोखरा महानगरपालिका" : "Pokhara Metropolitan City"}</span></div>
+            <div><strong className="block text-sm font-semibold text-white sm:text-base">{lang === "np" ? "नेपाल" : "Nepal"}</strong><span className="text-[9px] text-emerald-50/55 sm:text-[10px]">{lang === "np" ? "दीर्घकालीन परिकल्पना" : "long-term vision"}</span></div>
+            <div className="border-x border-white/10"><strong className="block text-sm font-semibold text-white sm:text-base">{lang === "np" ? "वडा २१" : "Ward 21"}</strong><span className="text-[9px] text-emerald-50/55 sm:text-[10px]">{lang === "np" ? "पोखराको हालको नमुना" : "current Pokhara pilot"}</span></div>
             <div><strong className="block text-sm font-semibold text-white sm:text-base">{lang === "np" ? "मानवीय जाँच" : "Human review"}</strong><span className="text-[9px] text-emerald-50/55 sm:text-[10px]">{lang === "np" ? "अध्ययनमा प्रयोग गर्नुअघि" : "before research use"}</span></div>
+          </div>
+        </section>
+
+        <section id="pilot" className="border-b border-emerald-950/5 bg-[#f5f7f1] py-14 sm:py-18">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-8 lg:grid-cols-[.8fr_1.2fr] lg:items-start">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[.16em] text-emerald-800">{lang === "np" ? "हालको स्थलगत कार्यान्वयन" : "CURRENT FIELD IMPLEMENTATION"}</p>
+                <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">{lang === "np" ? "पोखरा महानगरपालिकाको वडा नं. २१ मा हार्डवेयर प्रोटोटाइप" : "Hardware prototype in Pokhara Metropolitan City, Ward No. 21"}</h2>
+                <p className="mt-4 text-sm leading-7 text-slate-600">{lang === "np" ? "यो प्रोटोटाइप पोखरा महानगरपालिका आर्थिक विकास महाशाखाको योजना तथा आर्थिक सहयोगमा खगराज आचार्यको कृषि फर्ममा विकास तथा सञ्चालन गरिएको हो। यो हालको स्थलगत परीक्षण हो; WAMS को दीर्घकालीन परिकल्पना भने नेपालभर वन्यजन्तु अवलोकन, अनुसन्धान र मानव–वन्यजन्तु द्वन्द्व व्यवस्थापनमा सहयोग गर्ने हो।" : "This hardware prototype was developed and is being operated at the agricultural farm of Mr. Kharagaj Acharya under the plan and financial support of the Economic Development Division, Pokhara Metropolitan City. This is the current field pilot; WAMS has a broader long-term vision for wildlife observation, research and human–wildlife conflict management across Nepal."}</p>
+                <p className="mt-3 text-xs leading-6 text-slate-500">{lang === "np" ? "यस पृष्ठमा देखाइएको वन्यजन्तुको तस्बिर सन्दर्भका लागि हो; यो वडा २१ को फार्ममा खिचिएको प्रोटोटाइपको तस्बिर होइन।" : "The wildlife image above is illustrative reference material, not a photograph of the Ward 21 prototype installation."}</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <article className="rounded-2xl border border-emerald-950/10 bg-white p-5 shadow-[0_10px_30px_-24px_rgba(16,38,31,.28)]">
+                  <Camera className="h-5 w-5 text-emerald-800" />
+                  <h3 className="mt-3 font-semibold text-slate-950">{lang === "np" ? "क्यामेरा र प्रारम्भिक विश्लेषण" : "Camera monitoring and screening"}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{lang === "np" ? "CCTV बाट दृश्य सङ्कलन गरी मेसिन लर्निङको सहयोगमा वन्यजन्तुको गतिविधि प्रारम्भिक रूपमा विश्लेषण गर्ने अवधारणा परीक्षण भइरहेको छ। नतिजा समीक्षापछि मात्र प्रयोग गर्नुपर्छ।" : "CCTV footage is collected for machine-learning-assisted screening of possible wildlife activity. Outputs are candidate detections and require human review; they are not guaranteed predictions."}</p>
+                </article>
+                <article className="rounded-2xl border border-emerald-950/10 bg-white p-5 shadow-[0_10px_30px_-24px_rgba(16,38,31,.28)]">
+                  <BellRing className="h-5 w-5 text-emerald-800" />
+                  <h3 className="mt-3 font-semibold text-slate-950">{lang === "np" ? "किसानलाई सूचना र प्रतिरोधात्मक उपाय" : "Farmer alerts and deterrent concepts"}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{lang === "np" ? "साइरन र ध्वनि उपकरण तथा किसानलाई इमेल/आवाजमार्फत सूचना दिने कार्यप्रवाह विकास तथा परीक्षणको विषय हो। IoT बाट नियन्त्रण हुने विद्युतीय बार प्रयोग गर्दा प्रमाणित energizer, सही earthing, चेतावनी संकेत, सुरक्षित दूरी र आपतकालीन बन्द गर्ने व्यवस्था सहित लागू मापदण्ड पालना अनिवार्य हुन्छ।" : "Siren and sound devices, together with email and voice-based farmer notification workflows, are part of the prototype and integration work. Any IoT-controlled electric deterrent fence must be designed, installed and operated under applicable electrical safety requirements, with a certified energizer, correct earthing, warning signs, safe clearances and emergency shutoff."}</p>
+                </article>
+                <article className="rounded-2xl border border-emerald-950/10 bg-white p-5 shadow-[0_10px_30px_-24px_rgba(16,38,31,.28)] sm:col-span-2">
+                  <Globe2 className="h-5 w-5 text-emerald-800" />
+                  <h3 className="mt-3 font-semibold text-slate-950">{lang === "np" ? "कम लागतमा क्षेत्र विस्तारको अध्ययन" : "Research into lower-cost wider coverage"}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{lang === "np" ? "CCTV तथा हार्डवेयरको लागत र कभरेज चुनौतीलाई सम्बोधन गर्न passive radar र LoRa प्रविधिको सम्भाव्यता अध्ययन भइरहेको छ। यी प्रविधि अध्ययनको चरणमा छन्; उपलब्ध भइसकेको कार्यक्षमता भनेर बुझ्नु हुँदैन।" : "Passive radar and LoRa are being studied as potential ways to reduce equipment costs and extend coverage. They remain under study and should not be understood as deployed capabilities."}</p>
+                </article>
+              </div>
+            </div>
           </div>
         </section>
 
