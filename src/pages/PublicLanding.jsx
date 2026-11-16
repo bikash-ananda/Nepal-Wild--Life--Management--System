@@ -46,7 +46,7 @@ const getDetailedWildlifeGuides = (lang) => {
     {
       id: "rhesus", group: np ? "बाँदरका प्रजाति" : "MONKEY IDENTIFICATION",
       name: np ? "रातो बाँदर / रेसस मकाक" : "Rhesus macaque",
-      scientific: "Macaca mulatta", image: "/images/species/rhesus_macaque.jpg",
+      scientific: "Macaca mulatta", image: "/images/species/rhesus_macaque.jpg", photoCredit: "Charles J. Sharp · CC BY-SA 4.0", photoSource: "https://commons.wikimedia.org/wiki/File:Rhesus_macaque_(Macaca_mulatta)_Gokarna_3.jpg",
       identify: np ? "मध्यम आकार, खैरो–खैरो खैरो शरीर, गुलाबी वा रातो अनुहार र नितम्ब; पुच्छर मध्यम लम्बाइको। प्रायः दिनमा सक्रिय र समूहमा हिँड्ने।" : "Medium-sized macaque with a grey-brown coat, pink to red face and rump, and a medium-length tail. Usually active by day and commonly travels in groups.",
       behaviour: np ? "खाना खोज्दा खेत, घर वरिपरि र वनको किनारमा आउन सक्छ। मकै, आलु, फलफूल, गहुँलगायत बाली खान सक्छ। समूह ठूलो हुँदा एउटै पटक धेरै बोट वा फलमा क्षति देखिन सक्छ।" : "Forages around farms, settlements and forest edges. May eat maize, potatoes, fruit and other crops. A larger foraging party can affect many plants during one visit.",
       action: np ? "खेतको निगरानी पालो मिलाएर गर्नुहोस्; पाकेको बाली समयमै टिप्नुहोस्; अन्न र फोहोर बन्द भाँडोमा राख्नुहोस्; बाँदरलाई खाना नदिनुहोस्। सुरक्षित, मानवीय उपाय समुदायसँग मिलेर अपनाउनुहोस्। ढुङ्गा, गुलेली, विष वा पासो प्रयोग नगर्नुहोस्।" : "Organise shared, rotating field watch; harvest ripe crops promptly; secure grain and waste; never feed macaques. Coordinate humane, safe deterrence with neighbours. Do not use stones, catapults, poison or traps.",
@@ -55,7 +55,7 @@ const getDetailedWildlifeGuides = (lang) => {
     {
       id: "assamese", group: np ? "बाँदरका प्रजाति" : "MONKEY IDENTIFICATION",
       name: np ? "पहाडे बाँदर / आसामी मकाक" : "Assamese macaque",
-      scientific: "Macaca assamensis", image: null,
+      scientific: "Macaca assamensis", image: "https://commons.wikimedia.org/wiki/Special:FilePath/Assam_macaque_(Macaca_assamensis_pelops)_male_head_Nagarjun.jpg?width=960", photoCredit: "Charles J. Sharp · CC BY-SA 4.0 · Nagarjun Forest, Nepal", photoSource: "https://commons.wikimedia.org/wiki/File:Assam_macaque_(Macaca_assamensis_pelops)_male_head_Nagarjun.jpg",
       identify: np ? "रेसस मकाकभन्दा प्रायः ठूलो र गाढा खैरो–खरानी रङको देखिन सक्छ। अनुहारको छाला गाढा र पुच्छर छोटो तथा बाक्लो रौँ भएको हुन सक्छ। स्थानीय रङ तथा आकारमा भिन्नता हुन्छ।" : "Often appears larger and darker brown-grey than a rhesus macaque. The face is dark and the tail is relatively short and well-haired. Appearance varies across local populations.",
       behaviour: np ? "पहाडी वन, नदी आसपासका वन र बस्ती नजिकका वन किनारमा देखिन सक्छ। मकै, धान, आलु, कोदो तथा अन्य उपलब्ध खाद्यवस्तु खान सक्छ। यसको वितरण र स्थानीय संख्या सबै क्षेत्रमा समान छैन।" : "Occurs in hill forests, riverine forests and some forest edges near settlements. May feed on maize, rice, potato, millet and other available foods. Distribution and local abundance are uneven.",
       action: np ? "वनको किनारमा रहेका खेतमा सामूहिक निगरानी, बाली समयमै भित्र्याउने, अन्न सुरक्षित राख्ने र फोहोर व्यवस्थापन गर्ने उपाय अपनाउनुहोस्। स्थानीय वन कार्यालयसँग प्रजाति पहिचान र उपयुक्त उपायबारे सल्लाह लिनुहोस्।" : "Use coordinated field watch near forest edges, timely harvesting, secure food storage and proper waste management. Ask the local forest office to confirm identification and recommend site-specific measures.",
@@ -64,7 +64,7 @@ const getDetailedWildlifeGuides = (lang) => {
     {
       id: "langur", group: np ? "बाँदरका प्रजाति" : "MONKEY IDENTIFICATION",
       name: np ? "नेपाल ग्रे लङ्गुर" : "Nepal gray langur",
-      scientific: "Semnopithecus schistaceus", image: "/images/species/nepal_gray_langur.jpg",
+      scientific: "Semnopithecus schistaceus", image: "/images/species/nepal_gray_langur.jpg", photoCredit: "Aditya Pal · CC BY-SA 4.0", photoSource: "https://commons.wikimedia.org/wiki/File:Nepal_gray_langur_at_Manag.jpg",
       identify: np ? "खरानी वा चाँदीजस्तो रौँ, कालो अनुहार र हातखुट्टा, तथा शरीरभन्दा निकै लामो पुच्छर यसको मुख्य चिनारी हुन्। मकाकभन्दा लामो खुट्टा र पातलो शरीर देखिन्छ।" : "Recognisable by its grey to silvery coat, dark face and limbs, and very long tail. It generally has a more slender build and longer limbs than macaques.",
       behaviour: np ? "धेरैजसो रुखमा बस्ने र पात, कोपिला तथा वनस्पति खाने गर्छ। कहिलेकाहीँ खेत वा फलफूलमा आउन सक्छ, तर सबै लङ्गुरले समान क्षति गर्छन् भन्ने हुँदैन।" : "Mostly arboreal and feeds on leaves, buds and other vegetation. It may sometimes visit fields or orchards, but crop impacts vary by place and season.",
       action: np ? "फलफूल तथा बाली पाक्ने समयमा खेतको किनार निगरानी गर्नुहोस्; बगैँचामा खसेका फल र खुला खाद्यवस्तु व्यवस्थापन गर्नुहोस्; स्थानीय समुदायसँग मिलेर सुरक्षित उपाय अपनाउनुहोस्।" : "Monitor field and orchard edges as crops ripen; collect fallen fruit and secure exposed food; coordinate safe, non-injurious measures with neighbours.",
@@ -73,7 +73,7 @@ const getDetailedWildlifeGuides = (lang) => {
     {
       id: "leopard", group: np ? "ठूला बिराला: चितुवा र बाघ" : "BIG CATS: LEOPARD VS TIGER",
       name: np ? "चितुवा" : "Leopard",
-      scientific: "Panthera pardus", image: "/images/species/leopard.jpg",
+      scientific: "Panthera pardus", image: "/images/species/leopard.jpg", photoCredit: "Adhish dulal · CC BY-SA 4.0", photoSource: "https://commons.wikimedia.org/wiki/File:Panthera_Pardus.jpg",
       identify: np ? "मध्यम आकारको बलियो शरीर, पहेँलो–सुनौलो पृष्ठभूमिमा कालो गुलाफजस्ता धब्बा (rosettes) र लामो पुच्छर। बाघभन्दा सानो र रुख चढ्न निकै सक्षम हुन्छ।" : "A muscular, medium-sized cat with a golden coat covered in dark rosettes. Smaller than a tiger, with a long tail and strong climbing ability.",
       behaviour: np ? "प्रायः एक्लै हिँड्छ र साँझ, रात वा बिहान सक्रिय हुन सक्छ। बाख्रा, भेडा तथा अन्य साना/मध्यम पशुधन जोखिममा पर्न सक्छन्, विशेष गरी असुरक्षित खोरमा।" : "Usually solitary and may be active at dusk, night or dawn. Goats, sheep and other small or medium livestock can be vulnerable, especially in weak night enclosures.",
       action: np ? "पशुधनलाई साँझ पर्नुअघि बलियो खोरमा राख्नुहोस्; ढोका, भित्ता र छाना सुरक्षित बनाउनुहोस्; रातभर खुला चरनमा नछोड्नुहोस्। मृत पशु वा अवशेष खुला नराखी सम्बन्धित निकायको सल्लाह लिनुहोस्।" : "Bring livestock into a strong enclosure before dusk; reinforce doors, walls and roofing; do not leave animals tethered in open fields overnight. Do not leave carcasses exposed; seek local authority advice.",
@@ -82,7 +82,7 @@ const getDetailedWildlifeGuides = (lang) => {
     {
       id: "tiger", group: np ? "ठूला बिराला: चितुवा र बाघ" : "BIG CATS: LEOPARD VS TIGER",
       name: np ? "पाटेबाघ" : "Bengal tiger",
-      scientific: "Panthera tigris tigris", image: "/images/species/bengal_tiger.png",
+      scientific: "Panthera tigris tigris", image: "/images/species/bengal_tiger.png", photoCredit: "Robirob4433 · CC BY-SA 4.0 · Bardia, Nepal", photoSource: "https://commons.wikimedia.org/wiki/File:Bengal_tiger_walking_in_tall_grass_in_Dalla_Community_Forest,_Bardia,_Nepal.png",
       identify: np ? "चितुवाभन्दा धेरै ठूलो र भारी शरीर, सुनौलो–सुन्तला रङमा स्पष्ट कालो ठाडा धर्सा, ठूलो टाउको र बलिया खुट्टा। प्रत्येक बाघका धर्साको ढाँचा फरक हुन्छ।" : "Much larger and heavier than a leopard, with a powerful body, orange-gold coat and prominent black vertical stripes. Stripe patterns are individual.",
       behaviour: np ? "मुख्यतः तराईका वन, घाँसे मैदान र नदी आसपासका क्षेत्रमा पाइन्छ। ठूलो शिकार गर्ने एक्लो सिकारी हो; पशुधन चराउने वा वनमा घाँस–दाउरा लिन जाने मानिससँग जोखिमपूर्ण भेट हुन सक्छ।" : "Found mainly in the Terai’s forests, grasslands and riverine habitats. A solitary large predator; risk can arise where livestock grazing or forest-resource collection overlaps with tiger habitat.",
       action: np ? "बाघ देखिएको वा ताजा गतिविधि भएको सूचना आएमा वन/निकुञ्जको निर्देशन नआएसम्म जोखिम क्षेत्र नजानुहोस्। वनमा एक्लै नजानुहोस्; पशुधन सुरक्षित खोरमा राख्नुहोस्; स्थानीय सूचना र चेतावनी पालना गर्नुहोस्।" : "If a tiger is sighted or fresh activity is reported, avoid the area until forest or park authorities advise it is safe. Do not enter forests alone; secure livestock at night and follow local alerts.",
@@ -787,11 +787,11 @@ export default function PublicLanding() {
             <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {getDetailedWildlifeGuides(lang).map((animal) => (
                 <article key={animal.id} className="overflow-hidden rounded-3xl border border-emerald-950/10 bg-white shadow-[0_18px_50px_-38px_rgba(12,40,28,.35)]">
-                  {animal.image ? <img src={animal.image} alt={animal.name} loading="lazy" decoding="async" className="h-52 w-full bg-slate-100 object-cover sm:h-60" /> : <div className="flex h-52 items-center justify-center bg-gradient-to-br from-[#e4ece3] to-[#cbd9c9] sm:h-60"><div className="rounded-full border border-emerald-900/15 bg-white/80 px-5 py-3 text-center"><span className="block text-xs font-bold uppercase tracking-wider text-emerald-800">{lang === "np" ? "पहिचान तुलना" : "IDENTIFICATION NOTE"}</span><span className="mt-1 block text-sm font-semibold text-emerald-950">{lang === "np" ? "रेसससँग तुलना गर्नुहोस्" : "Compare with rhesus macaque"}</span></div></div>}
+                  {animal.image ? <img src={animal.image} alt={animal.name} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="h-52 w-full bg-slate-100 object-cover sm:h-60" /> : <div className="flex h-52 items-center justify-center bg-gradient-to-br from-[#e4ece3] to-[#cbd9c9] sm:h-60"><div className="rounded-full border border-emerald-900/15 bg-white/80 px-5 py-3 text-center"><span className="block text-xs font-bold uppercase tracking-wider text-emerald-800">{lang === "np" ? "पहिचान तुलना" : "IDENTIFICATION NOTE"}</span><span className="mt-1 block text-sm font-semibold text-emerald-950">{lang === "np" ? "रेसससँग तुलना गर्नुहोस्" : "Compare with rhesus macaque"}</span></div></div>}
                   <div className="p-5 sm:p-6">
                     <p className="text-[10px] font-bold uppercase tracking-[.14em] text-emerald-800">{animal.group}</p>
                     <h3 className="mt-2 text-xl font-semibold text-slate-950">{animal.name}</h3>
-                    <p className="mt-1 text-xs italic text-slate-500">{animal.scientific}</p>
+                    <p className="mt-1 text-xs italic text-slate-500">{animal.scientific}</p>\n                    {animal.photoSource && <a href={animal.photoSource} target="_blank" rel="noreferrer" className="mt-1 inline-flex text-[10px] font-medium text-emerald-800 underline underline-offset-2">{lang === "np" ? "तस्बिर श्रेय" : "Photo credit"}: {animal.photoCredit}</a>}
                     <div className="mt-4 space-y-3 text-sm leading-6">
                       <div><p className="font-semibold text-slate-900">{lang === "np" ? "कसरी चिन्ने" : "How to identify"}</p><p className="text-slate-600">{animal.identify}</p></div>
                       <div><p className="font-semibold text-slate-900">{lang === "np" ? "व्यवहार र सम्भावित असर" : "Behaviour and possible impact"}</p><p className="text-slate-600">{animal.behaviour}</p></div>
