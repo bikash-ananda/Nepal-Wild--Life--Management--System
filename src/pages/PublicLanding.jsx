@@ -507,6 +507,7 @@ export default function PublicLanding() {
             <a className="text-sm font-medium text-slate-600 hover:text-emerald-800" href="#guides">{t.navGuides}</a>
             <Link className="text-sm font-medium text-slate-600 hover:text-emerald-800" to={"/species-library?lang=" + lang}>{t.navSpecies}</Link>
             <a className="text-sm font-medium text-slate-600 hover:text-emerald-800" href="#report">{t.navReport}</a>
+            <a className="text-sm font-semibold text-emerald-800 hover:text-emerald-950" href="#early-alerts">{lang === "np" ? "अग्रिम सूचना" : "Early alerts"}</a>
           </nav>
           <div className="flex shrink-0 items-center gap-2">
             
@@ -530,6 +531,7 @@ export default function PublicLanding() {
               <div className="mt-6 grid gap-3 sm:mt-8 sm:flex sm:flex-wrap">
                 <Link to={`/public-capture?lang=${lang}`} className="group inline-flex min-h-[56px] items-center justify-center gap-2.5 rounded-2xl bg-lime-300 px-5 py-3 text-center text-sm font-bold text-[#10261e] shadow-[0_12px_36px_-16px_rgba(190,242,100,.8)] transition duration-300 hover:-translate-y-0.5 hover:bg-lime-200 active:scale-[.99] sm:rounded-full sm:px-6"><Camera className="h-4 w-4" />{t.capture}<ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></Link>
                 <a href="#report" className="inline-flex min-h-[56px] items-center justify-center gap-2 rounded-2xl border border-white/20 bg-white/[.06] px-5 py-3 text-center text-sm font-semibold text-white transition hover:border-white/40 hover:bg-white/10 active:scale-[.99] sm:rounded-full sm:px-6">{t.report}<ArrowDown className="h-4 w-4" /></a>
+                <a href="#early-alerts" className="inline-flex min-h-[56px] items-center justify-center gap-2 rounded-2xl border border-lime-200/35 bg-lime-200/10 px-5 py-3 text-center text-sm font-semibold text-lime-100 transition hover:bg-lime-200/20 sm:rounded-full sm:px-6"><BellRing className="h-4 w-4" />{lang === "np" ? "अग्रिम सूचना पाउनुहोस्" : "Get early alerts"}</a>
               </div>
               <div className="hero-trust-card mt-6 flex max-w-xl items-start gap-3 rounded-2xl border p-4 text-sm leading-6 sm:mt-8 sm:p-5"><span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-lime-200/10 text-lime-200"><ShieldCheck className="h-5 w-5" /></span><div><strong className="font-semibold text-white">{t.pilot}</strong><p className="mt-1 text-sm text-emerald-50/70">{t.pilotNote}</p></div></div>
               <a href="#about" className="mt-5 inline-flex min-h-10 items-center gap-2 px-1 text-sm font-semibold text-lime-200 hover:text-white"><span>{t.scroll}</span><ChevronDown className="h-4 w-4 animate-bounce" /></a>
