@@ -8,7 +8,7 @@ import {
 import { api } from "@/api/apiClient";
 import { useToast } from "@/components/ui/use-toast";
 import { useLanguage } from "@/lib/LanguageContext";
-import PokharaLogo from "@/components/PokharaLogo";
+
 
 const WildlifeHero3D = lazy(() => import("@/components/3d/WildlifeHero3D"));
 
@@ -487,7 +487,7 @@ export default function PublicLanding() {
         <div ref={scrollProgressRef} className="absolute inset-x-0 bottom-0 h-[2px] origin-left scale-x-0 bg-lime-500" aria-hidden="true" />
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
           <Link to="/login" className="group flex min-w-0 items-center gap-3" aria-label={lang === "np" ? "आधिकारिक लगइन खोल्नुहोस्" : "Open official login"}>
-            <PokharaLogo className="h-11 w-11 shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-105" />
+            <img src="/icons/wildlife.svg" alt="Nepal Wildlife Management System logo" className="h-11 w-11 shrink-0 rounded-xl shadow-sm transition-transform duration-300 group-hover:scale-105" />
             <span className="min-w-0"><span className="block max-w-[220px] truncate text-sm font-bold leading-tight text-slate-950 sm:max-w-md">{t.system}</span><span className="mt-0.5 block text-[9px] font-bold uppercase tracking-[.14em] text-emerald-800 sm:text-[10px]">{lang === "np" ? "पोखरा · वडा नं. २१" : "Pokhara · Ward 21"}</span></span>
           </Link>
           <nav className="hidden items-center gap-7 lg:flex" aria-label={lang === "np" ? "मुख्य नेभिगेसन" : "Main navigation"}>
@@ -497,7 +497,7 @@ export default function PublicLanding() {
             <a className="text-sm font-medium text-slate-600 hover:text-emerald-800" href="#report">{t.navReport}</a>
           </nav>
           <div className="flex shrink-0 items-center gap-2">
-            {!isAppInstalled && <button type="button" onClick={handleInstallApp} className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-emerald-900 px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 sm:gap-2 sm:px-3.5 sm:text-sm" aria-label={t.installApp}><Download className="h-4 w-4" /><span className="hidden sm:inline">{t.installApp}</span></button>}
+            
             <button type="button" onClick={() => setLanguage(lang === "en" ? "np" : "en")} className="inline-flex h-10 items-center gap-2 rounded-full border border-slate-200 px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50" aria-label={`Switch language: ${t.language}`}><Globe2 className="h-4 w-4" /><span>{t.language}</span></button>
             <button type="button" onClick={() => setMobileNav((value) => !value)} className="inline-flex h-11 w-11 items-center justify-center rounded-full text-slate-700 transition-colors hover:bg-emerald-950/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 lg:hidden" aria-expanded={mobileNav} aria-controls="public-mobile-navigation" aria-label={mobileNav ? t.closeMenu : t.menu}>{mobileNav ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
           </div>
@@ -651,6 +651,7 @@ export default function PublicLanding() {
         <Link to={`/public-capture?lang=${lang}`} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-900 px-3 text-center text-sm font-semibold text-white active:scale-[.98]"><Camera className="h-4 w-4 shrink-0" />{t.captureShort}</Link>
         <a href="#report" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-emerald-900/15 bg-emerald-50 px-3 text-center text-sm font-semibold text-emerald-950 active:scale-[.98]">{t.reportShort}<ArrowDown className="h-4 w-4 shrink-0" /></a>
       </div>
+      {!isAppInstalled && <div className="fixed bottom-28 right-4 z-[60] sm:bottom-6 sm:right-6"><button type="button" onClick={handleInstallApp} className="inline-flex min-h-12 items-center gap-2 rounded-full border border-lime-300/30 bg-emerald-950 px-4 py-3 text-sm font-bold text-white shadow-[0_12px_35px_-10px_rgba(6,78,59,.65)] transition hover:-translate-y-0.5 hover:bg-emerald-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-700" aria-label={t.installApp}><Download className="h-4 w-4" /><span>{t.installApp}</span></button></div>}
       <MonkeyCursor />
       {activeNotice && <NoticeBanner notice={activeNotice} lang={lang} onDismiss={dismissNotice} />}
     </div>
