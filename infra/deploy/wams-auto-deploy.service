@@ -1,0 +1,16 @@
+[Unit]
+Description=Check and deploy the Nepal Wildlife Management System from GitHub
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+ConditionPathIsDirectory=/opt/nepal-wildlife
+ConditionPathExists=/opt/nepal-wildlife/.git
+ConditionPathExists=/opt/nepal-wildlife/docker-compose.vps.yml
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+UMask=0077
+ExecStart=/usr/local/sbin/wams-auto-deploy
+TimeoutStartSec=30min
