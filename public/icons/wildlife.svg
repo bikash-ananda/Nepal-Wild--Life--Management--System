@@ -1,4 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <rect width="128" height="128" rx="28" fill="#064e3b"/>
-  <path d="M90 28C63 29 38 43 31 65c-5 16 4 31 20 35 19 5 40-9 46-33 3-12 1-25-7-39ZM31 97c13-20 28-35 50-51" fill="none" stroke="#ecfdf5" stroke-linecap="round" stroke-linejoin="round" stroke-width="9"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">WAMS Nepal wildlife mark</title>
+  <rect width="512" height="512" rx="112" fill="#0b241b"/>
+  <circle cx="256" cy="256" r="190" fill="#143d2d"/>
+  <path d="M129 216c-18-38-3-83 29-91 27-7 52 12 57 42m139 49c18-38 3-83-29-91-27-7-52 12-57 42" fill="#dce9c7"/>
+  <path d="M256 112c-92 0-151 70-151 160 0 91 64 151 151 151s151-60 151-151c0-90-59-160-151-160Z" fill="#f1ead8"/>
+  <path d="M164 235c18-17 43-17 61-1m62 0c18-16 43-16 61 1" fill="none" stroke="#18382b" stroke-linecap="round" stroke-width="17"/>
+  <ellipse cx="199" cy="263" rx="12" ry="17" fill="#18382b"/>
+  <ellipse cx="313" cy="263" rx="12" ry="17" fill="#18382b"/>
+  <path d="M222 310c10-15 24-23 34-23s24 8 34 23c-6 24-20 38-34 38s-28-14-34-38Z" fill="#c7a982"/>
+  <path d="M238 307c8-8 28-8 36 0-3 11-10 17-18 17s-15-6-18-17Z" fill="#18382b"/>
+  <path d="M256 324v18m-38 17c13 11 25 16 38 16s25-5 38-16" fill="none" stroke="#18382b" stroke-linecap="round" stroke-width="10"/>
+  <path d="M355 111c18-28 45-39 73-36-2 29-18 55-48 67-12 5-23-7-25-31Z" fill="#c9e58b"/>
+  <path d="M354 146c17-21 35-37 59-52" fill="none" stroke="#0b241b" stroke-linecap="round" stroke-width="7"/>
 </svg>
