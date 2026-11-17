@@ -13,6 +13,10 @@ export function validEmail(value) {
 }
 
 export function validateCoordinates(latitudeValue, longitudeValue) {
+  if (latitudeValue == null || longitudeValue == null ||
+      String(latitudeValue).trim() === "" || String(longitudeValue).trim() === "") {
+    throw Object.assign(new Error("A valid farm latitude and longitude are required for location-based alerts."), { statusCode: 400 });
+  }
   const latitude = Number(latitudeValue);
   const longitude = Number(longitudeValue);
   if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 ||
@@ -56,7 +60,9 @@ export function registerAlertSubscriptionRoutes(app, pool, requireAuth, checkOri
     }
     if (body.location_consent !== true) return reply.code(400).send({ error: "Explicit farm-location consent is required." });
     const { latitude, longitude } = validateCoordinates(body.latitude, body.longitude);
-    const accuracy = body.location_accuracy_m == null ? null : Number(body.location_accuracy_m);
+    const accuracy = body.location_accuracy_m == null || String(body.location_accuracy_m).trim() === ""
+      ? null
+      : Number(body.location_accuracy_m);
     if (accuracy !== null && (!Number.isFinite(accuracy) || accuracy < 0 || accuracy > 100000)) {
       return reply.code(400).send({ error: "Location accuracy is invalid." });
     }
