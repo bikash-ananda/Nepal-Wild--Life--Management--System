@@ -1,0 +1,55 @@
+name: WLMS CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches:
+      - integration/wlms-unified-alerts-agent
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wlms-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend build, tests and lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Build frontend
+        run: npm run build
+      - name: Run frontend tests
+        run: npm test
+      - name: Run lint
+        run: npm run lint
+
+  backend:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - name: Install backend dependencies
+        run: npm ci --prefix server
+      - name: Run backend tests
+        run: npm test --prefix server
