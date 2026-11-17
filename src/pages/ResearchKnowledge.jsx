@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowUpRight, BookOpen, Leaf, Search, ShieldCheck, Cpu, CalendarDays } from "lucide-react";
-import { officialResearchSources, preventionMethods, researchReviewedOn, researchStudies, technologyStatusLabels } from "@/data/researchKnowledge";
+import { officialResearchSources, preventionMethods, researchReviewedOn, researchStudies as curatedStudies, technologyStatusLabels } from "@/data/researchKnowledge";
+import { api } from "@/api/apiClient";
 
 const text = {
   en: {
@@ -44,6 +45,9 @@ export default function ResearchKnowledge() {
   const [methodQuery, setMethodQuery] = useState("");
   const [methodGroup, setMethodGroup] = useState("all");
   const [tab, setTab] = useState("studies");
+  const [publishedStudies, setPublishedStudies] = useState([]);
+  useEffect(() => { api.research.publicList().then((result) => setPublishedStudies(result.studies || [])).catch(() => {}); }, []);
+  const researchStudies = useMemo(() => [...publishedStudies, ...curatedStudies.filter((item) => !publishedStudies.some((published) => published.id === item.id))], [publishedStudies]);
 
   const studies = useMemo(() => researchStudies.filter((study) => {
     const haystack = [study.title[lang], study.title.en, study.title.np, study.citation, ...study.species, ...study.region].join(" ").toLowerCase();
