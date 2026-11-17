@@ -51,6 +51,29 @@ async function withStore(mode, callback) {
   }
 }
 
+export async function saveCaptureDraft({ id, payload, photoBlob }) {
+  if (!id || !(photoBlob instanceof Blob) || !payload || typeof payload !== "object") {
+    throw new Error("The photo could not be saved on this device.");
+  }
+  const record = {
+    id: String(id),
+    kind: "capture",
+    payload,
+    photo_blob: photoBlob,
+    status: "draft",
+    attempts: 0,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    last_error: "",
+  };
+  await withStore("readwrite", (store) => store.put(record));
+  return record;
+}
+
+export async function deleteOfflineReport(id) {
+  return withStore("readwrite", (store) => store.delete(String(id)));
+}
+
 export async function enqueueOfflineReport({ id, kind, payload, photoBlob = null }) {
   if (!id || !["damage", "capture"].includes(kind) || !payload || typeof payload !== "object") {
     throw new Error("The report could not be prepared for offline storage.");
