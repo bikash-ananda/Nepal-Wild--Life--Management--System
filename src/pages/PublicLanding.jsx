@@ -9,7 +9,7 @@ import { api } from "@/api/apiClient";
 import VoiceTranscriptionInput from "@/components/VoiceTranscriptionInput";
 import { useToast } from "@/components/ui/use-toast";
 import { useLanguage } from "@/lib/LanguageContext";
-import { createOfflineReportId, enqueueOfflineReport, getOfflineReport, getOfflineReports, syncOfflineReports, requestOfflineReportSync, requestOfflineStoragePersistence } from "@/lib/offlinePublicReports";
+import { createOfflineReportId, enqueueOfflineReport, getOfflineReport, getOfflineReports, syncOfflineReports, retryFailedOfflineReports, requestOfflineReportSync, requestOfflineStoragePersistence } from "@/lib/offlinePublicReports";
 
 
 const WildlifeHero3D = lazy(() => import("@/components/3d/WildlifeHero3D"));
@@ -786,6 +786,7 @@ export default function PublicLanding() {
               {offlineReportCount > 0 && <div className="mb-5 flex flex-col gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-950 sm:flex-row sm:items-center sm:justify-between">
                 <span>{lang === "np" ? `${offlineReportCount} वटा रिपोर्ट यस उपकरणमा सुरक्षित छन् र सर्भरसँग Sync हुन बाँकी छन्।` : `${offlineReportCount} report(s) are safely stored on this device and waiting to sync.`}</span>
                 <button type="button" onClick={async () => {
+                  await retryFailedOfflineReports();
                   await syncOfflineReports();
                   const reports = await getOfflineReports();
                   setOfflineReportCount(reports.filter((item) => ["pending", "retry", "uploading", "failed"].includes(item.status)).length);
