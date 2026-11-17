@@ -32,8 +32,11 @@ export function matchActiveAlertSubscriptions(event, subscriptions, options = {}
   const confidence = Number(event?.confidence);
   const occurredAt = Date.parse(event?.occurred_at || "");
   const now = Number(options.now ?? Date.now());
-  const radiusKm = Math.min(25, Math.max(0.1, Number(options.radius_km ?? 5)));
-  const maxAgeMs = Math.min(24, Math.max(1, Number(options.max_age_hours ?? 6))) * 60 * 60 * 1000;
+  const requestedRadius = Number(options.radius_km ?? 5);
+  const requestedMaxAge = Number(options.max_age_hours ?? 6);
+  const radiusKm = Number.isFinite(requestedRadius) ? Math.min(25, Math.max(0.1, requestedRadius)) : 5;
+  const maxAgeHours = Number.isFinite(requestedMaxAge) ? Math.min(24, Math.max(1, requestedMaxAge)) : 6;
+  const maxAgeMs = maxAgeHours * 60 * 60 * 1000;
   const accuracy = event?.location_accuracy_m == null ? null : Number(event.location_accuracy_m);
 
   if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 ||
