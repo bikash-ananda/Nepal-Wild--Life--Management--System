@@ -3,15 +3,15 @@ import { addAudit } from "./db.js";
 const allowedChannels = new Set(["email", "sms", "whatsapp_message", "whatsapp_call"]);
 const allowedRisks = new Set(["crop", "livestock", "elephant", "rhino", "tiger", "leopard", "monkey", "other"]);
 
-function normalizePhone(value) {
+export function normalizePhone(value) {
   return String(value || "").replace(/[\s()-]/g, "").slice(0, 24);
 }
 
-function validEmail(value) {
+export function validEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || ""));
 }
 
-function validateCoordinates(latitudeValue, longitudeValue) {
+export function validateCoordinates(latitudeValue, longitudeValue) {
   const latitude = Number(latitudeValue);
   const longitude = Number(longitudeValue);
   if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 ||
