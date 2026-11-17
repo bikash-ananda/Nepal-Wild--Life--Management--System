@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
-import { createOfflineReportId, enqueueOfflineReport, syncOfflineReports, requestOfflineReportSync, requestOfflineStoragePersistence } from "@/lib/offlinePublicReports";
+import { createOfflineReportId, enqueueOfflineReport, saveCaptureDraft, deleteOfflineReport, getOfflineReport, getOfflineReports, updateOfflineReport, syncOfflineReports, requestOfflineReportSync, requestOfflineStoragePersistence } from "@/lib/offlinePublicReports";
 
 const labels = {
   en: {
@@ -59,6 +59,37 @@ export default function PublicCapture() {
   const [submitting, setSubmitting] = useState(false);
   const [consent, setConsent] = useState(false);
   const [captureLocationBusy, setCaptureLocationBusy] = useState(false);
+
+  useEffect(() => {
+    let restoredUrl = null;
+    getOfflineReports().then((reports) => {
+      const draft = reports
+        .filter((item) => item.kind === "capture" && item.status === "draft" && item.photo_blob instanceof Blob)
+        .sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
+      if (!draft) return;
+      restoredUrl = URL.createObjectURL(draft.photo_blob);
+      const payload = draft.payload || {};
+      setPendingPhoto(restoredUrl);
+      setCaptureMetadata({
+        capture_id: draft.id,
+        captured_at: payload.captured_at || draft.created_at,
+        coords: Number.isFinite(Number(payload.latitude)) && Number.isFinite(Number(payload.longitude))
+          ? {
+              latitude: Number(payload.latitude),
+              longitude: Number(payload.longitude),
+              accuracy: payload.accuracy == null ? null : Number(payload.accuracy),
+              timestamp: payload.location_captured_at ? Date.parse(payload.location_captured_at) : null,
+            }
+          : null,
+      });
+      setCountry(String(payload.country || ""));
+      setLocationName(String(payload.location_name || ""));
+      setProvince(String(payload.province || ""));
+      setDistrict(String(payload.district || ""));
+      setNotes(String(payload.notes || ""));
+    }).catch(() => {});
+    return () => { if (restoredUrl) URL.revokeObjectURL(restoredUrl); };
+  }, []);
 
   const localizeGpsError = (message) => {
     if (lang !== "np") return message;
@@ -127,17 +158,41 @@ export default function PublicCapture() {
 
   const handleCapture = async (photoDataUrl) => {
     const capturedAt = new Date().toISOString();
+    const captureId = createOfflineReportId();
     setPendingPhoto(photoDataUrl);
     const fixAge = coords?.timestamp ? Date.now() - Number(coords.timestamp) : Infinity;
     const freshFix = coords && fixAge >= 0 && fixAge <= 30000 ? { ...coords } : null;
-    setCaptureMetadata({ captured_at: capturedAt, coords: freshFix });
+    const basePayload = {
+      captured_at: capturedAt,
+      latitude: freshFix?.latitude ?? null,
+      longitude: freshFix?.longitude ?? null,
+      accuracy: freshFix?.accuracy ?? null,
+      location_captured_at: freshFix?.timestamp ? new Date(freshFix.timestamp).toISOString() : null,
+    };
+    setCaptureMetadata({ capture_id: captureId, captured_at: capturedAt, coords: freshFix });
+    try {
+      const blob = await (await fetch(photoDataUrl)).blob();
+      await saveCaptureDraft({ id: captureId, payload: basePayload, photoBlob: blob });
+    } catch (error) {
+      toast({ title: lang === "np" ? "तस्बिर फोनमा सुरक्षित गर्न सकिएन" : "Could not save photo on this device", description: error.message, variant: "destructive" });
+    }
     if (freshFix) return;
     setCaptureLocationBusy(true);
     try {
       const freshCoords = await refreshGps();
+      const locationCapturedAt = freshCoords.timestamp ? new Date(freshCoords.timestamp).toISOString() : null;
       setCaptureMetadata((metadata) => metadata ? { ...metadata, coords: freshCoords } : metadata);
+      await updateOfflineReport(captureId, {
+        payload: {
+          ...basePayload,
+          latitude: freshCoords.latitude,
+          longitude: freshCoords.longitude,
+          accuracy: freshCoords.accuracy ?? null,
+          location_captured_at: locationCapturedAt,
+        },
+      });
     } catch {
-      // The reporter can retry GPS or add coordinates manually if needed.
+      // The photo draft remains saved; the reporter can retry GPS or enter coordinates manually.
     } finally {
       setCaptureLocationBusy(false);
     }
@@ -148,27 +203,35 @@ export default function PublicCapture() {
     setSubmitting(true);
     try {
       const manualPoint = getManualPoint();
-      // Keep the GPS fix captured for this photo; never silently substitute a later position.
       const point = manualPoint || captureMetadata?.coords;
       if (!point) throw new Error("LOCATION_REQUIRED");
-      const blob = await (await fetch(pendingPhoto)).blob();
-      const captureId = createOfflineReportId();
+      const captureId = captureMetadata?.capture_id || createOfflineReportId();
+      const existingDraft = await getOfflineReport(captureId);
+      const blob = existingDraft?.photo_blob || await (await fetch(pendingPhoto)).blob();
       const payload = {
+        ...(existingDraft?.payload || {}),
         consent: true,
         latitude: point.latitude,
         longitude: point.longitude,
         accuracy: manualPoint ? null : point.accuracy ?? null,
+        location_captured_at: manualPoint ? null : (point.timestamp ? new Date(point.timestamp).toISOString() : null),
         location_name: [country.trim() ? `Country: ${country.trim()}` : "", locationName.trim()].filter(Boolean).join(" · "),
+        country,
         province,
         district,
         submitter_name: submitterName,
         notes,
         captured_at: captureMetadata?.captured_at || new Date().toISOString(),
-        location_captured_at: manualPoint ? null : (point.timestamp ? new Date(point.timestamp).toISOString() : null),
       };
-      await enqueueOfflineReport({ id: captureId, kind: "capture", payload, photoBlob: blob });
-      const result = await syncOfflineReports();
-      if (result.pending > 0) requestOfflineReportSync().catch(() => {});
+      if (existingDraft) {
+        await updateOfflineReport(captureId, { kind: "capture", payload, photo_blob: blob, status: "pending", lock_until: null, last_error: "" });
+      } else {
+        await enqueueOfflineReport({ id: captureId, kind: "capture", payload, photoBlob: blob });
+      }
+      await syncOfflineReports();
+      const saved = await getOfflineReport(captureId);
+      if (saved?.status === "failed") throw new Error(saved.last_error || "The server rejected this report. Please review the details and try again.");
+      if (saved?.status !== "synced") requestOfflineReportSync().catch(() => {});
       setPendingPhoto(null);
       setCaptureMetadata(null);
       setConsent(false);
@@ -176,9 +239,9 @@ export default function PublicCapture() {
       setManualLongitude("");
       toast({
         title: t.submitted,
-        description: result.pending > 0
-          ? (lang === "np" ? "रिपोर्ट फोनमा सुरक्षित भयो। इन्टरनेट उपलब्ध भएपछि स्वतः पठाइनेछ।" : "Report saved on this device. It will upload automatically when internet is available.")
-          : (point.accuracy == null ? t.thankYou : `${t.gpsPrecision} (±${Math.round(point.accuracy)} m)`),
+        description: saved?.status === "synced"
+          ? (point.accuracy == null ? t.thankYou : `${t.gpsPrecision} (±${Math.round(point.accuracy)} m)`)
+          : (lang === "np" ? "तस्बिर, समय र स्थान फोनमा सुरक्षित भयो। इन्टरनेट आएपछि स्वतः पठाइनेछ।" : "Photo, time and location are saved on this device. They will upload automatically when internet is available."),
       });
     } catch (e) {
       const description = e.message === "COORDINATE_PAIR" ? t.coordinatePair
@@ -231,7 +294,7 @@ export default function PublicCapture() {
               <img src={pendingPhoto} alt={t.captured} className="w-full h-full object-cover" />
               <button
                 disabled={captureLocationBusy}
-                onClick={() => { setPendingPhoto(null); setCaptureMetadata(null); setConsent(false); }}
+                onClick={() => { if (captureMetadata?.capture_id) deleteOfflineReport(captureMetadata.capture_id).catch(() => {}); setPendingPhoto(null); setCaptureMetadata(null); setConsent(false); }}
                 className="absolute top-3 right-3 flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-black/55 text-white backdrop-blur"
               >
                 <RefreshCw className="w-3.5 h-3.5" /> {t.retake}
