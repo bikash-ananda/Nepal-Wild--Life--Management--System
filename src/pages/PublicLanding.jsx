@@ -9,6 +9,7 @@ import { api } from "@/api/apiClient";
 import VoiceTranscriptionInput from "@/components/VoiceTranscriptionInput";
 import { useToast } from "@/components/ui/use-toast";
 import { useLanguage } from "@/lib/LanguageContext";
+import { createOfflineReportId, enqueueOfflineReport, getOfflineReport, getOfflineReports, syncOfflineReports, requestOfflineReportSync } from "@/lib/offlinePublicReports";
 
 
 const WildlifeHero3D = lazy(() => import("@/components/3d/WildlifeHero3D"));
@@ -326,6 +327,7 @@ export default function PublicLanding() {
   const [locationBusy, setLocationBusy] = useState(false);
   const [lookupMessage, setLookupMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [offlineReportCount, setOfflineReportCount] = useState(0);
   const [formError, setFormError] = useState("");
   const [alertSaved, setAlertSaved] = useState(false);
   const [alertProfile, setAlertProfile] = useState(() => { try { return JSON.parse(window.localStorage.getItem("wams-alert-preferences-v1") || "null"); } catch { return null; } });
@@ -370,6 +372,26 @@ export default function PublicLanding() {
       setNotices(result?.notices || []);
     } catch { /* A public notice feed is optional; the page remains usable offline. */ }
   }, [noticeWard, noticeMunicipality]);
+
+  useEffect(() => {
+    let active = true;
+    const sync = async () => {
+      try {
+        await syncOfflineReports();
+        const reports = await getOfflineReports();
+        if (active) setOfflineReportCount(reports.filter((item) => ["pending", "retry", "uploading", "failed"].includes(item.status)).length);
+      } catch { /* Reports remain safely stored locally if sync is unavailable. */ }
+      requestOfflineReportSync().catch(() => {});
+    };
+    sync();
+    window.addEventListener("online", sync);
+    document.addEventListener("visibilitychange", sync);
+    return () => {
+      active = false;
+      window.removeEventListener("online", sync);
+      document.removeEventListener("visibilitychange", sync);
+    };
+  }, []);
 
   useEffect(() => {
     const initial = window.setTimeout(loadNotices, 300);
@@ -524,18 +546,29 @@ export default function PublicLanding() {
       const payload = {
         ...form,
         consent: form.consent,
-        submission_id: globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        submission_id: createOfflineReportId(),
         location_name: [form.country.trim() ? `Country: ${form.country.trim()}` : "", form.location_name.trim()].filter(Boolean).join(" · "),
         latitude: point.latitude,
         longitude: point.longitude,
         accuracy: point.accuracy ?? null,
         reported_at: new Date().toISOString(),
       };
-      await api.public.submitDamageReport(payload);
+      await enqueueOfflineReport({ id: payload.submission_id, kind: "damage", payload });
+      await syncOfflineReports();
+      const savedReport = await getOfflineReport(payload.submission_id);
+      if (savedReport?.status === "failed") throw new Error(savedReport.last_error || t.reportError);
+      if (savedReport?.status !== "synced") requestOfflineReportSync().catch(() => {});
+      setOfflineReportCount((count) => savedReport?.status === "synced" ? count : count + 1);
       setForm((prior) => ({ ...prior, crop_type: "", livestock_type: "", estimated_loss_npr: "", description: "", reporter_name: "", reporter_phone: "", location_name: "", consent: false }));
       setManualLatitude("");
       setManualLongitude("");
-      toast({ title: t.submitted, description: point.accuracy == null ? t.gpsReady : `${t.gpsAccuracy}: ±${Math.round(point.accuracy)} m` });
+      const reportStatus = await getOfflineReport(payload.submission_id);
+      toast({
+        title: t.submitted,
+        description: reportStatus?.status === "synced"
+          ? (point.accuracy == null ? t.gpsReady : `${t.gpsAccuracy}: ±${Math.round(point.accuracy)} m`)
+          : (lang === "np" ? "रिपोर्ट फोनमा सुरक्षित भयो। इन्टरनेट उपलब्ध भएपछि स्वतः पठाइनेछ।" : "Report saved on this device and will sync when internet is available."),
+      });
     } catch (error) {
       setFormError(error.message === "COORDINATE_PAIR" || error.message === "COORDINATES_INVALID" ? explainLocationError(error, t)
         : error.message === "LOCATION_REQUIRED" ? t.locationRequired
