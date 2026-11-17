@@ -69,6 +69,7 @@ const Register = lazy(() => import('@/pages/Register'));
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 const Accounts = lazy(() => import('@/pages/Accounts'));
+const AlertSubscribers = lazy(() => import('@/pages/AlertSubscribers'));
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -149,6 +150,7 @@ const AuthenticatedApp = () => {
         <Route path="/detection-trends" element={<DetectionTrends />} />
         <Route path="/team" element={<Team />} />
         <Route path="/accounts" element={<Accounts />} />
+        <Route path="/alert-subscribers" element={<AlertSubscribers />} />
         <Route path="/team/add" element={<AddTeamMember />} />
         <Route path="/team/:id" element={<TeamMemberDetail />} />
         <Route path="/api-integrations" element={<ApiIntegrations />} />
