@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Nepal Wildlife Management System",
-  "short_name": "WAMS",
+  "name": "Wildlife Management System (WLMS)",
+  "short_name": "WLMS",
   "description": "Nepal Wildlife Management System: community wildlife observations, easy incident reporting, species guidance and human–wildlife coexistence.",
   "lang": "en",
   "start_url": "/",
