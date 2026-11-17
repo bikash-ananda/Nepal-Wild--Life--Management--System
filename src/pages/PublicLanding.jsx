@@ -552,6 +552,7 @@ export default function PublicLanding() {
         latitude: point.latitude,
         longitude: point.longitude,
         accuracy: point.accuracy ?? null,
+        location_captured_at: manualPoint ? null : (point.captured_at || null),
         reported_at: new Date().toISOString(),
       };
       await enqueueOfflineReport({ id: payload.submission_id, kind: "damage", payload });
