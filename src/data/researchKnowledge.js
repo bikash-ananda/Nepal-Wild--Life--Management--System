@@ -200,6 +200,51 @@ export const researchStudies = [
     },
     url: "https://www.nature.com/articles/s41598-025-16707-w",
   },
+
+  {
+    id: "bardia-crop-protection-2010",
+    year: 2010,
+    category: "mitigation",
+    species: ["elephant", "rhino", "wild-boar", "monkey"],
+    region: ["bardia"],
+    sourceType: "peer-reviewed",
+    title: {
+      np: "बर्दिया राष्ट्रिय निकुञ्जका दुई गाउँमा बाली जोगाउने विधिको प्रभावकारिता",
+      en: "Effectiveness of crop protection methods against wildlife damage: a case study of two villages at Bardia National Park",
+    },
+    citation: "Crop Protection, Volume 29, Issue 11 (November 2010), pp. 1297–1304. DOI: 10.1016/j.cropro.2010.06.015; household survey (n=117).",
+    summary: {
+      np: "बर्दिया राष्ट्रिय निकुञ्जको मध्यवर्ती क्षेत्रका दुई गाउँका ११७ घरधुरीमा गरिएको अध्ययनले किसानले प्रयोग गरेका बाली सुरक्षा विधि र तिनको प्रभावकारिता मूल्याङ्कन गर्‍यो। यो अध्ययनले एउटै उपाय सबै वन्यजन्तु र सबै स्थानमा समान रूपमा काम गर्छ भन्नेभन्दा पनि स्थानीय क्षतिको प्रकृति र समुदायले अपनाएको उपायको तुलना गर्न आधार दिन्छ।",
+      en: "A study of 117 households in two buffer-zone villages around Bardia National Park assessed crop-protection methods used by farmers and their effectiveness. It provides a local evidence base for comparing measures against the types of damage experienced rather than assuming one method works equally for all species and places.",
+    },
+    limitations: {
+      np: "यो २०१० को दुई गाउँमा आधारित अध्ययन हो; प्रविधि, वन्यजन्तुको अवस्था र खेती प्रणाली बदलिएकाले अहिलेको निर्णयमा नयाँ स्थानीय मूल्याङ्कन पनि चाहिन्छ।",
+      en: "This is a 2010 study from two villages; changes in technology, wildlife conditions and farming systems mean current decisions also need updated local assessment.",
+    },
+    url: "https://www.sciencedirect.com/science/article/pii/S026121941000178X",
+  },
+  {
+    id: "udayapur-sundarpur-2019",
+    year: 2019,
+    category: "species-conflict",
+    species: ["rhesus-macaque", "elephant", "leopard", "sloth-bear"],
+    region: ["udayapur"],
+    sourceType: "peer-reviewed",
+    title: {
+      np: "उदयपुरको सुन्दरपुरमा मानव–वन्यजन्तु द्वन्द्व र संरक्षणमा यसको प्रभाव",
+      en: "Assessment of human–wildlife conflict and its implication for conservation at Sundarpur, Udayapur",
+    },
+    citation: "Tribhuvan University Journal, Volume 33, No. 2 (December 2019), pp. 15–30. DOI: 10.3126/tuj.v33i2.33602.",
+    summary: {
+      np: "घरधुरी सर्वेक्षण, प्रमुख सूचनादाता अन्तर्वार्ता र प्रत्यक्ष अवलोकनमा आधारित अध्ययनमा बाँदर (९३%) र हात्ती (८६%) बालीमा क्षति पुर्‍याउने प्रमुख जनावरका रूपमा उल्लेख भए। पशुधन क्षतिका घटनामा चितुवा र मानवमाथिका आक्रमणमा भालुको भूमिका बढी रहेको उत्तरदाताले बताए। अध्ययनले स्थानीय समुदायको अनुभव र प्रजातिअनुसार क्षतिको फरक स्वरूप देखाउँछ।",
+      en: "Based on household surveys, key-informant interviews and direct observation, respondents identified monkeys (93%) and elephants (86%) as major crop raiders. Leopards were most often associated with livestock depredation, while sloth bears were involved in most reported human-attack cases. The study documents local perceptions and species-specific patterns of damage.",
+    },
+    limitations: {
+      np: "प्रतिशतहरू अध्ययन क्षेत्रका उत्तरदाताको रिपोर्ट हुन्; राष्ट्रिय घटना दर वा स्वतन्त्र रूपमा पुष्टि गरिएका आक्रमणको अनुपात होइनन्।",
+      en: "The percentages are reports from respondents in the study area; they are not national incident rates or independently verified attack proportions.",
+    },
+    url: "https://www.nepjol.info/index.php/TUJ/article/view/33602/26424",
+  },
 ];
 
 export const preventionMethods = [
