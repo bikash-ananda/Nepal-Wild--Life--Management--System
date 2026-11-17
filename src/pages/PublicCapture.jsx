@@ -42,6 +42,7 @@ export default function PublicCapture() {
   const [pendingPhoto, setPendingPhoto] = useState(null);
 
   useEffect(() => {
+    requestOfflineStoragePersistence().catch(() => {});
     const sync = () => {
       syncOfflineReports().catch(() => {});
       requestOfflineReportSync().catch(() => {});
