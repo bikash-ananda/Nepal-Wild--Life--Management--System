@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, ArrowUpRight, BookOpen, Filter, Leaf, Search, ShieldCheck, Cpu, MapPin, CalendarDays } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, BookOpen, Leaf, Search, ShieldCheck, Cpu, CalendarDays } from "lucide-react";
 import { officialResearchSources, preventionMethods, researchReviewedOn, researchStudies, technologyStatusLabels } from "@/data/researchKnowledge";
 
 const text = {
