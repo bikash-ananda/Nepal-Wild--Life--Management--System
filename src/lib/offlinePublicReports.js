@@ -51,7 +51,7 @@ async function withStore(mode, callback) {
   }
 }
 
-export async function saveCaptureDraft({ id, payload, photoBlob }) {
+export async function saveCaptureDraft({ id, payload, photoBlob, consentAt = null }) {
   if (!id || !(photoBlob instanceof Blob) || !payload || typeof payload !== "object") {
     throw new Error("The photo could not be saved on this device.");
   }
@@ -60,7 +60,9 @@ export async function saveCaptureDraft({ id, payload, photoBlob }) {
     kind: "capture",
     payload,
     photo_blob: photoBlob,
-    status: "draft",
+    status: consentAt ? "pending" : "draft",
+    consent_at: consentAt || null,
+    consent_text_version: consentAt ? "wlms-public-capture-v1" : null,
     attempts: 0,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
