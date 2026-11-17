@@ -192,6 +192,14 @@ export const api = {
     }),
   },
 
+  whatsappAgent: {
+    get: () => request("/api/admin/whatsapp-agent"),
+    update: (settings) => request("/api/admin/whatsapp-agent", {
+      method: "PATCH",
+      body: JSON.stringify(settings),
+    }),
+  },
+
   notifications: {
     pushConfig: () => request("/api/notifications/push-config"),
 
