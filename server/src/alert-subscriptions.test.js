@@ -20,6 +20,8 @@ test("farm coordinate validation accepts valid GPS and manual points", () => {
 
 test("farm coordinate validation rejects missing and out-of-range points", () => {
   assert.throws(() => validateCoordinates("", "83.99"), /valid farm latitude and longitude/);
+  assert.throws(() => validateCoordinates(null, "83.99"), /valid farm latitude and longitude/);
+  assert.throws(() => validateCoordinates("28.21", undefined), /valid farm latitude and longitude/);
   assert.throws(() => validateCoordinates("91", "83.99"), /valid farm latitude and longitude/);
   assert.throws(() => validateCoordinates("28.21", "-181"), /valid farm latitude and longitude/);
 });
