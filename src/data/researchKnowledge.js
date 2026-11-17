@@ -1,4 +1,4 @@
-export const researchReviewedOn = "2026-11-17";
+export const researchReviewedOn = "2026-11-18";
 
 export const researchStudies = [
   {
