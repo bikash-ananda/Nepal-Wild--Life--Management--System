@@ -180,6 +180,10 @@ export const api = {
     },
   },
 
+  research: {
+    publicList: (limit = 100) => request(`/api/public/research?limit=${encodeURIComponent(limit)}`),
+  },
+
   alertSubscriptions: {
     create: (payload) => request("/api/public/alert-subscriptions", {
       method: "POST",
