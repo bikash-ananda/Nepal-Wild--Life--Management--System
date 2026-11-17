@@ -9,7 +9,7 @@ import { api } from "@/api/apiClient";
 import VoiceTranscriptionInput from "@/components/VoiceTranscriptionInput";
 import { useToast } from "@/components/ui/use-toast";
 import { useLanguage } from "@/lib/LanguageContext";
-import { createOfflineReportId, enqueueOfflineReport, getOfflineReport, getOfflineReports, syncOfflineReports, requestOfflineReportSync } from "@/lib/offlinePublicReports";
+import { createOfflineReportId, enqueueOfflineReport, getOfflineReport, getOfflineReports, syncOfflineReports, requestOfflineReportSync, requestOfflineStoragePersistence } from "@/lib/offlinePublicReports";
 
 
 const WildlifeHero3D = lazy(() => import("@/components/3d/WildlifeHero3D"));
