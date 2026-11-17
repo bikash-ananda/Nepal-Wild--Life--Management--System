@@ -281,7 +281,7 @@ export default function PublicCapture() {
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-white">
       <header className="sticky top-0 z-20 glass border-b border-emerald-100">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
-          <Link to="/" aria-label={lang === "np" ? "WAMS मुख्य पृष्ठ" : "WAMS home"} className="shrink-0"><img src="/wams-logo.webp?v=4" alt="WAMS" width="52" height="52" fetchPriority="high" className="h-12 w-12 rounded-xl bg-white object-contain p-0.5 shadow-sm ring-1 ring-emerald-900/10" /></Link>
+          <Link to="/" aria-label={lang === "np" ? "WLMS मुख्य पृष्ठ" : "WLMS home"} className="shrink-0"><img src="/wams-logo.webp?v=4" alt="WLMS" width="52" height="52" fetchPriority="high" className="h-12 w-12 rounded-xl bg-white object-contain p-0.5 shadow-sm ring-1 ring-emerald-900/10" /></Link>
           <div className="min-w-0">
             <h1 className="font-bold text-slate-800 leading-tight">{t.title}</h1>
             <p className="text-[11px] text-slate-500">{t.subtitle}</p>
