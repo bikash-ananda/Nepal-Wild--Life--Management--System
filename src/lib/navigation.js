@@ -2,7 +2,7 @@ import {
   LayoutDashboard, MapPin, Camera, Activity, Target,
   Zap, FileBarChart, Map, Shield, Brain, Workflow,
   Cpu, Settings, Phone, Globe, BarChart3, FileSpreadsheet, Scale,
-  Users, Cable, Bell, Leaf, LineChart, ShieldAlert, Swords, Eye, Footprints, Fingerprint, History, Gamepad2, Trophy, ListOrdered, Route
+  Users, Cable, Bell, Leaf, LineChart, ShieldAlert, Swords, Eye, Footprints, Fingerprint, History, Gamepad2, Trophy, ListOrdered, Route, BellRing
 } from "lucide-react";
 
 const ALL_ROLES = [
@@ -83,6 +83,7 @@ export const navGroups = [
     label: "Team & Administration",
     items: [
       { label: "Accounts & Site Access", path: "/accounts", icon: Users, roles: ["admin"] },
+      { label: "Farmer Alert Registrations", path: "/alert-subscribers", icon: BellRing, roles: ["admin"] },
       { label: "Team", path: "/team", icon: Users, roles: ALL_ROLES },
       { label: "API & Integrations", path: "/api-integrations", icon: Cable, roles: ADMIN_ROLES },
       { label: "Reports", path: "/reports", icon: FileBarChart, roles: ["super_admin", "wildlife_admin", "government_officer", "admin", "user"] },
