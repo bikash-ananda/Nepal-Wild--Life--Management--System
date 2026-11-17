@@ -90,7 +90,8 @@ export function registerAlertSubscriptionRoutes(app, pool, requireAuth, checkOri
 
   app.get("/api/admin/alert-subscriptions", { preHandler: requireAuth }, async (request, reply) => {
     if (!requireAdmin(request, reply)) return;
-    const limit = Math.min(100, Math.max(1, Number(request.query?.limit || 50)));
+    const requestedLimit = Number.parseInt(request.query?.limit || "50", 10);
+    const limit = Number.isFinite(requestedLimit) ? Math.min(100, Math.max(1, requestedLimit)) : 50;
     const result = await pool.query(
       `SELECT id, name, phone, email, province, district, municipality, ward,
               farm_latitude, farm_longitude, location_accuracy_m, location_source,
