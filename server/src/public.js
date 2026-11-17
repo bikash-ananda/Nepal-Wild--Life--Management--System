@@ -213,6 +213,7 @@ export function registerPublicRoutes(app, pool, requireAuth, checkOrigin) {
       ward: text(body.ward, 40),
       location_name: text(body.location_name, 180),
       latitude, longitude, location_accuracy_m: accuracy,
+      location_captured_at: body.location_captured_at && Number.isFinite(Date.parse(body.location_captured_at)) ? new Date(body.location_captured_at).toISOString() : null,
       reported_at: reportedAt.toISOString(),
       is_demo: false,
       visibility: "reviewer_only",
