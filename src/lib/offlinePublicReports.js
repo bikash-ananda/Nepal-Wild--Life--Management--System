@@ -78,6 +78,35 @@ export async function getOfflineReport(id) {
   return withStore("readonly", (store) => store.get(String(id)));
 }
 
+async function claimOfflineReport(id) {
+  const db = await openDatabase();
+  try {
+    return await new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE, "readwrite");
+      const store = transaction.objectStore(STORE);
+      const request = store.get(String(id));
+      let claimed = false;
+      request.onsuccess = () => {
+        const current = request.result;
+        const expiredLease = current?.status === "uploading" && Number(current.lock_until || 0) <= Date.now();
+        if (!current || (!["pending", "retry"].includes(current.status) && !expiredLease)) return;
+        store.put({
+          ...current,
+          status: "uploading",
+          attempts: (current.attempts || 0) + 1,
+          lock_until: Date.now() + 120000,
+          last_error: "",
+          updated_at: new Date().toISOString(),
+        });
+        claimed = true;
+      };
+      transaction.oncomplete = () => resolve(claimed);
+      transaction.onerror = () => reject(transaction.error || new Error("Could not claim report for sync."));
+      transaction.onabort = () => reject(transaction.error || new Error("Report sync claim was interrupted."));
+    });
+  } finally { db.close(); }
+}
+
 export async function updateOfflineReport(id, patch) {
   const current = await getOfflineReport(id);
   if (!current) return null;
@@ -149,18 +178,19 @@ export async function syncOfflineReports({ onProgress } = {}) {
     .sort((a, b) => a.created_at.localeCompare(b.created_at));
   let synced = 0;
   for (const record of records) {
-    await updateOfflineReport(record.id, { status: "uploading", attempts: (record.attempts || 0) + 1, last_error: "" });
+    if (!(await claimOfflineReport(record.id))) continue;
     onProgress?.({ id: record.id, status: "uploading" });
     try {
       if (record.kind === "capture") await sendCapture(record);
       else await sendDamage(record);
-      await updateOfflineReport(record.id, { status: "synced", photo_blob: null, last_error: "" });
+      await updateOfflineReport(record.id, { status: "synced", photo_blob: null, lock_until: null, last_error: "" });
       synced += 1;
       onProgress?.({ id: record.id, status: "synced" });
     } catch (error) {
       const retryable = !error.status || error.status === 408 || error.status === 429 || error.status >= 500;
       await updateOfflineReport(record.id, {
         status: retryable ? "retry" : "failed",
+        lock_until: null,
         last_error: String(error.message || "Upload failed").slice(0, 300),
       });
       onProgress?.({ id: record.id, status: retryable ? "retry" : "failed", error });
