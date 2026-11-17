@@ -3,13 +3,12 @@ import { Link, useSearchParams } from "react-router-dom";
 import {
   Satellite, Loader2, Camera, RefreshCw, MapPin,
 } from "lucide-react";
-import { api } from "@/api/apiClient";
 import CameraViewfinder from "@/components/field/CameraViewfinder";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
-import { enqueueOfflineReport, syncOfflineReports, requestOfflineReportSync } from "@/lib/offlinePublicReports";
+import { createOfflineReportId, enqueueOfflineReport, syncOfflineReports, requestOfflineReportSync } from "@/lib/offlinePublicReports";
 
 const labels = {
   en: {
@@ -152,7 +151,7 @@ export default function PublicCapture() {
       const point = manualPoint || captureMetadata?.coords;
       if (!point) throw new Error("LOCATION_REQUIRED");
       const blob = await (await fetch(pendingPhoto)).blob();
-      const captureId = globalThis.crypto?.randomUUID?.() || `wams-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      const captureId = createOfflineReportId();
       const payload = {
         consent: true,
         latitude: point.latitude,
