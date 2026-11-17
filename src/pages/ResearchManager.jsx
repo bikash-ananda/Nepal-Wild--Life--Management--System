@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BookOpen, CheckCircle2, Edit3, Plus, RefreshCw, ShieldAlert, Trash2 } from "lucide-react";
+import { BookOpen, CheckCircle2, Edit3, RefreshCw, ShieldAlert, Trash2 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { api } from "@/api/apiClient";
 import { useAuth } from "@/lib/AuthContext";
