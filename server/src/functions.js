@@ -114,6 +114,7 @@ async function createCapture(pool, body, user, isPublic = false) {
     latitude: typeof body.latitude === "number" ? body.latitude : null,
     longitude: typeof body.longitude === "number" ? body.longitude : null,
     location_accuracy_m: Number.isFinite(Number(body.accuracy)) ? Number(body.accuracy) : null,
+    location_captured_at: body.location_captured_at ? new Date(body.location_captured_at).toISOString() : null,
     location_name: String(body.location_name || ""),
     province: String(body.province || ""),
     district: String(body.district || ""),
