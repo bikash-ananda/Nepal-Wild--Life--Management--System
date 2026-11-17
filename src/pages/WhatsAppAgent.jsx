@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
-  Activity, AlertTriangle, Bot, CheckCircle2, Clock3, Languages,
+  Activity, AlertTriangle, Bot, Clock3, Languages,
   MessageCircle, PhoneCall, Save, ShieldCheck, ShieldOff, Smartphone,
 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
