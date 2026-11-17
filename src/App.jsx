@@ -32,6 +32,7 @@ const AIVerification = lazy(() => import('@/pages/AIVerification'));
 const AIModels = lazy(() => import('@/pages/AIModels'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
 const VoiceBot = lazy(() => import('@/pages/VoiceBot'));
+const WhatsAppAgent = lazy(() => import('@/pages/WhatsAppAgent'));
 const KnowledgeBase = lazy(() => import('@/pages/KnowledgeBase'));
 const Analytics = lazy(() => import('@/pages/Analytics'));
 const DatasetBuilder = lazy(() => import('@/pages/DatasetBuilder'));
@@ -138,6 +139,7 @@ const AuthenticatedApp = () => {
         <Route path="/ai-models" element={<AIModels />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/voice-bot" element={<VoiceBot />} />
+        <Route path="/whatsapp-agent" element={<WhatsAppAgent />} />
         <Route path="/knowledge-base" element={<KnowledgeBase />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/dataset-builder" element={<DatasetBuilder />} />
