@@ -43,6 +43,35 @@
     } finally { db.close(); }
   }
 
+  async function claimReport(id) {
+    const db = await openDb();
+    try {
+      return await new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, "readwrite");
+        const store = tx.objectStore(STORE);
+        const request = store.get(id);
+        let claimed = false;
+        request.onsuccess = () => {
+          const current = request.result;
+          const expiredLease = current?.status === "uploading" && Number(current.lock_until || 0) <= Date.now();
+          if (!current || (!["pending", "retry"].includes(current.status) && !expiredLease)) return;
+          store.put({
+            ...current,
+            status: "uploading",
+            attempts: (current.attempts || 0) + 1,
+            lock_until: Date.now() + 120000,
+            last_error: "",
+            updated_at: new Date().toISOString(),
+          });
+          claimed = true;
+        };
+        tx.oncomplete = () => resolve(claimed);
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error);
+      });
+    } finally { db.close(); }
+  }
+
   async function postJson(path, payload) {
     const response = await fetch(path, {
       method: "POST", credentials: "include",
@@ -85,15 +114,16 @@
       .filter((item) => item.status === "pending" || item.status === "retry")
       .sort((a, b) => a.created_at.localeCompare(b.created_at));
     for (const record of records) {
-      await patchReport(record.id, { status: "uploading", attempts: (record.attempts || 0) + 1, last_error: "" });
+      if (!(await claimReport(record.id))) continue;
       try {
         if (record.kind === "capture") await sendCapture(record);
         else await postJson("/api/public/reports", { ...record.payload, submission_id: record.id });
-        await patchReport(record.id, { status: "synced", photo_blob: null, last_error: "" });
+        await patchReport(record.id, { status: "synced", photo_blob: null, lock_until: null, last_error: "" });
       } catch (error) {
         const retryable = !error.status || error.status === 408 || error.status === 429 || error.status >= 500;
         await patchReport(record.id, {
           status: retryable ? "retry" : "failed",
+          lock_until: null,
           last_error: String(error.message || "Upload failed").slice(0, 300),
         });
         if (retryable) throw error;
