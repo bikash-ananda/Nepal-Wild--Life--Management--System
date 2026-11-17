@@ -1,3 +1,5 @@
+importScripts("/offline-sync.js");
+
 const CACHE_NAME = "nws-shell-v4";
 const SHELL = ["/", "/index.html", "/manifest.json", "/wams-logo.webp?v=4", "/icons/wams-192.png?v=4", "/icons/wams-512.png?v=4"];
 
@@ -28,6 +30,18 @@ self.addEventListener("fetch", (event) => {
       }
       return response;
     })));
+  }
+});
+
+self.addEventListener("sync", (event) => {
+  if (event.tag === "wams-public-report-sync") {
+    event.waitUntil(self.wamsSyncOfflineReports());
+  }
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "WAMS_SYNC_PUBLIC_REPORTS") {
+    event.waitUntil?.(self.wamsSyncOfflineReports());
   }
 });
 
