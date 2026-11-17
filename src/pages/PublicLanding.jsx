@@ -777,6 +777,14 @@ export default function PublicLanding() {
               <p className="mt-2 text-[10px] leading-5 text-white/45" role={guideFeedbackMessage ? "status" : undefined}>{guideFeedbackMessage ? (lang === "np" ? (guideFeedbackMessage === "helpful" ? "धन्यवाद। यो यन्त्रमा तपाईंको रोजाइअनुसार आगामी सुझाव मिलाइनेछ।" : "धन्यवाद। यस सत्रमा अर्को सुझाव पहिले देखाइनेछ।") : (guideFeedbackMessage === "helpful" ? "Thanks. Your choice will prioritize similar prompts on this device." : "Thanks. We’ll show a different prompt first in this session.")) : (lang === "np" ? "तपाईंको प्रतिक्रिया यही ब्राउजरमा मात्रै रहन्छ; घटना विवरण वा व्यक्तिगत जानकारीसँग पठाइँदैन।" : "Feedback stays in this browser session and is not sent with your report or personal details.")}</p>
             </aside>
             <form onSubmit={submitReport} className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-[0_24px_60px_-48px_rgba(15,23,42,.4)] sm:p-8">
+              {offlineReportCount > 0 && <div className="mb-5 flex flex-col gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-950 sm:flex-row sm:items-center sm:justify-between">
+                <span>{lang === "np" ? `${offlineReportCount} वटा रिपोर्ट यस उपकरणमा सुरक्षित छन् र सर्भरसँग Sync हुन बाँकी छन्।` : `${offlineReportCount} report(s) are safely stored on this device and waiting to sync.`}</span>
+                <button type="button" onClick={async () => {
+                  await syncOfflineReports();
+                  const reports = await getOfflineReports();
+                  setOfflineReportCount(reports.filter((item) => ["pending", "retry", "uploading", "failed"].includes(item.status)).length);
+                }} className="min-h-9 shrink-0 rounded-full border border-amber-300 bg-white px-3 font-semibold">{lang === "np" ? "फेरि पठाउने प्रयास" : "Try syncing"}</button>
+              </div>}
               <div className="grid gap-5 sm:grid-cols-2">
                 <label className="grid gap-1.5 text-sm font-medium text-slate-800 sm:col-span-2">{t.reportType}<select name="loss_type" value={form.loss_type} onChange={update} className="h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm"><option value="crop">{t.crop}</option><option value="livestock">{t.livestock}</option><option value="both">{t.both}</option><option value="other">{t.other}</option></select></label>
                 {(form.loss_type === "crop" || form.loss_type === "both") && <label className="grid gap-1.5 text-sm font-medium text-slate-800">{t.cropName}<input name="crop_type" value={form.crop_type} onChange={update} required className="h-11 rounded-xl border border-slate-300 px-3 font-normal" placeholder={lang === "np" ? "जस्तै: मकै" : "e.g. Maize"} /></label>}
