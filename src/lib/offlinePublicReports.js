@@ -192,6 +192,14 @@ async function sendDamage(record) {
   });
 }
 
+export async function retryFailedOfflineReports() {
+  const failed = (await getOfflineReports()).filter((item) => item.status === "failed");
+  for (const item of failed) {
+    await updateOfflineReport(item.id, { status: "retry", lock_until: null, last_error: "" });
+  }
+  return failed.length;
+}
+
 export async function syncOfflineReports({ onProgress } = {}) {
   if (typeof navigator !== "undefined" && navigator.onLine === false) {
     return { synced: 0, pending: (await getOfflineReports()).filter((item) => item.status !== "synced").length };
