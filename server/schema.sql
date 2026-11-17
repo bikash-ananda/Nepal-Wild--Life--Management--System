@@ -220,3 +220,25 @@ CREATE TABLE IF NOT EXISTS camera_control_tunnels (
   updated_at timestamptz NOT NULL DEFAULT now(),
   FOREIGN KEY (camera_entity, camera_id) REFERENCES app_records(entity, id) ON DELETE CASCADE
 );
+
+
+-- WLMS WhatsApp AI Agent configuration. Provider actions remain disabled until
+-- Meta onboarding, verified webhooks, consent handling and provider adapters exist.
+CREATE TABLE IF NOT EXISTS whatsapp_agent_settings (
+  id boolean PRIMARY KEY DEFAULT true CHECK (id = true),
+  official_number text NOT NULL DEFAULT '9768004157',
+  display_name text NOT NULL DEFAULT 'WLMS Wildlife Alert Assistant',
+  default_language text NOT NULL DEFAULT 'ne' CHECK (default_language IN ('ne', 'en', 'auto')),
+  greeting_np text NOT NULL DEFAULT 'नमस्कार, म WLMS को AI सहायक हुँ। तपाईंको क्षेत्रमा वन्यजन्तुसम्बन्धी सूचना प्राप्त भएको छ। के तपाईं अहिले सुरक्षित स्थानमा हुनुहुन्छ?',
+  greeting_en text NOT NULL DEFAULT 'Hello, I am the WLMS AI assistant. We have received a wildlife activity report near your area. Are you currently in a safe place?',
+  agent_enabled boolean NOT NULL DEFAULT false,
+  live_delivery_enabled boolean NOT NULL DEFAULT false,
+  test_mode boolean NOT NULL DEFAULT true,
+  webhook_verified_at timestamptz,
+  updated_by uuid REFERENCES app_users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+INSERT INTO whatsapp_agent_settings (id, official_number, display_name, agent_enabled, live_delivery_enabled, test_mode)
+VALUES (true, '9768004157', 'WLMS Wildlife Alert Assistant', false, false, true)
+ON CONFLICT (id) DO NOTHING;
