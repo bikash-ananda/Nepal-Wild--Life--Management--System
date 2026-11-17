@@ -1,6 +1,6 @@
 importScripts("/offline-sync.js");
 
-const CACHE_NAME = "nws-shell-v4";
+const CACHE_NAME = "nws-shell-v5";
 const SHELL = ["/", "/index.html", "/manifest.json", "/wams-logo.webp?v=4", "/icons/wams-192.png?v=4", "/icons/wams-512.png?v=4"];
 
 self.addEventListener("install", (event) => {
