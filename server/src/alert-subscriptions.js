@@ -63,6 +63,7 @@ export function registerAlertSubscriptionRoutes(app, pool, requireAuth, checkOri
     if (risks.some((risk) => !allowedRisks.has(risk))) return reply.code(400).send({ error: "One or more wildlife risk preferences are invalid." });
     const language = ["ne", "en"].includes(String(body.language)) ? String(body.language) : "ne";
     const consentVersion = String(body.consent_text_version || "wlms-farmer-alert-consent-v1").slice(0, 80);
+    const locationSource = body.location_source === "gps" ? "gps" : "manual";
     const result = await pool.query(
       `INSERT INTO alert_subscriptions
         (name, phone, email, province, district, municipality, ward, farm_latitude, farm_longitude,
@@ -72,13 +73,13 @@ export function registerAlertSubscriptionRoutes(app, pool, requireAuth, checkOri
        RETURNING id, status, created_at`,
       [
         name, phone || null, email || null, province, district, municipality, ward,
-        latitude, longitude, accuracy, String(body.location_source || "manual").slice(0, 20),
+        latitude, longitude, accuracy, locationSource,
         JSON.stringify(Object.fromEntries(channels.map((channel) => [channel, { consented: true, consented_at: new Date().toISOString() }]))),
         risks, language, consentVersion,
       ]
     );
     await addAudit(null, "alert_subscription.created", "AlertSubscription", result.rows[0].id, {
-      channels, risk_count: risks.length, location_source: String(body.location_source || "manual"),
+      channels, risk_count: risks.length, location_source: locationSource,
     });
     return reply.code(201).send({
       subscription_id: result.rows[0].id,
