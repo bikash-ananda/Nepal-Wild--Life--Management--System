@@ -545,10 +545,12 @@ export default function PublicLanding() {
           throw new Error("LOCATION_REQUIRED");
         }
       }
+      const submissionId = reportSubmissionId || createOfflineReportId();
+      setReportSubmissionId(submissionId);
       const payload = {
         ...form,
         consent: form.consent,
-        submission_id: reportSubmissionId || createOfflineReportId(),
+        submission_id: submissionId,
         location_name: [form.country.trim() ? `Country: ${form.country.trim()}` : "", form.location_name.trim()].filter(Boolean).join(" · "),
         latitude: point.latitude,
         longitude: point.longitude,
