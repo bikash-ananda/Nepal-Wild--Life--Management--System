@@ -374,6 +374,7 @@ export default function PublicLanding() {
   }, [noticeWard, noticeMunicipality]);
 
   useEffect(() => {
+    requestOfflineStoragePersistence().catch(() => {});
     let active = true;
     const sync = async () => {
       try {
