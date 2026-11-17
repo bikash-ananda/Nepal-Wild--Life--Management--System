@@ -328,6 +328,7 @@ export default function PublicLanding() {
   const [lookupMessage, setLookupMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [offlineReportCount, setOfflineReportCount] = useState(0);
+  const [reportSubmissionId, setReportSubmissionId] = useState(null);
   const [formError, setFormError] = useState("");
   const [alertSaved, setAlertSaved] = useState(false);
   const [alertProfile, setAlertProfile] = useState(() => { try { return JSON.parse(window.localStorage.getItem("wams-alert-preferences-v1") || "null"); } catch { return null; } });
@@ -547,7 +548,7 @@ export default function PublicLanding() {
       const payload = {
         ...form,
         consent: form.consent,
-        submission_id: createOfflineReportId(),
+        submission_id: reportSubmissionId || createOfflineReportId(),
         location_name: [form.country.trim() ? `Country: ${form.country.trim()}` : "", form.location_name.trim()].filter(Boolean).join(" · "),
         latitude: point.latitude,
         longitude: point.longitude,
@@ -561,6 +562,7 @@ export default function PublicLanding() {
       if (savedReport?.status === "failed") throw new Error(savedReport.last_error || t.reportError);
       if (savedReport?.status !== "synced") requestOfflineReportSync().catch(() => {});
       setOfflineReportCount((count) => savedReport?.status === "synced" ? count : count + 1);
+      setReportSubmissionId(null);
       setForm((prior) => ({ ...prior, crop_type: "", livestock_type: "", estimated_loss_npr: "", description: "", reporter_name: "", reporter_phone: "", location_name: "", consent: false }));
       setManualLatitude("");
       setManualLongitude("");
