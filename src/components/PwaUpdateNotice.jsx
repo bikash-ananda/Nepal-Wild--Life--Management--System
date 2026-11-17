@@ -15,8 +15,8 @@ export default function PwaUpdateNotice() {
     };
     const checkForUpdate = async () => {
       try {
-        const registration = await navigator.serviceWorker.getRegistration("/");
-        await registration?.update();
+        const registration = await navigator.serviceWorker.ready;
+        await registration.update();
       } catch { /* The installed version remains usable if update checks fail. */ }
     };
     navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
