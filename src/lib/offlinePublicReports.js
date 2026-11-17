@@ -98,24 +98,29 @@ async function postJson(path, payload) {
 }
 
 async function sendCapture(record) {
-  if (!(record.photo_blob instanceof Blob)) throw new Error("The saved photo is missing. Please capture it again.");
-  const form = new FormData();
-  form.append("consent", "true");
-  form.append("file", record.photo_blob, "wams-capture.jpg");
-  const uploadResponse = await fetch("/api/public/uploads", {
-    method: "POST",
-    credentials: "include",
-    body: form,
-  });
-  const upload = await uploadResponse.json().catch(() => ({}));
-  if (!uploadResponse.ok || !upload.file_uri) {
-    const error = new Error(upload.error || "The photo could not be uploaded.");
-    error.status = uploadResponse.status;
-    throw error;
+  let photoUri = record.photo_uri;
+  if (!photoUri) {
+    if (!(record.photo_blob instanceof Blob)) throw new Error("The saved photo is missing. Please capture it again.");
+    const form = new FormData();
+    form.append("consent", "true");
+    form.append("file", record.photo_blob, "wams-capture.jpg");
+    const uploadResponse = await fetch("/api/public/uploads", {
+      method: "POST",
+      credentials: "include",
+      body: form,
+    });
+    const upload = await uploadResponse.json().catch(() => ({}));
+    if (!uploadResponse.ok || !upload.file_uri) {
+      const error = new Error(upload.error || "The photo could not be uploaded.");
+      error.status = uploadResponse.status;
+      throw error;
+    }
+    photoUri = upload.file_uri;
+    await updateOfflineReport(record.id, { photo_uri: photoUri });
   }
   return postJson("/api/functions/publicCapture", {
     ...record.payload,
-    photo_uri: upload.file_uri,
+    photo_uri: photoUri,
     capture_id: record.id,
     consent: true,
   });
