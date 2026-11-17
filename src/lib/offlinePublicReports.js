@@ -3,6 +3,13 @@ const DB_VERSION = 1;
 const STORE = "reports";
 const SYNC_TAG = "wams-public-report-sync";
 
+export async function requestOfflineStoragePersistence() {
+  try {
+    if (navigator.storage?.persist) return await navigator.storage.persist();
+  } catch { /* Browser-managed storage remains available on a best-effort basis. */ }
+  return false;
+}
+
 export function createOfflineReportId() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (character) => {
