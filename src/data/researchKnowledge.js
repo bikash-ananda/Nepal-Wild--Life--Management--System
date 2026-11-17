@@ -12,7 +12,7 @@ export const researchStudies = [
       np: "नेपालमा संरक्षित तथा मानव–वन्यजन्तु द्वन्द्वको अवस्था",
       en: "Profiling of Protected and Human–Wildlife Conflicts in Nepal",
     },
-    citation: "Department of National Parks and Wildlife Conservation (DNPWC), Profiling of Protected and Human–Wildlife Conflicts — Final Report.",
+    citation: "Department of National Parks and Wildlife Conservation (DNPWC), Profiling of Protected and Human Wildlife Conflicts Associated Wild Animals in Nepal — Final Report (2017).",
     summary: {
       np: "सरकारी मूल्याङ्कनले नेपालका ६९ जिल्ला (९२%) मा वन्यजन्तुसँग सम्बन्धित द्वन्द्वका घटना अभिलेख भएको र २६ प्रजाति द्वन्द्वसँग सम्बन्धित देखिएको उल्लेख गर्छ। हात्ती बाली, सम्पत्ति र मानव क्षतिसँग बढी सम्बन्धित थियो भने चितुवा पशुधन क्षतिमा प्रमुख देखियो। प्रतिवेदनले द्रुत प्रतिकार्य टोली, उद्धार क्षमता, राहत प्रणालीको समीक्षा र रिसस बाँदरसम्बन्धी बढ्दो समस्या सम्बोधन गर्न सुझाव दिएको छ।",
       en: "A national assessment recorded conflict incidents in 69 districts (92%) and identified 26 conflict-associated species. Elephants were most associated with crop damage, property loss and human casualties, while leopards were a major cause of livestock depredation. Recommendations include rapid-response teams, rescue capacity, review of relief mechanisms and attention to increasing rhesus macaque conflict.",
@@ -132,6 +132,73 @@ export const researchStudies = [
       en: "This is a historical analysis of recorded cases, not a current annual incident rate.",
     },
     url: "https://onlinelibrary.wiley.com/doi/10.1002/ece3.9381",
+  },
+
+  {
+    id: "rhesus-macaque-national-2022",
+    year: 2022,
+    category: "species-conflict",
+    species: ["rhesus-macaque"],
+    region: ["national"],
+    sourceType: "peer-reviewed",
+    title: {
+      np: "नेपालमा रिसस बाँदर र मानवबीचको द्वन्द्वका वातावरणीय तथा मानवीय कारण",
+      en: "Environmental and anthropogenic causes, distribution and intensity of human–rhesus macaque conflict in Nepal",
+    },
+    citation: "Journal of Environmental Management, Volume 316, Article 115276 (15 August 2022), DOI: 10.1016/j.jenvman.2022.115276.",
+    summary: {
+      np: "अध्ययनले नेपालको करिब ४४% भूभाग रिसस बाँदरका लागि उपयुक्त बासस्थान हुन सक्ने र उपयुक्त बासस्थान भएका क्षेत्रमा मानव–बाँदर द्वन्द्व पनि बढी देखिएको उल्लेख गर्छ। उपयुक्त बासस्थानको ८८% सामुदायिक तथा निजी जमिनमा रहेको अनुमान गरिएको छ। वन पुनर्स्थापना र टुक्रिएका वन क्षेत्र जोड्ने उपाय सिफारिस गरिएको छ।",
+      en: "The study estimated that about 44% of Nepal may provide suitable rhesus macaque habitat, and areas with highly suitable habitat also showed high conflict. An estimated 88% of suitable habitat was on community-owned and private land. The authors recommend natural forest restoration and connecting fragmented forest patches.",
+    },
+    limitations: {
+      np: "बासस्थान उपयुक्तताको मोडेल र द्वन्द्वको स्थानगत सम्बन्धले कुनै निश्चित गाउँमा बाँदरको संख्या वा तत्काल क्षति निश्चित गर्दैन।",
+      en: "Habitat-suitability modelling and spatial association do not establish macaque abundance or predict immediate damage in a particular village.",
+    },
+    url: "https://www.sciencedirect.com/science/article/pii/S0301479722008490",
+  },
+  {
+    id: "chitwan-fence-icimod-2017",
+    year: 2017,
+    category: "mitigation",
+    species: ["elephant", "rhino", "wild-boar"],
+    region: ["chitwan"],
+    sourceType: "research-institute",
+    title: {
+      np: "चितवन राष्ट्रिय निकुञ्ज वरिपरि बारमार्फत मानव–वन्यजन्तु द्वन्द्व न्यूनीकरण",
+      en: "Mitigating Human–Wildlife Conflict in Nepal: A Case Study of Fences around Chitwan National Park",
+    },
+    citation: "ICIMOD Working Paper 2017/14, May 2017; collaborative study involving ICIMOD, NTNC, DNPWC and other partners.",
+    summary: {
+      np: "यो कार्यपत्रले चितवन राष्ट्रिय निकुञ्ज वरिपरि बारको प्रयोग, व्यवस्थापन र द्वन्द्व न्यूनीकरणमा यसको भूमिकाको केस अध्ययन प्रस्तुत गर्छ। यसले बारलाई केवल संरचना होइन, समुदायको सहभागिता, मर्मत, संस्थागत जिम्मेवारी र स्थानीय अवस्थासँग जोडेर हेर्नुपर्ने देखाउँछ।",
+      en: "This working paper presents a case study of fencing around Chitwan National Park and its role in mitigating human–wildlife conflict. It treats fencing not simply as infrastructure, but as an approach linked to community participation, maintenance, institutional responsibilities and local conditions.",
+    },
+    limitations: {
+      np: "यो चितवन केन्द्रित केस अध्ययन हो; बारको प्रकार, वन्यजन्तुको प्रजाति, भूगोल र मर्मत क्षमताअनुसार नतिजा फरक हुन सक्छ।",
+      en: "This is a Chitwan-focused case study; outcomes may vary with fence design, species, terrain and maintenance capacity.",
+    },
+    url: "https://lib.icimod.org/records/m87vt-r5w63/files/icimodWP14-017.pdf?download=1",
+  },
+  {
+    id: "bardia-chitwan-megafauna-2025",
+    year: 2025,
+    category: "national",
+    species: ["elephant", "rhino", "tiger", "leopard", "wild-boar"],
+    region: ["bardia", "chitwan"],
+    sourceType: "peer-reviewed",
+    title: {
+      np: "बर्दिया र चितवनका मध्यवर्ती क्षेत्रमा दश वर्षको मानव–वन्यजन्तु द्वन्द्व प्रवृत्ति",
+      en: "Balancing act: Human–wildlife conflict amidst megafauna recovery in Nepal's tropical lowlands",
+    },
+    citation: "Scientific Reports (2025), DOI: 10.1038/s41598-025-16707-w; reported incidents from 2013–2022 in Bardia and Chitwan buffer zones.",
+    summary: {
+      np: "अध्ययनले २०१३–२०२२ का १४,९८९ अभिलेख विश्लेषण गर्‍यो। बालीमा आक्रमण ८,१२९ र पशुधन क्षति ४,६११ घटना थिए; कुल घटनामध्ये ४२.८% हात्तीसँग सम्बन्धित थिए। जोखिम बढी भएका वडालाई प्राथमिकता दिई मौसमअनुसार सामुदायिक उपाय, सिकारी जनावरबाट सुरक्षित खोर र जोखिमअनुसार पशुधन बीमाको व्यवस्था गर्न सुझाव दिएको छ।",
+      en: "The study analysed 14,989 reported incidents from 2013–2022. Crop raiding accounted for 8,129 incidents and livestock depredation for 4,611; elephants were responsible for 42.8% of all incidents. It recommends prioritising high-conflict wards, seasonal community measures, predator-proof livestock sheds and livestock insurance aligned with spatial and temporal risk.",
+    },
+    limitations: {
+      np: "अध्ययन बर्दिया र चितवनका मध्यवर्ती क्षेत्रका राहत दाबी अभिलेखमा आधारित छ; दर्ता नभएका घटनाहरू छुटेका हुन सक्छन् र नतिजा अन्य जिल्लामा स्वतः लागू हुँदैन।",
+      en: "The analysis is based on relief-claim records from the Bardia and Chitwan buffer zones; unreported incidents may be missing, and findings should not automatically be generalised to other districts.",
+    },
+    url: "https://www.nature.com/articles/s41598-025-16707-w",
   },
 ];
 
