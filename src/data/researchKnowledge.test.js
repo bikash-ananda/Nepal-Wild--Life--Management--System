@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { officialResearchSources, preventionMethods, researchReviewedOn, researchStudies, technologyStatusLabels } from "./researchKnowledge.js";
 
 test("research studies have bilingual summaries, dates, source links and limitations", () => {
-  assert.ok(researchStudies.length >= 5);
+  assert.ok(researchStudies.length >= 8);
   for (const study of researchStudies) {
     assert.ok(study.id && study.year >= 2000 && study.year <= 2026);
     assert.ok(study.title.np && study.title.en);
