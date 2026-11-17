@@ -1,17 +1,17 @@
-# WAMS location-aware wildlife alerts and AI voice bot
+# WLMS (Wildlife Management System): location-aware alerts and WhatsApp AI voice agent
 
 **Status:** Architecture preparation only. No messaging or calling provider is connected and no alerts are sent by this document.
 
 ## 1. Product goal
 
-Let a farmer or livestock owner voluntarily register a farm/location and choose the wildlife risks and channels for which they want advance warnings. When a credible wildlife event is detected or confirmed near that registered area, WAMS matches the event against subscribed locations and sends a timely, localized warning.
+Let a farmer or livestock owner voluntarily register a farm/location and choose the wildlife risks and channels for which they want advance warnings. When a credible wildlife event is detected or confirmed near that registered area, WLMS matches the event against subscribed locations and sends a timely, localized warning.
 
 The service must support Nepali first and English, with SMS/email/push as additional fallback channels where configured.
 
 ## 2. Important distinction: location is the farm, not continuous phone tracking
 
 - The user selects a farm point on a map or grants one-time GPS permission to save the farm location.
-- WAMS stores the farm geolocation and an accuracy/source label. The user's phone is not continuously tracked in the background.
+- WLMS stores the farm geolocation and an accuracy/source label. The user's phone is not continuously tracked in the background.
 - A user may register more than one farm/plot and set a separate alert radius and risk preferences for each.
 - The event location is compared with saved farm locations using geospatial distance and species/event-specific thresholds.
 - Exact farm coordinates are private and must never appear in community-facing alerts.
@@ -59,14 +59,15 @@ Camera / farmer photo / ranger report / verified observation
 5. **Alert outbox:** durable queued jobs, idempotency key, retries with backoff, per-recipient cooldown, quiet hours, escalation rules and provider delivery receipts.
 6. **Provider adapters:** WhatsApp Cloud API; WhatsApp Business Calling where Meta enables it for the registered sender and recipient permission exists; PSTN voice provider for ordinary mobile calls; optional SMS/email/push fallback.
 7. **Voice agent:** for phase 1, use a clear pre-generated Nepali/English spoken alert plus keypad confirmation (e.g. press 1 to acknowledge, press 2 to request a human callback). Phase 2 can add a bounded interactive voice agent with speech recognition and text-to-speech. It must identify itself as an AI assistant, never claim certainty beyond event evidence, and provide a human escalation path.
-8. **Admin console:** provider connection status, templates, test recipient, campaign preview, delivery log, opt-out suppression, call outcomes, usage/cost limits and emergency kill switch.
+8. **Admin console:** add a dedicated **WhatsApp AI Agent** module inside the authenticated admin panel. It must show the configured official sender number 9768004157, Meta/WABA connection and eligibility status, webhook health, agent enabled/disabled state, test mode, consent status, approved templates, delivery/call history, conversation summaries, opt-out suppression, usage/cost limits and an emergency kill switch. The number is the selected official WLMS sender identity, but it is **not connected or verified yet**.
+9. **Call interaction:** send a WLMS push alert with a clear “Talk to WLMS AI on WhatsApp” action. The farmer must explicitly tap/accept before a voice session begins. The action should open the supported WhatsApp Business Calling flow; if the platform/API requires the farmer to initiate the call, the UI must clearly guide them to do so. Never silently auto-call a farmer from a push notification. After the call is established, the agent greets the farmer, identifies itself as an AI assistant, explains only the evidence-backed alert, asks short follow-up questions, offers practical safety advice, and records a structured outcome. Provide a human-contact option. Do not claim that a push-button can directly accept an incoming call unless Meta's current API and the target device support that exact flow.
 
-## 5. WhatsApp sender: proposed number 9768004157
+## 5. WhatsApp sender: selected official WLMS agent number 9768004157
 
-Treat this as the proposed WAMS WhatsApp Business sender, not as a number that is already connected.
+The project decision is to use 9768004157 as the official WLMS WhatsApp AI Agent number. This is a configuration decision only: it does not prove SIM ownership, Meta eligibility, Business Portfolio verification, API registration, or successful connection. Do not send messages or calls until onboarding and tests are complete.
 
 Required onboarding:
-1. Confirm that WAMS controls the SIM and can receive Meta's SMS/voice verification code.
+1. Confirm that WLMS controls the SIM and can receive Meta's SMS/voice verification code.
 2. Create or select the correct Meta Business Portfolio and WhatsApp Business Account (WABA).
 3. Set up a Meta developer app and WhatsApp Cloud API; configure the business display name and profile.
 4. Verify the business where Meta requires it; configure a system-user token with minimum permissions and secure token rotation.
@@ -105,7 +106,7 @@ Collect only the data needed for warning delivery. Do not expose exact farm coor
 ## 8. Alert message design
 
 Every alert should contain:
-- WAMS identity and language;
+- WLMS identity and language;
 - event type/species with confidence wording (confirmed / reported / possible);
 - approximate locality, not another farmer's exact coordinates;
 - event time and freshness;
@@ -116,7 +117,16 @@ Every alert should contain:
 
 Never guarantee that an animal will attack or that a warning prevents damage. Do not automatically activate electric fences, sirens or other physical deterrents from an AI alert. Those remain independently controlled, safety-reviewed and audited.
 
-## 9. Suggested phased delivery
+## 9. WLMS naming and Admin Panel placement
+
+- Product name: **WLMS — Wildlife Management System**. Replace WAMS in new UI, user-facing notifications, agent greetings, templates and documentation. Keep historical database keys/API identifiers stable until a reviewed migration is planned; do not perform a blind global rename.
+- Add an authenticated admin route and navigation entry named **WhatsApp AI Agent** (suggested route /whatsapp-agent). Restrict configuration and live-control actions to administrators; researchers may receive read-only operational visibility only if explicitly authorized.
+- The module should have sections for Overview, WhatsApp Connection, Agent & Languages, Alert Templates, Consent & Subscribers, Call/Conversation Logs, Usage & Limits, and Safety Controls.
+- Display 9768004157 as the selected sender with status Not connected; never display Connected until the Meta API connection and webhook verification succeed.
+- Store access tokens, app secrets, webhook secrets and PINs only in the VPS secret store. Admin UI must show masked values and never return secrets after saving.
+- Safe defaults: ALERT_DELIVERY_ENABLED=false, ALERT_TEST_MODE=true, no live recipient allowlist by default, and an obvious global stop control.
+
+## 10. Suggested phased delivery
 
 ### Phase A — Provider and consent readiness
 - Verify sender-number ownership and Meta onboarding route.
@@ -144,7 +154,7 @@ Never guarantee that an animal will attack or that a warning prevents damage. Do
 - Add multi-location subscribers, species-specific risk tuning, local authority escalation and delivery analytics.
 - Expand beyond Ward 21 only after field precision, alert usefulness, opt-out rate and delivery reliability are measured.
 
-## 10. Required acceptance tests
+## 11. Required acceptance tests
 
 - No message or call is sent without the matching channel consent.
 - A user can opt out of one channel without losing other selected channels.
@@ -155,9 +165,9 @@ Never guarantee that an animal will attack or that a warning prevents damage. Do
 - Quiet hours, rate limits, emergency stop and per-user cooldowns work.
 - Nepali Unicode and audio are intelligible on common Android devices.
 - Test mode cannot accidentally reach real recipients.
-- Provider outage does not block report submission or other WAMS functions.
+- Provider outage does not block report submission or other WLMS functions.
 
-## 11. Configuration placeholders (secrets must remain outside Git)
+## 12. Configuration placeholders (secrets must remain outside Git)
 
 - `WHATSAPP_CLOUD_API_VERSION`
 - `WHATSAPP_PHONE_NUMBER_ID`
@@ -175,7 +185,7 @@ Never guarantee that an animal will attack or that a warning prevents damage. Do
 
 Never commit real tokens, verification PINs, phone-owner documents or recipient lists.
 
-## 12. External references
+## 13. External references
 
 - Meta WhatsApp Business Policy: https://whatsappbusiness.com/policy/
 - Meta WhatsApp Cloud API collection: https://www.postman.com/meta/whatsapp-business-platform/
