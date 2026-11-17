@@ -70,6 +70,7 @@ const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 const Accounts = lazy(() => import('@/pages/Accounts'));
 const AlertSubscribers = lazy(() => import('@/pages/AlertSubscribers'));
+const WhatsAppAgent = lazy(() => import('@/pages/WhatsAppAgent'));
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -151,6 +152,7 @@ const AuthenticatedApp = () => {
         <Route path="/team" element={<Team />} />
         <Route path="/accounts" element={<Accounts />} />
         <Route path="/alert-subscribers" element={<AlertSubscribers />} />
+        <Route path="/whatsapp-agent" element={<WhatsAppAgent />} />
         <Route path="/team/add" element={<AddTeamMember />} />
         <Route path="/team/:id" element={<TeamMemberDetail />} />
         <Route path="/api-integrations" element={<ApiIntegrations />} />
