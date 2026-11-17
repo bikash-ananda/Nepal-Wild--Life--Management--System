@@ -3,6 +3,14 @@ const DB_VERSION = 1;
 const STORE = "reports";
 const SYNC_TAG = "wams-public-report-sync";
 
+export function createOfflineReportId() {
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (character) => {
+    const random = Math.random() * 16 | 0;
+    return (character === "x" ? random : (random & 3 | 8)).toString(16);
+  });
+}
+
 function openDatabase() {
   return new Promise((resolve, reject) => {
     if (typeof indexedDB === "undefined") return reject(new Error("Offline storage is unavailable in this browser."));
