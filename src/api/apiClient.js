@@ -180,6 +180,18 @@ export const api = {
     },
   },
 
+  alertSubscriptions: {
+    create: (payload) => request("/api/public/alert-subscriptions", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+    list: (limit = 50) => request(`/api/admin/alert-subscriptions?limit=${encodeURIComponent(limit)}`),
+    previewMatch: (event) => request("/api/admin/alert-subscriptions/preview-match", {
+      method: "POST",
+      body: JSON.stringify(event),
+    }),
+  },
+
   notifications: {
     pushConfig: () => request("/api/notifications/push-config"),
 

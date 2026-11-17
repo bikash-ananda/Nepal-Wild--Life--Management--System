@@ -220,3 +220,41 @@ CREATE TABLE IF NOT EXISTS camera_control_tunnels (
   updated_at timestamptz NOT NULL DEFAULT now(),
   FOREIGN KEY (camera_entity, camera_id) REFERENCES app_records(entity, id) ON DELETE CASCADE
 );
+
+
+-- Durable farmer alert subscriptions with explicit location and per-channel consent.
+CREATE TABLE IF NOT EXISTS alert_subscriptions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL DEFAULT '',
+  phone text,
+  email text,
+  province text NOT NULL DEFAULT '',
+  district text NOT NULL DEFAULT '',
+  municipality text NOT NULL DEFAULT '',
+  ward text NOT NULL DEFAULT '',
+  farm_latitude double precision NOT NULL CHECK (farm_latitude BETWEEN -90 AND 90),
+  farm_longitude double precision NOT NULL CHECK (farm_longitude BETWEEN -180 AND 180),
+  location_accuracy_m double precision CHECK (location_accuracy_m IS NULL OR location_accuracy_m BETWEEN 0 AND 100000),
+  location_source text NOT NULL DEFAULT 'manual' CHECK (location_source IN ('gps', 'manual')),
+  location_consent_at timestamptz NOT NULL,
+  channel_consents jsonb NOT NULL DEFAULT '{}'::jsonb,
+  risk_preferences text[] NOT NULL DEFAULT ARRAY[]::text[],
+  preferred_language text NOT NULL DEFAULT 'ne' CHECK (preferred_language IN ('ne', 'en')),
+  consent_text_version text NOT NULL,
+  status text NOT NULL DEFAULT 'pending_verification' CHECK (status IN ('pending_verification', 'active', 'paused', 'withdrawn')),
+  phone_verified_at timestamptz,
+  email_verified_at timestamptz,
+  withdrawn_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CHECK (phone IS NOT NULL OR email IS NOT NULL)
+);
+CREATE INDEX IF NOT EXISTS alert_subscriptions_status_created_idx
+  ON alert_subscriptions (status, created_at DESC);
+CREATE INDEX IF NOT EXISTS alert_subscriptions_location_idx
+  ON alert_subscriptions (farm_latitude, farm_longitude)
+  WHERE status = 'active';
+CREATE INDEX IF NOT EXISTS alert_subscriptions_phone_idx
+  ON alert_subscriptions (phone) WHERE phone IS NOT NULL;
+CREATE INDEX IF NOT EXISTS alert_subscriptions_email_idx
+  ON alert_subscriptions (email) WHERE email IS NOT NULL;
