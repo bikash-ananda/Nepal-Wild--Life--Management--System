@@ -79,7 +79,7 @@ const AuthenticatedApp = () => {
   const isPublicRoute = location.pathname === "/public-capture";
   const isSpeciesLibrary = location.pathname === "/species-library";
   const isResearchKnowledge = location.pathname === "/research";
-  const isResearchKnowledge = location.pathname === "/research";
+
   const isPublicHome = ["/welcome", "/public"].includes(location.pathname) || (location.pathname === "/" && !isAuthenticated && !isLoadingAuth);
   const isAuthRoute = ["/login", "/register", "/forgot-password", "/reset-password"].includes(location.pathname);
 
