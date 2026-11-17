@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Nepal Wildlife Management System",
-  "short_name": "WAMS",
+  "name": "Wildlife Management System (WLMS)",
+  "short_name": "WLMS",
   "description": "Community reporting and research on human–wildlife conflict in Pokhara, Nepal.",
   "lang": "en",
   "start_url": "/",

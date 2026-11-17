@@ -50,8 +50,8 @@ export default function Layout() {
             <Leaf className="w-5 h-5 text-white" />
           </div>
           <div>
-            <div className="text-white font-semibold text-sm leading-tight">Wildlife MS</div>
-            <div className="text-slate-500 text-[10px] uppercase tracking-wider">{roleLabel}</div>
+            <div className="text-white font-semibold text-sm leading-tight">WLMS</div>
+            <div className="text-slate-500 text-[10px] uppercase tracking-wider">Wildlife Management System</div>
           </div>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-4 overflow-y-auto">

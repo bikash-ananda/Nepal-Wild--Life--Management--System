@@ -2,7 +2,7 @@ import {
   LayoutDashboard, MapPin, Camera, Activity, Target,
   Zap, FileBarChart, Map, Shield, Brain, Workflow,
   Cpu, Settings, Phone, Globe, BarChart3, FileSpreadsheet, Scale,
-  Users, Cable, Bell, Leaf, LineChart, ShieldAlert, Swords, Eye, Footprints, Fingerprint, History, Gamepad2, Trophy, ListOrdered, Route
+  Users, Cable, Bell, Leaf, LineChart, ShieldAlert, Swords, Eye, Footprints, Fingerprint, History, Gamepad2, Trophy, ListOrdered, Route, MessageCircle
 } from "lucide-react";
 
 const ALL_ROLES = [
@@ -88,6 +88,7 @@ export const navGroups = [
       { label: "Reports", path: "/reports", icon: FileBarChart, roles: ["super_admin", "wildlife_admin", "government_officer", "admin", "user"] },
       { label: "Detection Reports", path: "/detection-reports", icon: FileSpreadsheet, roles: ["super_admin", "wildlife_admin", "government_officer", "admin", "user"] },
       { label: "Voice Bot", path: "/voice-bot", icon: Phone, roles: ["super_admin", "wildlife_admin", "admin", "user"] },
+      { label: "WhatsApp AI Agent", path: "/whatsapp-agent", icon: MessageCircle, roles: ["admin"] },
     ],
   },
 ];
