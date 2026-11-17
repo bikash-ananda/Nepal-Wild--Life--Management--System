@@ -1,4 +1,5 @@
 import { addAudit } from "./db.js";
+import { matchActiveAlertSubscriptions } from "./alert-matching.js";
 
 const allowedChannels = new Set(["email", "sms", "whatsapp_message", "whatsapp_call"]);
 const allowedRisks = new Set(["crop", "livestock", "elephant", "rhino", "tiger", "leopard", "monkey", "other"]);
@@ -86,6 +87,37 @@ export function registerAlertSubscriptionRoutes(app, pool, requireAuth, checkOri
       status: result.rows[0].status,
       message: "Your preferences have been received. Contact verification and provider setup are required before alerts can be delivered.",
     });
+  });
+
+
+  app.post("/api/admin/alert-subscriptions/preview-match", { preHandler: requireAuth }, async (request, reply) => {
+    if (!requireAdmin(request, reply)) return;
+    if (!checkOrigin(request, reply)) return;
+    const body = request.body || {};
+    const result = await pool.query(
+      `SELECT id, municipality, ward, farm_latitude, farm_longitude, risk_preferences, status
+       FROM alert_subscriptions WHERE status = 'active' ORDER BY created_at DESC LIMIT 5000`
+    );
+    const preview = matchActiveAlertSubscriptions({
+      latitude: body.latitude,
+      longitude: body.longitude,
+      species: body.species,
+      behavior: body.behavior,
+      incident_type: body.incident_type,
+      confidence: body.confidence,
+      verified: body.verified,
+      occurred_at: body.occurred_at,
+      location_accuracy_m: body.location_accuracy_m,
+    }, result.rows, {
+      radius_km: body.radius_km,
+      max_age_hours: body.max_age_hours,
+    });
+    await addAudit(request.user.id, "alert_subscription.match_preview", "AlertSubscription", null, {
+      eligible: preview.eligible,
+      reason: preview.reason,
+      match_count: preview.matches.length,
+    });
+    return preview;
   });
 
   app.get("/api/admin/alert-subscriptions", { preHandler: requireAuth }, async (request, reply) => {
