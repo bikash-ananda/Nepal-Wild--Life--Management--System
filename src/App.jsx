@@ -78,11 +78,13 @@ const AuthenticatedApp = () => {
   const location = useLocation();
   const isPublicRoute = location.pathname === "/public-capture";
   const isSpeciesLibrary = location.pathname === "/species-library";
+  const isResearchKnowledge = location.pathname === "/research";
   const isPublicHome = ["/welcome", "/public"].includes(location.pathname) || (location.pathname === "/" && !isAuthenticated && !isLoadingAuth);
   const isAuthRoute = ["/login", "/register", "/forgot-password", "/reset-password"].includes(location.pathname);
 
   if (isPublicRoute) return <PublicCapture />;
   if (isSpeciesLibrary) return <SpeciesLibrary />;
+  if (isResearchKnowledge) return <ResearchKnowledge />;
   if (isPublicHome) return <PublicLanding />;
 
   if (isAuthRoute) {
