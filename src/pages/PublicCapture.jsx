@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   Satellite, Loader2, Camera, RefreshCw, MapPin,
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
+import { enqueueOfflineReport, syncOfflineReports, requestOfflineReportSync } from "@/lib/offlinePublicReports";
 
 const labels = {
   en: {
@@ -40,6 +41,20 @@ export default function PublicCapture() {
   const [manualLongitude, setManualLongitude] = useState("");
   const [notes, setNotes] = useState("");
   const [pendingPhoto, setPendingPhoto] = useState(null);
+
+  useEffect(() => {
+    const sync = () => {
+      syncOfflineReports().catch(() => {});
+      requestOfflineReportSync().catch(() => {});
+    };
+    sync();
+    window.addEventListener("online", sync);
+    document.addEventListener("visibilitychange", sync);
+    return () => {
+      window.removeEventListener("online", sync);
+      document.removeEventListener("visibilitychange", sync);
+    };
+  }, []);
   const [captureMetadata, setCaptureMetadata] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [consent, setConsent] = useState(false);
@@ -133,25 +148,13 @@ export default function PublicCapture() {
     setSubmitting(true);
     try {
       const manualPoint = getManualPoint();
-      // Use the fix tied to this photo, never a stale background fix.
+      // Keep the GPS fix captured for this photo; never silently substitute a later position.
       const point = manualPoint || captureMetadata?.coords;
       if (!point) throw new Error("LOCATION_REQUIRED");
-      // Upload the photo privately first (no login required on a public app)
-      let photo_uri;
-      try {
-        const blob = await (await fetch(pendingPhoto)).blob();
-        const file = new File([blob], "capture.jpg", { type: "image/jpeg" });
-        const up = await api.integrations.Core.UploadPublicFile({ file });
-        photo_uri = up.file_uri;
-      } catch (e) {
-        toast({ title: "Photo upload failed", description: e.message, variant: "destructive" });
-        setSubmitting(false);
-        return;
-      }
-
-      await api.functions.invoke("publicCapture", {
-        photo_uri,
-        consent,
+      const blob = await (await fetch(pendingPhoto)).blob();
+      const captureId = globalThis.crypto?.randomUUID?.() || `wams-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      const payload = {
+        consent: true,
         latitude: point.latitude,
         longitude: point.longitude,
         accuracy: manualPoint ? null : point.accuracy ?? null,
@@ -161,7 +164,10 @@ export default function PublicCapture() {
         submitter_name: submitterName,
         notes,
         captured_at: captureMetadata?.captured_at || new Date().toISOString(),
-      });
+      };
+      await enqueueOfflineReport({ id: captureId, kind: "capture", payload, photoBlob: blob });
+      const result = await syncOfflineReports();
+      if (result.pending > 0) requestOfflineReportSync().catch(() => {});
       setPendingPhoto(null);
       setCaptureMetadata(null);
       setConsent(false);
@@ -169,14 +175,16 @@ export default function PublicCapture() {
       setManualLongitude("");
       toast({
         title: t.submitted,
-        description: point.accuracy == null ? t.thankYou : `${t.gpsPrecision} (±${Math.round(point.accuracy)} m)`,
+        description: result.pending > 0
+          ? (lang === "np" ? "रिपोर्ट फोनमा सुरक्षित भयो। इन्टरनेट उपलब्ध भएपछि स्वतः पठाइनेछ।" : "Report saved on this device. It will upload automatically when internet is available.")
+          : (point.accuracy == null ? t.thankYou : `${t.gpsPrecision} (±${Math.round(point.accuracy)} m)`),
       });
     } catch (e) {
       const description = e.message === "COORDINATE_PAIR" ? t.coordinatePair
         : e.message === "COORDINATES_INVALID" ? t.coordinateInvalid
           : e.message === "LOCATION_REQUIRED" ? t.locationRequired
-          : localizeGpsError(e.message);
-      toast({ title: "Submission failed", description, variant: "destructive" });
+          : e.message || localizeGpsError(e.message);
+      toast({ title: lang === "np" ? "रिपोर्ट सुरक्षित गर्न सकिएन" : "Could not save report", description, variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
