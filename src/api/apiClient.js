@@ -186,6 +186,10 @@ export const api = {
       body: JSON.stringify(payload),
     }),
     list: (limit = 50) => request(`/api/admin/alert-subscriptions?limit=${encodeURIComponent(limit)}`),
+    previewMatch: (event) => request("/api/admin/alert-subscriptions/preview-match", {
+      method: "POST",
+      body: JSON.stringify(event),
+    }),
   },
 
   notifications: {
