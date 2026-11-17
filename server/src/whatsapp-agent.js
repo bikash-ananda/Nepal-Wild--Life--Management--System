@@ -10,7 +10,7 @@ function requireAdmin(request, reply) {
   return true;
 }
 
-function publicSettings(row) {
+export function publicSettings(row) {
   const credentialsPresent = Boolean(
     process.env.WHATSAPP_ACCESS_TOKEN &&
     process.env.WHATSAPP_PHONE_NUMBER_ID &&
