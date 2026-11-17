@@ -8,17 +8,17 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
-import { createOfflineReportId, enqueueOfflineReport, syncOfflineReports, requestOfflineReportSync } from "@/lib/offlinePublicReports";
+import { createOfflineReportId, enqueueOfflineReport, syncOfflineReports, requestOfflineReportSync, requestOfflineStoragePersistence } from "@/lib/offlinePublicReports";
 
 const labels = {
   en: {
     title: "Human Wildlife Conflict Management System", subtitle: "Report wildlife from anywhere in the world — no account needed",
-    gpsLoading: "Acquiring GPS…", gpsLocked: "GPS locked", noGps: "No GPS fix", enableGps: "Tap Get GPS and allow location access. HTTPS is required.", refreshGps: "Get / refresh GPS", gettingGps: "Getting location…", manualCoordinates: "Or enter coordinates manually", latitude: "Latitude", longitude: "Longitude", coordinatePair: "Enter both latitude and longitude, or leave both blank.", coordinateInvalid: "Check coordinates: latitude −90 to 90, longitude −180 to 180.",
+    gpsLoading: "Acquiring GPS…", gpsLocked: "GPS locked", noGps: "No GPS fix", enableGps: "GPS can use satellite signals without internet. Allow location access; HTTPS is required. A fix may take longer or be unavailable in some places.", refreshGps: "Get / refresh GPS", gettingGps: "Getting location…", manualCoordinates: "Or enter coordinates manually", latitude: "Latitude", longitude: "Longitude", coordinatePair: "Enter both latitude and longitude, or leave both blank.", coordinateInvalid: "Check coordinates: latitude −90 to 90, longitude −180 to 180.",
     captured: "Captured photo", retake: "Retake", name: "Your name (optional)", namePlaceholder: "e.g. Ram Sharma", country: "Country", countryPlaceholder: "e.g. Nepal", countryRequired: "Enter the country where this photo was taken.", province: "State / Province / Region (optional)", district: "District / County (optional)", location: "Location / Area name", locationPlaceholder: "City, village, farm or landmark", notes: "Notes (optional)", notesPlaceholder: "What was the animal doing?", submit: "Submit report for review", submitting: "Submitting report…", thankYou: "Thank you! Your report was received.", flagship: "Priority species — reviewer attention requested", privacy: "Photos are stored privately. Reports are reviewed before they are treated as confirmed.", submitted: "Your report was received for human review.", language: "नेपाली", consent: "I agree to share this photo and its location with authorized project reviewers for conflict research.", locationRequired: "Location is required. Allow GPS or enter both coordinates manually.", gpsPrecision: "GPS is an estimate. Check its displayed accuracy before sending.",
   },
   np: {
     title: "मानव–वन्यजन्तु द्वन्द्व व्यवस्थापन प्रणाली", subtitle: "विश्वको जुनसुकै ठाउँबाट वन्यजन्तुको जानकारी दिनुहोस् — खाता आवश्यक छैन",
-    gpsLoading: "GPS खोज्दै…", gpsLocked: "GPS प्राप्त भयो", noGps: "GPS स्थान प्राप्त भएन", enableGps: "GPS लिन थिच्नुहोस् र स्थान अनुमति दिनुहोस्। HTTPS आवश्यक छ।", refreshGps: "GPS लिनुहोस् / फेरि खोज्नुहोस्", gettingGps: "स्थान खोज्दै…", manualCoordinates: "वा निर्देशाङ्क आफैँ लेख्नुहोस्", latitude: "अक्षांश", longitude: "देशान्तर", coordinatePair: "अक्षांश र देशान्तर दुवै लेख्नुहोस् वा दुवै खाली छोड्नुहोस्।", coordinateInvalid: "निर्देशाङ्क जाँच्नुहोस्: अक्षांश −९० देखि ९० र देशान्तर −१८० देखि १८० सम्म।",
+    gpsLoading: "GPS खोज्दै…", gpsLocked: "GPS प्राप्त भयो", noGps: "GPS स्थान प्राप्त भएन", enableGps: "GPS ले इन्टरनेटबिना पनि उपग्रहबाट स्थान लिन सक्छ। स्थान अनुमति दिनुहोस्; HTTPS आवश्यक छ। केही ठाउँमा स्थान पत्ता लगाउन समय लाग्न सक्छ।", refreshGps: "GPS लिनुहोस् / फेरि खोज्नुहोस्", gettingGps: "स्थान खोज्दै…", manualCoordinates: "वा निर्देशाङ्क आफैँ लेख्नुहोस्", latitude: "अक्षांश", longitude: "देशान्तर", coordinatePair: "अक्षांश र देशान्तर दुवै लेख्नुहोस् वा दुवै खाली छोड्नुहोस्।", coordinateInvalid: "निर्देशाङ्क जाँच्नुहोस्: अक्षांश −९० देखि ९० र देशान्तर −१८० देखि १८० सम्म।",
     captured: "तस्बिर खिचियो", retake: "फेरि खिच्नुहोस्", name: "तपाईंको नाम (वैकल्पिक)", namePlaceholder: "जस्तै: राम शर्मा", country: "देश", countryPlaceholder: "जस्तै: नेपाल", countryRequired: "तस्बिर खिचिएको देश लेख्नुहोस्।", province: "प्रदेश / राज्य / क्षेत्र (वैकल्पिक)", district: "जिल्ला / काउन्टी (वैकल्पिक)", location: "स्थान / क्षेत्र", locationPlaceholder: "सहर, गाउँ, खेत वा चिनारीको स्थान", notes: "टिप्पणी (वैकल्पिक)", notesPlaceholder: "जनावरले के गरिरहेको थियो?", submit: "समीक्षाका लागि पठाउनुहोस्", submitting: "पठाउँदै…", thankYou: "धन्यवाद! तपाईंको विवरण प्राप्त भयो।", flagship: "प्राथमिक प्रजाति — समीक्षकले हेर्नुपर्ने", privacy: "तस्बिर निजी रूपमा सुरक्षित हुन्छ। पुष्टि भएको मान्नुअघि विवरण समीक्षा गरिन्छ।", submitted: "तपाईंको विवरण मानव समीक्षाका लागि प्राप्त भयो।", language: "English", consent: "द्वन्द्व अनुसन्धानका लागि अधिकृत परियोजना समीक्षकसँग यो तस्बिर र स्थान साझा गर्न म सहमत छु।", locationRequired: "स्थान आवश्यक छ। GPS अनुमति दिनुहोस् वा दुवै निर्देशाङ्क आफैँ लेख्नुहोस्।", gpsPrecision: "GPS अनुमानित हुन्छ। पठाउनुअघि देखाइएको शुद्धता जाँच्नुहोस्।",
   },
 };
@@ -163,6 +163,7 @@ export default function PublicCapture() {
         submitter_name: submitterName,
         notes,
         captured_at: captureMetadata?.captured_at || new Date().toISOString(),
+        location_captured_at: manualPoint ? null : (point.timestamp ? new Date(point.timestamp).toISOString() : null),
       };
       await enqueueOfflineReport({ id: captureId, kind: "capture", payload, photoBlob: blob });
       const result = await syncOfflineReports();
