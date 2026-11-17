@@ -117,7 +117,7 @@ async function claimOfflineReport(id) {
           ...current,
           status: "uploading",
           attempts: (current.attempts || 0) + 1,
-          lock_until: Date.now() + 120000,
+          lock_until: Date.now() + 600000,
           last_error: "",
           updated_at: new Date().toISOString(),
         });
