@@ -17,6 +17,7 @@ import { registerCameraRoutes, startCameraEngine } from "./cameras.js";
 import { registerAiRoutes } from "./ai.js";
 import { registerPublicRoutes } from "./public.js";
 import { registerAlertSubscriptionRoutes } from "./alert-subscriptions.js";
+import { registerWhatsAppAgentRoutes } from "./whatsapp-agent.js";
 
 const production = process.env.NODE_ENV === "production";
 const jwtSecret = process.env.JWT_SECRET || (!production ? "local-development-secret-change-before-deploy" : "");
@@ -90,6 +91,7 @@ registerCameraRoutes(app, pool, requireAuth, checkOrigin);
 registerAiRoutes(app, pool, requireAuth, checkOrigin);
 registerPublicRoutes(app, pool, requireAuth, checkOrigin);
 registerAlertSubscriptionRoutes(app, pool, requireAuth, checkOrigin);
+registerWhatsAppAgentRoutes(app, pool, requireAuth, checkOrigin);
 
 app.post("/api/integrations/send-email", { preHandler: requireAuth, config: { rateLimit: { max: 10, timeWindow: "1 hour" } } }, async (request, reply) => {
   if (!checkOrigin(request, reply)) return;
