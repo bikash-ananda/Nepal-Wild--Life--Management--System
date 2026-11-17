@@ -3,7 +3,7 @@ export const researchReviewedOn = "2026-11-17";
 export const researchStudies = [
   {
     id: "dnpwc-national-profile",
-    year: 2024,
+    year: 2017,
     category: "national",
     species: ["elephant", "leopard", "rhesus-macaque"],
     region: ["national"],
