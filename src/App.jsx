@@ -7,6 +7,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { LanguageProvider } from '@/lib/LanguageContext';
 import ScrollToTop from './components/ScrollToTop';
+import PwaUpdateNotice from '@/components/PwaUpdateNotice';
 import Layout from '@/components/Layout';
 const Home = lazy(() => import('@/pages/Home'));
 const Sites = lazy(() => import('@/pages/Sites'));
@@ -178,6 +179,7 @@ function App() {
         <QueryClientProvider client={queryClientInstance}>
           <Router>
             <ScrollToTop />
+            <PwaUpdateNotice />
             <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center" role="status" aria-label="Loading page"><div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" /></div>}>
               <AuthenticatedApp />
             </Suspense>
