@@ -32,7 +32,7 @@ export default function PwaUpdateNotice() {
   return (
     <aside role="status" aria-live="polite" className="fixed inset-x-3 bottom-4 z-[100] mx-auto flex max-w-lg items-center gap-3 rounded-2xl border border-emerald-200 bg-white p-3 shadow-2xl sm:inset-x-auto sm:bottom-6">
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-emerald-950">{lang === "ne" ? "WAMS को नयाँ संस्करण तयार छ" : "A new WAMS version is ready"}</p>
+        <p className="text-sm font-semibold text-emerald-950">{lang === "ne" ? "WLMS को नयाँ संस्करण तयार छ" : "A new WLMS version is ready"}</p>
         <p className="mt-0.5 text-xs leading-5 text-slate-600">{lang === "ne" ? "तपाईंको सुरक्षित रिपोर्टहरू नमेटाई अपडेट लागू गर्न सक्नुहुन्छ।" : "Update when ready. Reports saved on this device will be preserved."}</p>
       </div>
       <button type="button" onClick={() => window.location.reload()} className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full bg-emerald-800 px-4 text-xs font-semibold text-white hover:bg-emerald-900">
