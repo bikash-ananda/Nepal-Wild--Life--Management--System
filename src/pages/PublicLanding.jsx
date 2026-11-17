@@ -331,6 +331,13 @@ export default function PublicLanding() {
   const [reportSubmissionId, setReportSubmissionId] = useState(null);
   const [formError, setFormError] = useState("");
   const [alertSaved, setAlertSaved] = useState(false);
+  const [alertSaveBusy, setAlertSaveBusy] = useState(false);
+  const [alertStatus, setAlertStatus] = useState("");
+  const [alertLatitude, setAlertLatitude] = useState("");
+  const [alertLongitude, setAlertLongitude] = useState("");
+  const [alertLocationAccuracy, setAlertLocationAccuracy] = useState(null);
+  const [alertLocationSource, setAlertLocationSource] = useState("manual");
+  const [alertLocationBusy, setAlertLocationBusy] = useState(false);
   const [alertProfile, setAlertProfile] = useState(() => { try { return JSON.parse(window.localStorage.getItem("wams-alert-preferences-v1") || "null"); } catch { return null; } });
   const [guideRatings, setGuideRatings] = useState(() => {
     try {
@@ -351,6 +358,24 @@ export default function PublicLanding() {
     (guideRatings[`${form.loss_type}:${right.id}`] || 0) - (guideRatings[`${form.loss_type}:${left.id}`] || 0),
   )[0];
   const guideKey = `${form.loss_type}:${selectedGuide.id}`;
+
+  const captureAlertFarmLocation = () => {
+    if (!navigator.geolocation) {
+      toast({ title: lang === "np" ? "यो ब्राउजरमा स्थान सुविधा उपलब्ध छैन" : "Location is unavailable", description: lang === "np" ? "अक्षांश र देशान्तर आफैँ लेख्नुहोस्।" : "Enter the farm coordinates manually.", variant: "destructive" });
+      return;
+    }
+    setAlertLocationBusy(true);
+    navigator.geolocation.getCurrentPosition((position) => {
+      setAlertLatitude(String(position.coords.latitude));
+      setAlertLongitude(String(position.coords.longitude));
+      setAlertLocationAccuracy(position.coords.accuracy);
+      setAlertLocationSource("gps");
+      setAlertLocationBusy(false);
+    }, (error) => {
+      setAlertLocationBusy(false);
+      toast({ title: lang === "np" ? "स्थान लिन सकिएन" : "Could not get farm location", description: error.code === 1 ? (lang === "np" ? "स्थान अनुमति दिनुहोस् वा निर्देशाङ्क आफैँ लेख्नुहोस्।" : "Allow location access or enter coordinates manually.") : (lang === "np" ? "फेरि प्रयास गर्नुहोस् वा निर्देशाङ्क आफैँ लेख्नुहोस्।" : "Try again or enter coordinates manually."), variant: "destructive" });
+    }, { enableHighAccuracy: true, maximumAge: 60000, timeout: 15000 });
+  };
 
   const rateGuide = (rating) => {
     const next = { ...guideRatings, [guideKey]: rating };
@@ -674,10 +699,10 @@ export default function PublicLanding() {
               <p className="mt-4 text-sm leading-7 text-emerald-50/75">{lang === "np" ? "आफ्नो क्षेत्र र सम्पर्क माध्यम छान्नुहोस्। भविष्यमा उपलब्ध हुने सूचना सेवाका लागि आफ्नो प्राथमिकता तयार गर्न सक्नुहुन्छ।" : "Choose the areas and contact channels that matter to you. Prepare your preferences for the planned local early-warning service."}</p>
               <div className="mt-6 rounded-2xl border border-white/15 bg-white/[.06] p-4">
                 <div className="flex items-center gap-2 text-sm font-semibold text-lime-200"><ShieldCheck className="h-4 w-4" />{lang === "np" ? "स्थान गोपनीयता र सहमति" : "Location privacy and consent"}</div>
-                <p className="mt-2 text-xs leading-6 text-emerald-50/70">{lang === "np" ? "GPS अनुमति बिना स्थान प्रयोग हुँदैन। यो पृष्ठले निरन्तर background tracking गर्दैन। अहिले प्राथमिकता यही उपकरणमा मात्र सुरक्षित हुन्छ; वास्तविक SMS, इमेल वा WhatsApp सूचना पठाउने सेवा जोडिएको छैन।" : "GPS is not accessed without browser permission. This page does not continuously track your device in the background. Preferences are stored only on this device; live SMS, email and WhatsApp delivery is not connected yet."}</p>
+                <p className="mt-2 text-xs leading-6 text-emerald-50/70">{lang === "np" ? "GPS अनुमति बिना स्थान प्रयोग हुँदैन। यो पृष्ठले निरन्तर background tracking गर्दैन। फार्मको स्थान र प्रत्येक सूचना माध्यमको सहमति WLMS सर्भरमा सुरक्षित हुन्छ। फोनको निरन्तर tracking हुँदैन; सम्पर्क पुष्टि र सेवा प्रदायकको एकीकरण नभएसम्म सूचना सक्रिय हुँदैन।" : "GPS is not accessed without browser permission. This page does not continuously track your device in the background. Your selected farm point and channel-specific consents are submitted securely to WLMS. No continuous phone tracking is performed; alerts remain inactive until contact verification and provider integration."}</p>
               </div>
             </div>
-            <form className="rounded-[1.75rem] border border-white/10 bg-white p-5 text-slate-900 shadow-2xl sm:p-8" onSubmit={(event) => {
+            <form className="rounded-[1.75rem] border border-white/10 bg-white p-5 text-slate-900 shadow-2xl sm:p-8" onSubmit={async (event) => {
               event.preventDefault();
               const data = new FormData(event.currentTarget);
               const phoneField = event.currentTarget.elements.namedItem("alert_phone");
@@ -688,20 +713,52 @@ export default function PublicLanding() {
                 return;
               }
               phoneField.setCustomValidity("");
+              const latitude = Number(alertLatitude);
+              const longitude = Number(alertLongitude);
+              if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+                toast({ title: lang === "np" ? "फार्मको स्थान आवश्यक छ" : "Farm location required", description: lang === "np" ? "GPS बाट स्थान लिनुहोस् वा सही अक्षांश र देशान्तर लेख्नुहोस्।" : "Use the location button or enter valid latitude and longitude.", variant: "destructive" });
+                return;
+              }
+              const channels = data.getAll("alert_channel");
+              if (!channels.length) {
+                toast({ title: lang === "np" ? "सूचना माध्यम छान्नुहोस्" : "Choose at least one alert channel", variant: "destructive" });
+                return;
+              }
               const profile = {
                 name: String(data.get("alert_name") || "").trim(),
                 phone: String(data.get("alert_phone") || "").trim(),
-                email: String(data.get("alert_email") || "").trim(),
+                email: emailValue,
                 province: String(data.get("alert_province") || "").trim(),
                 district: String(data.get("alert_district") || "").trim(),
                 municipality: String(data.get("alert_municipality") || "").trim(),
                 ward: String(data.get("alert_ward") || "").trim(),
-                channels: data.getAll("alert_channel"),
+                latitude,
+                longitude,
+                location_accuracy_m: alertLocationAccuracy,
+                location_source: alertLocationSource,
+                location_consent: data.get("alert_location") === "on",
+                channels,
                 risks: data.getAll("alert_risk"),
-                locationConsent: data.get("alert_location") === "on"
+                language: lang === "np" ? "ne" : "en",
+                consent_text_version: "wlms-farmer-alert-consent-v1",
               };
-              try { window.localStorage.setItem("wams-alert-preferences-v1", JSON.stringify(profile)); setAlertProfile(profile); setAlertSaved(true); }
-              catch { setAlertSaved(false); }
+              if (!profile.location_consent) {
+                toast({ title: lang === "np" ? "स्थान प्रयोगको सहमति आवश्यक छ" : "Farm-location consent is required", variant: "destructive" });
+                return;
+              }
+              setAlertSaveBusy(true);
+              try {
+                const result = await api.alertSubscriptions.create(profile);
+                window.localStorage.setItem("wams-alert-preferences-v1", JSON.stringify(profile));
+                setAlertProfile(profile);
+                setAlertStatus(result.status || "pending_verification");
+                setAlertSaved(true);
+              } catch (error) {
+                setAlertSaved(false);
+                toast({ title: lang === "np" ? "प्राथमिकता सुरक्षित गर्न सकिएन" : "Could not save alert preferences", description: error.message, variant: "destructive" });
+              } finally {
+                setAlertSaveBusy(false);
+              }
             }}>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="grid gap-1.5 text-sm font-semibold sm:col-span-2">{lang === "np" ? "नाम" : "Your name"}<input name="alert_name" defaultValue={alertProfile?.name || ""} required autoComplete="name" className="min-h-12 rounded-xl border border-slate-300 px-3 font-normal" /></label>
@@ -711,12 +768,12 @@ export default function PublicLanding() {
                 <label className="grid gap-1.5 text-sm font-semibold">{lang === "np" ? "जिल्ला" : "District"}<input name="alert_district" defaultValue={alertProfile?.district || ""} className="min-h-12 rounded-xl border border-slate-300 px-3 font-normal" /></label>
                 <label className="grid gap-1.5 text-sm font-semibold">{lang === "np" ? "पालिका / गाउँपालिका" : "Municipality / Rural municipality"}<input name="alert_municipality" defaultValue={alertProfile?.municipality || ""} className="min-h-12 rounded-xl border border-slate-300 px-3 font-normal" /></label>
                 <label className="grid gap-1.5 text-sm font-semibold">{lang === "np" ? "वडा नं." : "Ward number"}<input name="alert_ward" defaultValue={alertProfile?.ward || ""} inputMode="numeric" className="min-h-12 rounded-xl border border-slate-300 px-3 font-normal" /></label>
-                <fieldset className="grid gap-2 sm:col-span-2"><legend className="text-sm font-semibold">{lang === "np" ? "सूचना पाउने माध्यम" : "Preferred notification channels"}</legend><div className="grid grid-cols-3 gap-2 text-sm">{[["email","Email"],["sms","SMS"],["whatsapp","WhatsApp"]].map(([value,label]) => <label key={value} className="flex min-h-12 items-center gap-2 rounded-xl border border-slate-200 px-3"><input type="checkbox" name="alert_channel" value={value} defaultChecked={alertProfile?.channels?.includes(value)} className="h-4 w-4 accent-emerald-800" />{label}</label>)}</div></fieldset>
+                <fieldset className="grid gap-2 sm:col-span-2"><legend className="text-sm font-semibold">{lang === "np" ? "सूचना पाउने माध्यम" : "Preferred notification channels"}</legend><div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">{[["email","Email"],["sms","SMS"],["whatsapp_message","WhatsApp message"],["whatsapp_call","WhatsApp voice call"]].map(([value,label]) => <label key={value} className="flex min-h-12 items-center gap-2 rounded-xl border border-slate-200 px-3"><input type="checkbox" name="alert_channel" value={value} defaultChecked={alertProfile?.channels?.includes(value)} className="h-4 w-4 accent-emerald-800" />{label}</label>)}</div><p className="text-xs leading-5 text-slate-500">{lang === "np" ? "WhatsApp सन्देश र आवाज कलका लागि छुट्टाछुट्टै अनुमति र Meta को स्वीकृति आवश्यक हुन्छ। अहिले कुनै कल वा सन्देश पठाइँदैन।" : "WhatsApp messages and voice calls require separate opt-ins and Meta eligibility. No calls or messages are sent by this form."}</p></fieldset>
                 <fieldset className="grid gap-2 sm:col-span-2"><legend className="text-sm font-semibold">{lang === "np" ? "कुन जोखिमको सूचना चाहिन्छ?" : "Which wildlife risks interest you?"}</legend><div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">{(lang === "np" ? [["crop","बाली क्षति"],["livestock","पशुधनमा आक्रमण"],["elephant","हात्ती"],["rhino","गैँडा"],["tiger","बाघ"],["leopard","चितुवा"],["monkey","बाँदर"],["other","अन्य"]] : [["crop","Crop damage"],["livestock","Livestock attacks"],["elephant","Elephants"],["rhino","Rhinos"],["tiger","Tigers"],["leopard","Leopards"],["monkey","Monkeys"],["other","Other"]]).map(([value,label]) => <label key={value} className="flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 px-3"><input type="checkbox" name="alert_risk" value={value} defaultChecked={alertProfile?.risks?.includes(value)} className="h-4 w-4 accent-emerald-800" />{label}</label>)}</div></fieldset>
-                <label className="flex items-start gap-3 rounded-xl bg-emerald-50 p-3 text-xs leading-5 text-slate-700 sm:col-span-2"><input type="checkbox" name="alert_location" defaultChecked={alertProfile?.locationConsent} className="mt-1 h-4 w-4 accent-emerald-800" /><span>{lang === "np" ? "स्थानमा आधारित सूचना सुविधाका लागि अनुमति मागिएको बेला मात्र उपकरणको स्थान प्रयोग गर्न सहमत छु।" : "I consent to location access only when requested for location-based alerts; this does not enable continuous background tracking."}</span></label>
-                <p className="text-xs leading-5 text-slate-500 sm:col-span-2">{lang === "np" ? "फोन वा इमेलमध्ये कम्तीमा एउटा राख्नुहोस्। अहिले विवरण यही ब्राउजरमा मात्र सुरक्षित हुन्छ; वास्तविक सूचना पठाउन backend सेवा सक्रिय गर्न बाँकी छ।" : "Provide at least one contact method. Preferences are currently stored only in this browser; backend activation is still required before alerts can be delivered."}</p>
-                <button type="submit" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-900 px-5 text-sm font-bold text-white hover:bg-emerald-800 sm:col-span-2">{lang === "np" ? "सूचना प्राथमिकता सुरक्षित गर्नुहोस्" : "Save alert preferences"}<ArrowRight className="h-4 w-4" /></button>
-                {alertSaved && <p role="status" className="text-sm font-semibold text-emerald-800 sm:col-span-2">{lang === "np" ? "प्राथमिकता यो उपकरणमा सुरक्षित भयो। वास्तविक सूचना सेवा अझै सक्रिय छैन।" : "Preferences saved on this device. Live notification delivery is not active yet."}</p>}
+                <div className="grid gap-3 rounded-xl border border-emerald-100 bg-emerald-50 p-3 sm:col-span-2"><div className="flex flex-wrap items-center justify-between gap-2"><span className="text-sm font-semibold">{lang === "np" ? "फार्मको स्थान" : "Farm location"}</span><button type="button" onClick={captureAlertFarmLocation} disabled={alertLocationBusy} className="min-h-10 rounded-full border border-emerald-900/20 bg-white px-3 text-xs font-semibold text-emerald-900 disabled:opacity-60">{alertLocationBusy ? (lang === "np" ? "स्थान खोज्दै…" : "Getting location…") : (lang === "np" ? "हालको GPS स्थान लिनुहोस्" : "Use current GPS location")}</button></div><div className="grid grid-cols-2 gap-3"><label className="grid gap-1 text-xs font-semibold">{lang === "np" ? "अक्षांश" : "Latitude"}<input name="alert_latitude" type="number" step="any" value={alertLatitude} onChange={(event) => { setAlertLatitude(event.target.value); setAlertLocationSource("manual"); setAlertLocationAccuracy(null); }} required className="min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm font-normal" placeholder="28.21" /></label><label className="grid gap-1 text-xs font-semibold">{lang === "np" ? "देशान्तर" : "Longitude"}<input name="alert_longitude" type="number" step="any" value={alertLongitude} onChange={(event) => { setAlertLongitude(event.target.value); setAlertLocationSource("manual"); setAlertLocationAccuracy(null); }} required className="min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm font-normal" placeholder="83.99" /></label></div><p className="text-xs text-slate-500">{lang === "np" ? "GPS अनुमति दिएर एकपटक स्थान लिनुहोस् वा निर्देशाङ्क आफैँ लेख्नुहोस्।" : "Use one-time GPS permission or enter the coordinates manually."}</p><label className="flex items-start gap-3 rounded-lg bg-white p-3 text-xs leading-5 text-slate-700"><input type="checkbox" name="alert_location" required defaultChecked={alertProfile?.location_consent === true} className="mt-1 h-4 w-4 accent-emerald-800" /><span>{lang === "np" ? "यस फार्मको स्थान WLMS ले वन्यजन्तु जोखिमसँग मिलाउन र सम्बन्धित अग्रिम सूचना पठाउन सुरक्षित राख्न म सहमत छु। मेरो फोन निरन्तर track गरिने छैन।" : "I consent to WLMS storing this farm location to match nearby wildlife risks and send relevant alerts. My phone will not be continuously tracked."}</span></label></div>
+                <p className="text-xs leading-5 text-slate-500 sm:col-span-2">{lang === "np" ? "फोन वा इमेलमध्ये कम्तीमा एउटा राख्नुहोस्। सूचना पठाउनुअघि सम्पर्क पुष्टि र सेवा प्रदायकको एकीकरण आवश्यक हुन्छ।" : "Provide at least one contact method. Contact verification and provider activation are required before any alert is delivered."}</p>
+                <button type="submit" disabled={alertSaveBusy} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-900 px-5 text-sm font-bold text-white hover:bg-emerald-800 disabled:opacity-60 sm:col-span-2">{alertSaveBusy ? (lang === "np" ? "सुरक्षित गर्दै…" : "Saving…") : (lang === "np" ? "सूचना प्राथमिकता सुरक्षित गर्नुहोस्" : "Save alert preferences")}<ArrowRight className="h-4 w-4" /></button>
+                {alertSaved && <p role="status" className="text-sm font-semibold text-emerald-800 sm:col-span-2">{lang === "np" ? `प्राथमिकता सर्भरमा प्राप्त भयो (${alertStatus})। सम्पर्क पुष्टि र सेवा सक्रिय नभएसम्म सूचना पठाइँदैन।` : `Preferences received by WLMS (${alertStatus}). No alerts will be delivered until contact verification and provider activation.`}</p>}
               </div>
             </form>
           </div>
