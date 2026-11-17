@@ -14,12 +14,12 @@ const labels = {
   en: {
     title: "Human Wildlife Conflict Management System", subtitle: "Report wildlife from anywhere in the world — no account needed",
     gpsLoading: "Acquiring GPS…", gpsLocked: "GPS locked", noGps: "No GPS fix", enableGps: "GPS can use satellite signals without internet. Allow location access; HTTPS is required. A fix may take longer or be unavailable in some places.", refreshGps: "Get / refresh GPS", gettingGps: "Getting location…", manualCoordinates: "Or enter coordinates manually", latitude: "Latitude", longitude: "Longitude", coordinatePair: "Enter both latitude and longitude, or leave both blank.", coordinateInvalid: "Check coordinates: latitude −90 to 90, longitude −180 to 180.",
-    captured: "Captured photo", retake: "Retake", name: "Your name (optional)", namePlaceholder: "e.g. Ram Sharma", country: "Country", countryPlaceholder: "e.g. Nepal", countryRequired: "Enter the country where this photo was taken.", province: "State / Province / Region (optional)", district: "District / County (optional)", location: "Location / Area name", locationPlaceholder: "City, village, farm or landmark", notes: "Notes (optional)", notesPlaceholder: "What was the animal doing?", submit: "Submit report for review", submitting: "Submitting report…", thankYou: "Thank you! Your report was received.", flagship: "Priority species — reviewer attention requested", privacy: "Photos are stored privately. Reports are reviewed before they are treated as confirmed.", submitted: "Your report was received for human review.", language: "नेपाली", consent: "I agree to share this photo and its location with authorized project reviewers for conflict research.", locationRequired: "Location is required. Allow GPS or enter both coordinates manually.", gpsPrecision: "GPS is an estimate. Check its displayed accuracy before sending.",
+    captured: "Captured photo", retake: "Retake", name: "Your name (optional)", namePlaceholder: "e.g. Ram Sharma", country: "Country", countryPlaceholder: "e.g. Nepal", countryRequired: "Enter the country where this photo was taken.", province: "State / Province / Region (optional)", district: "District / County (optional)", location: "Location / Area name", locationPlaceholder: "City, village, farm or landmark", notes: "Notes (optional)", notesPlaceholder: "What was the animal doing?", submit: "Submit report for review", submitting: "Submitting report…", thankYou: "Thank you! Your report was received.", flagship: "Priority species — reviewer attention requested", privacy: "Photos are stored privately. Reports are reviewed before they are treated as confirmed.", consent: "I agree WLMS may save and upload this photo, its capture time and the GPS location I provide to authorized reviewers for wildlife observation and safety analysis. Exact location is restricted.", consentBeforeCapture: "Consent is required before taking and saving a photo. You can withdraw before capture.", backgroundSyncNote: "The report is queued after capture. Background upload depends on browser and device support; keep WLMS open until upload is confirmed when possible.", submitted: "Your report was received for human review.", language: "नेपाली", consent: "I agree to share this photo and its location with authorized project reviewers for conflict research.", locationRequired: "Location is required. Allow GPS or enter both coordinates manually.", gpsPrecision: "GPS is an estimate. Check its displayed accuracy before sending.",
   },
   np: {
     title: "मानव–वन्यजन्तु द्वन्द्व व्यवस्थापन प्रणाली", subtitle: "विश्वको जुनसुकै ठाउँबाट वन्यजन्तुको जानकारी दिनुहोस् — खाता आवश्यक छैन",
     gpsLoading: "GPS खोज्दै…", gpsLocked: "GPS प्राप्त भयो", noGps: "GPS स्थान प्राप्त भएन", enableGps: "GPS ले इन्टरनेटबिना पनि उपग्रहबाट स्थान लिन सक्छ। स्थान अनुमति दिनुहोस्; HTTPS आवश्यक छ। केही ठाउँमा स्थान पत्ता लगाउन समय लाग्न सक्छ।", refreshGps: "GPS लिनुहोस् / फेरि खोज्नुहोस्", gettingGps: "स्थान खोज्दै…", manualCoordinates: "वा निर्देशाङ्क आफैँ लेख्नुहोस्", latitude: "अक्षांश", longitude: "देशान्तर", coordinatePair: "अक्षांश र देशान्तर दुवै लेख्नुहोस् वा दुवै खाली छोड्नुहोस्।", coordinateInvalid: "निर्देशाङ्क जाँच्नुहोस्: अक्षांश −९० देखि ९० र देशान्तर −१८० देखि १८० सम्म।",
-    captured: "तस्बिर खिचियो", retake: "फेरि खिच्नुहोस्", name: "तपाईंको नाम (वैकल्पिक)", namePlaceholder: "जस्तै: राम शर्मा", country: "देश", countryPlaceholder: "जस्तै: नेपाल", countryRequired: "तस्बिर खिचिएको देश लेख्नुहोस्।", province: "प्रदेश / राज्य / क्षेत्र (वैकल्पिक)", district: "जिल्ला / काउन्टी (वैकल्पिक)", location: "स्थान / क्षेत्र", locationPlaceholder: "सहर, गाउँ, खेत वा चिनारीको स्थान", notes: "टिप्पणी (वैकल्पिक)", notesPlaceholder: "जनावरले के गरिरहेको थियो?", submit: "समीक्षाका लागि पठाउनुहोस्", submitting: "पठाउँदै…", thankYou: "धन्यवाद! तपाईंको विवरण प्राप्त भयो।", flagship: "प्राथमिक प्रजाति — समीक्षकले हेर्नुपर्ने", privacy: "तस्बिर निजी रूपमा सुरक्षित हुन्छ। पुष्टि भएको मान्नुअघि विवरण समीक्षा गरिन्छ।", submitted: "तपाईंको विवरण मानव समीक्षाका लागि प्राप्त भयो।", language: "English", consent: "द्वन्द्व अनुसन्धानका लागि अधिकृत परियोजना समीक्षकसँग यो तस्बिर र स्थान साझा गर्न म सहमत छु।", locationRequired: "स्थान आवश्यक छ। GPS अनुमति दिनुहोस् वा दुवै निर्देशाङ्क आफैँ लेख्नुहोस्।", gpsPrecision: "GPS अनुमानित हुन्छ। पठाउनुअघि देखाइएको शुद्धता जाँच्नुहोस्।",
+    captured: "तस्बिर खिचियो", retake: "फेरि खिच्नुहोस्", name: "तपाईंको नाम (वैकल्पिक)", namePlaceholder: "जस्तै: राम शर्मा", country: "देश", countryPlaceholder: "जस्तै: नेपाल", countryRequired: "तस्बिर खिचिएको देश लेख्नुहोस्।", province: "प्रदेश / राज्य / क्षेत्र (वैकल्पिक)", district: "जिल्ला / काउन्टी (वैकल्पिक)", location: "स्थान / क्षेत्र", locationPlaceholder: "सहर, गाउँ, खेत वा चिनारीको स्थान", notes: "टिप्पणी (वैकल्पिक)", notesPlaceholder: "जनावरले के गरिरहेको थियो?", submit: "समीक्षाका लागि पठाउनुहोस्", submitting: "पठाउँदै…", thankYou: "धन्यवाद! तपाईंको विवरण प्राप्त भयो।", flagship: "प्राथमिक प्रजाति — समीक्षकले हेर्नुपर्ने", privacy: "तस्बिर निजी रूपमा सुरक्षित हुन्छ। पुष्टि भएको मान्नुअघि विवरण समीक्षा गरिन्छ।", consent: "यो तस्बिर, खिचिएको समय र मैले दिएको GPS स्थान WLMS ले सुरक्षित गरी वन्यजन्तु अवलोकन तथा सुरक्षा विश्लेषणका लागि अधिकृत समीक्षकलाई पठाउन सक्छ भन्नेमा म सहमत छु। वास्तविक स्थानमा पहुँच सीमित हुनेछ।", consentBeforeCapture: "तस्बिर खिचेर सुरक्षित गर्नुअघि स्वीकृति आवश्यक छ। तस्बिर खिच्नुअघि स्वीकृति फिर्ता लिन सक्नुहुन्छ।", backgroundSyncNote: "तस्बिर खिचेपछि विवरण पठाउन लाममा राखिन्छ। एप बन्द भएपछि स्वतः पठिने सुविधा ब्राउजर र फोनमा निर्भर हुन्छ; सम्भव भए सर्भरबाट प्राप्त भएको पुष्टि नहुँदासम्म WLMS खुला राख्नुहोस्।", submitted: "तपाईंको विवरण मानव समीक्षाका लागि प्राप्त भयो।", language: "English", consent: "द्वन्द्व अनुसन्धानका लागि अधिकृत परियोजना समीक्षकसँग यो तस्बिर र स्थान साझा गर्न म सहमत छु।", locationRequired: "स्थान आवश्यक छ। GPS अनुमति दिनुहोस् वा दुवै निर्देशाङ्क आफैँ लेख्नुहोस्।", gpsPrecision: "GPS अनुमानित हुन्छ। पठाउनुअघि देखाइएको शुद्धता जाँच्नुहोस्।",
   },
 };
 
@@ -58,6 +58,7 @@ export default function PublicCapture() {
   const [captureMetadata, setCaptureMetadata] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [consent, setConsent] = useState(false);
+  const [consentAt, setConsentAt] = useState(null);
   const [captureLocationBusy, setCaptureLocationBusy] = useState(false);
 
   useEffect(() => {
@@ -157,6 +158,7 @@ export default function PublicCapture() {
   };
 
   const handleCapture = async (photoDataUrl) => {
+    if (!consent || !consentAt) return;
     const capturedAt = new Date().toISOString();
     const captureId = createOfflineReportId();
     setPendingPhoto(photoDataUrl);
@@ -168,15 +170,23 @@ export default function PublicCapture() {
       longitude: freshFix?.longitude ?? null,
       accuracy: freshFix?.accuracy ?? null,
       location_captured_at: freshFix?.timestamp ? new Date(freshFix.timestamp).toISOString() : null,
+      consent: true,
+      consent_at: consentAt,
+      consent_text_version: "wlms-public-capture-v1",
     };
     setCaptureMetadata({ capture_id: captureId, captured_at: capturedAt, coords: freshFix });
     try {
       const blob = await (await fetch(photoDataUrl)).blob();
-      await saveCaptureDraft({ id: captureId, payload: basePayload, photoBlob: blob });
+      await saveCaptureDraft({ id: captureId, payload: basePayload, photoBlob: blob, consentAt });
+      if (!freshFix) await updateOfflineReport(captureId, { status: "draft" });
     } catch (error) {
       toast({ title: lang === "np" ? "तस्बिर फोनमा सुरक्षित गर्न सकिएन" : "Could not save photo on this device", description: error.message, variant: "destructive" });
     }
-    if (freshFix) return;
+    if (freshFix) {
+      syncOfflineReports().catch(() => {});
+      requestOfflineReportSync().catch(() => {});
+      return;
+    }
     setCaptureLocationBusy(true);
     try {
       const freshCoords = await refreshGps();
@@ -189,8 +199,14 @@ export default function PublicCapture() {
           longitude: freshCoords.longitude,
           accuracy: freshCoords.accuracy ?? null,
           location_captured_at: locationCapturedAt,
+          consent: true,
+          consent_at: consentAt,
+          consent_text_version: "wlms-public-capture-v1",
         },
+        status: "pending",
       });
+      syncOfflineReports().catch(() => {});
+      requestOfflineReportSync().catch(() => {});
     } catch {
       // The photo draft remains saved; the reporter can retry GPS or enter coordinates manually.
     } finally {
@@ -211,6 +227,8 @@ export default function PublicCapture() {
       const payload = {
         ...(existingDraft?.payload || {}),
         consent: true,
+        consent_at: consentAt || existingDraft?.payload?.consent_at || new Date().toISOString(),
+        consent_text_version: "wlms-public-capture-v1",
         latitude: point.latitude,
         longitude: point.longitude,
         accuracy: manualPoint ? null : point.accuracy ?? null,
@@ -235,6 +253,7 @@ export default function PublicCapture() {
       setPendingPhoto(null);
       setCaptureMetadata(null);
       setConsent(false);
+      setConsentAt(null);
       setManualLatitude("");
       setManualLongitude("");
       toast({
@@ -287,6 +306,14 @@ export default function PublicCapture() {
           </div>
         </div>
 
+        {/* Explicit consent is collected before the camera can capture or persist a photo. */}
+        {!pendingPhoto && (
+          <label className="mb-4 flex cursor-pointer items-start gap-3 rounded-xl border border-emerald-200 bg-white p-3 text-xs leading-5 text-slate-700">
+            <input type="checkbox" checked={consent} onChange={(event) => { setConsent(event.target.checked); setConsentAt(event.target.checked ? new Date().toISOString() : null); }} className="mt-0.5 h-4 w-4 shrink-0 accent-emerald-700" />
+            <span>{t.consent}<span className="mt-1 block text-[11px] text-slate-500">{t.consentBeforeCapture}</span></span>
+          </label>
+        )}
+
         {/* Camera or pending preview */}
         {pendingPhoto ? (
           <div className="mb-4">
@@ -294,7 +321,7 @@ export default function PublicCapture() {
               <img src={pendingPhoto} alt={t.captured} className="w-full h-full object-cover" />
               <button
                 disabled={captureLocationBusy}
-                onClick={() => { if (captureMetadata?.capture_id) deleteOfflineReport(captureMetadata.capture_id).catch(() => {}); setPendingPhoto(null); setCaptureMetadata(null); setConsent(false); }}
+                onClick={() => { if (captureMetadata?.capture_id) deleteOfflineReport(captureMetadata.capture_id).catch(() => {}); setPendingPhoto(null); setCaptureMetadata(null); setConsent(false); setConsentAt(null); }}
                 className="absolute top-3 right-3 flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-black/55 text-white backdrop-blur"
               >
                 <RefreshCw className="w-3.5 h-3.5" /> {t.retake}
@@ -303,7 +330,7 @@ export default function PublicCapture() {
           </div>
         ) : (
           <div className="mb-4">
-            <CameraViewfinder onCapture={handleCapture} disabled={submitting} />
+            <CameraViewfinder onCapture={handleCapture} disabled={submitting || !consent} />
           </div>
         )}
 
@@ -336,13 +363,6 @@ export default function PublicCapture() {
 
         {/* Submit */}
         {pendingPhoto && (
-          <label className="mb-4 flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-white p-3 text-xs leading-5 text-slate-600">
-            <input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-emerald-700" />
-            {t.consent}
-          </label>
-        )}
-
-        {pendingPhoto && (
           <button
             onClick={handleSubmit}
             disabled={submitting || captureLocationBusy || !consent}
@@ -356,6 +376,7 @@ export default function PublicCapture() {
           </button>
         )}
 
+        {pendingPhoto && <p className="mb-3 text-center text-[11px] leading-5 text-slate-500">{t.backgroundSyncNote}</p>}
         <p className="text-[11px] text-slate-400 text-center flex items-center justify-center gap-1">
           <MapPin className="w-3 h-3" />
           {t.privacy}
