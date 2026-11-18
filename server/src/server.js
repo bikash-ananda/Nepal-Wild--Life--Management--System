@@ -19,6 +19,7 @@ import { registerPublicRoutes } from "./public.js";
 import { registerAlertSubscriptionRoutes } from "./alert-subscriptions.js";
 import { registerWhatsAppAgentRoutes } from "./whatsapp-agent.js";
 import { registerResearchRoutes } from "./research.js";
+import { registerIotRoutes } from "./iot.js";
 
 const production = process.env.NODE_ENV === "production";
 const jwtSecret = process.env.JWT_SECRET || (!production ? "local-development-secret-change-before-deploy" : "");
@@ -94,6 +95,7 @@ registerPublicRoutes(app, pool, requireAuth, checkOrigin);
 registerAlertSubscriptionRoutes(app, pool, requireAuth, checkOrigin);
 registerWhatsAppAgentRoutes(app, pool, requireAuth, checkOrigin);
 registerResearchRoutes(app, pool);
+registerIotRoutes(app, pool, requireAuth, checkOrigin);
 
 app.post("/api/integrations/send-email", { preHandler: requireAuth, config: { rateLimit: { max: 10, timeWindow: "1 hour" } } }, async (request, reply) => {
   if (!checkOrigin(request, reply)) return;

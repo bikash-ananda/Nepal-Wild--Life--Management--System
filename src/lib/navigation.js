@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 
 const ALL_ROLES = [
-  "admin", "researcher", "reviewer", "field_officer", "field_worker", "community_reporter", "technician",
+  "admin", "researcher", "reviewer", "farmer", "field_officer", "field_worker", "community_reporter", "technician",
   "super_admin", "wildlife_admin", "government_officer",
   "technical_operator", "farm_owner", "farm_worker",
   "user"
@@ -70,6 +70,8 @@ export const navGroups = [
     label: "Farms & Devices",
     items: [
       { label: "Farms", path: "/sites", icon: Leaf, roles: ALL_ROLES },
+      { label: "My Farm Devices", path: "/my-farm/devices", icon: Activity, roles: ["farmer", "farm_owner", "farm_worker", "field_worker"] },
+      { label: "ESP32 Registry", path: "/iot-controllers", icon: Cpu, roles: ["admin", "technician"] },
       { label: "Cameras", path: "/cameras", icon: Camera, roles: TECH_ROLES.concat(["user"]) },
       { label: "Sensors", path: "/sensors", icon: Activity, roles: TECH_ROLES.concat(["user"]) },
       { label: "Devices", path: "/devices", icon: Cpu, roles: TECH_ROLES.concat(["user"]) },
@@ -99,6 +101,7 @@ export const roleLabels = {
   admin: "Administrator",
   researcher: "Researcher",
   reviewer: "Reviewer",
+  farmer: "Farmer",
   field_officer: "Field Officer",
   field_worker: "Field Worker",
   community_reporter: "Community Reporter",
@@ -122,6 +125,12 @@ export function canAccessNav(userRole, allowedRoles) {
 }
 
 export function getFilteredNavGroups(userRole) {
+  if (userRole === "farmer") {
+    const farmerItems = new Set(["Dashboard", "Live Map", "Incidents", "Field Capture", "Alerts", "Farms", "My Farm Devices"]);
+    return navGroups
+      .map((group) => ({ ...group, items: group.items.filter((item) => farmerItems.has(item.label)) }))
+      .filter((group) => group.items.length > 0);
+  }
   return navGroups
     .map((group) => ({
       ...group,
@@ -136,4 +145,12 @@ export const mobileNavItems = [
   { label: "Map", path: "/map", icon: Map },
   { label: "Alerts", path: "/notifications", icon: Bell },
   { label: "Team", path: "/team", icon: Users },
+];
+
+export const farmerMobileNavItems = [
+  { label: "Home", path: "/my-farm", icon: LayoutDashboard },
+  { label: "Devices", path: "/my-farm/devices", icon: Activity },
+  { label: "Report", path: "/field-capture", icon: Camera },
+  { label: "Map", path: "/map", icon: Map },
+  { label: "Alerts", path: "/notifications", icon: Bell },
 ];

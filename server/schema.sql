@@ -280,3 +280,41 @@ CREATE TABLE IF NOT EXISTS whatsapp_agent_settings (
 INSERT INTO whatsapp_agent_settings (id, official_number, display_name, agent_enabled, live_delivery_enabled, test_mode)
 VALUES (true, '9768004157', 'WLMS Wildlife Alert Assistant', false, false, true)
 ON CONFLICT (id) DO NOTHING;
+
+-- Farm-scoped ESP32 / IoT controller registry. Device credentials are high-entropy
+-- bearer tokens; only SHA-256 hashes are persisted. Physical fence energizers are
+-- deliberately not represented as remotely controllable command types.
+CREATE TABLE IF NOT EXISTS iot_controllers (
+  controller_id text PRIMARY KEY,
+  site_id text NOT NULL,
+  label text NOT NULL,
+  token_hash text NOT NULL UNIQUE,
+  firmware_version text NOT NULL DEFAULT '',
+  status text NOT NULL DEFAULT 'offline' CHECK (status IN ('online', 'offline', 'disabled')),
+  capabilities jsonb NOT NULL DEFAULT '{}'::jsonb,
+  enabled boolean NOT NULL DEFAULT true,
+  last_seen_at timestamptz,
+  created_by uuid REFERENCES app_users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS iot_controllers_site_idx ON iot_controllers (site_id, enabled);
+CREATE INDEX IF NOT EXISTS iot_controllers_last_seen_idx ON iot_controllers (last_seen_at DESC);
+
+CREATE TABLE IF NOT EXISTS iot_commands (
+  id uuid PRIMARY KEY,
+  controller_id text NOT NULL REFERENCES iot_controllers(controller_id) ON DELETE CASCADE,
+  site_id text NOT NULL,
+  requested_by uuid REFERENCES app_users(id) ON DELETE SET NULL,
+  command text NOT NULL CHECK (command IN ('siren', 'light')),
+  payload jsonb NOT NULL DEFAULT '{}'::jsonb,
+  status text NOT NULL DEFAULT 'queued' CHECK (status IN ('queued', 'sent', 'acknowledged', 'failed', 'expired')),
+  result_code text NOT NULL DEFAULT '',
+  expires_at timestamptz NOT NULL,
+  delivered_at timestamptz,
+  completed_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS iot_commands_poll_idx ON iot_commands (controller_id, status, created_at)
+  WHERE status = 'queued';
+CREATE INDEX IF NOT EXISTS iot_commands_site_history_idx ON iot_commands (site_id, created_at DESC);

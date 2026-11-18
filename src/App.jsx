@@ -29,6 +29,8 @@ const DeviceDetail = lazy(() => import('@/pages/DeviceDetail'));
 const DeviceDashboard = lazy(() => import('@/pages/DeviceDashboard'));
 const DeviceAdmin = lazy(() => import('@/pages/DeviceAdmin'));
 const DeviceSetupWizard = lazy(() => import('@/pages/DeviceSetupWizard'));
+const FarmDeviceControl = lazy(() => import('@/pages/FarmDeviceControl'));
+const IotControllerManager = lazy(() => import('@/pages/IotControllerManager'));
 const AIVerification = lazy(() => import('@/pages/AIVerification'));
 const AIModels = lazy(() => import('@/pages/AIModels'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
@@ -74,7 +76,7 @@ const WhatsAppAgent = lazy(() => import('@/pages/WhatsAppAgent'));
 // Add page imports here
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isAuthenticated } = useAuth();
+  const { isLoadingAuth, isAuthenticated, user } = useAuth();
   const location = useLocation();
   const isPublicRoute = location.pathname === "/public-capture";
   const isSpeciesLibrary = location.pathname === "/species-library";
@@ -117,7 +119,8 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={user?.role === "farmer" ? <FarmHome /> : <Home />} />
+        <Route path="/my-farm" element={user?.role === "farmer" ? <FarmHome /> : <Navigate to="/" replace />} />
         <Route path="/national-wildlife" element={<NationalWildlife />} />
         <Route path="/verification-game" element={<VerificationGame />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
@@ -141,6 +144,8 @@ const AuthenticatedApp = () => {
         <Route path="/device-dashboard" element={<DeviceDashboard />} />
         <Route path="/device-admin" element={<DeviceAdmin />} />
         <Route path="/device-setup" element={<DeviceSetupWizard />} />
+        <Route path="/my-farm/devices" element={<FarmDeviceControl />} />
+        <Route path="/iot-controllers" element={<IotControllerManager />} />
         <Route path="/ai-verification" element={<AIVerification />} />
         <Route path="/ai-models" element={<AIModels />} />
         <Route path="/notifications" element={<Notifications />} />
