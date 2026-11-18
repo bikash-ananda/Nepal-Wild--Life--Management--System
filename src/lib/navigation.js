@@ -125,6 +125,12 @@ export function canAccessNav(userRole, allowedRoles) {
 }
 
 export function getFilteredNavGroups(userRole) {
+  if (userRole === "farmer") {
+    const farmerItems = new Set(["Dashboard", "Live Map", "Incidents", "Field Capture", "Alerts", "Farms", "My Farm Devices"]);
+    return navGroups
+      .map((group) => ({ ...group, items: group.items.filter((item) => farmerItems.has(item.label)) }))
+      .filter((group) => group.items.length > 0);
+  }
   return navGroups
     .map((group) => ({
       ...group,
