@@ -100,11 +100,12 @@ export function registerIotRoutes(app, pool, requireAuth, checkOrigin) {
       return reply.code(400).send({ error: "Light action must be on or off." });
     }
     const result = await pool.query(
-      "SELECT controller_id, site_id, status FROM iot_controllers WHERE controller_id = $1 AND enabled = true",
+      "SELECT controller_id, site_id, status, last_seen_at FROM iot_controllers WHERE controller_id = $1 AND enabled = true",
       [controllerId]
     );
     const controller = result.rows[0];
     if (!controller) return reply.code(404).send({ error: "Controller not found." });
+    if (!controller.last_seen_at || Date.now() - new Date(controller.last_seen_at).getTime() > 90000) return reply.code(409).send({ error: "Controller is offline. No command was queued." });
     if (!canAccessSite(request.user, controller.site_id)) return reply.code(403).send({ error: "You do not have access to this farm." });
     const id = randomUUID();
     const payload = command === "siren"
@@ -122,7 +123,10 @@ export function registerIotRoutes(app, pool, requireAuth, checkOrigin) {
   app.get("/api/iot/device/commands", { preHandler: authenticateDevice }, async (request) => {
     const controller = request.iotController;
     const result = await pool.query(
-      `WITH next_commands AS (
+      `WITH expired_commands AS (
+         UPDATE iot_commands SET status = 'expired'
+         WHERE controller_id = $1 AND status = 'queued' AND expires_at <= now()
+       ), next_commands AS (
          SELECT id FROM iot_commands
          WHERE controller_id = $1 AND status = 'queued' AND expires_at > now()
          ORDER BY created_at ASC LIMIT 5
