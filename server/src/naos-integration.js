@@ -266,7 +266,12 @@ export function registerNaosIntegrationRoutes(app, pool) {
         location_accuracy_m: location.accuracy,
         location_precision: body.location.precision,
         location_zone_ref: location.zone_ref,
-        photos: mediaIds.map((id) => "media://" + id),
+        photos: mediaIds.map((id) => "/api/media/" + id),
+        evidence: evidence.rows.map((item) => ({
+          media_id: String(item.media_id),
+          file_url: "/api/media/" + item.media_id,
+          content_type: item.content_type,
+        })),
         is_demo: false,
         review_status: "pending",
       };
