@@ -1,0 +1,317 @@
+openapi: 3.1.0
+info:
+  title: WLMS NAOS Partner Reporting API
+  version: 1.0.0
+  description: |
+    Additive server-to-server API. WLMS remains the single source of truth for wildlife
+    reports, media evidence, review and audit. NAOS authenticates farmers and sends only
+    opaque subject/farm references. The bearer credential is server-side only.
+servers:
+  - url: https://{wlmsHost}
+    variables:
+      wlmsHost:
+        default: wildlife.example.org
+security:
+  - NaosBearer: []
+tags:
+  - name: Reporter links
+  - name: Evidence
+  - name: Reports
+paths:
+  /api/v1/integrations/naos/reporter-links:
+    post:
+      tags: [Reporter links]
+      summary: Create or renew an opaque consented farmer/farm link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ReporterLinkRequest'}
+      responses:
+        '201':
+          description: Active link
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ReporterLink'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+    delete:
+      tags: [Reporter links]
+      summary: Revoke a farmer/farm link
+      parameters:
+        - in: query
+          name: subject_ref
+          required: true
+          schema: {type: string}
+        - in: query
+          name: farm_ref
+          required: true
+          schema: {type: string}
+      responses:
+        '200':
+          description: Revocation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  revoked: {type: boolean}
+  /api/v1/integrations/naos/media:
+    post:
+      tags: [Evidence]
+      summary: Upload evidence to existing WLMS private media storage
+      parameters:
+        - in: header
+          name: X-NAOS-Subject-Ref
+          required: true
+          schema: {type: string}
+        - in: header
+          name: X-NAOS-Farm-Ref
+          required: true
+          schema: {type: string}
+        - in: header
+          name: X-NAOS-Evidence-Consent
+          required: true
+          schema: {type: string, const: 'true'}
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [consent, file]
+              properties:
+                consent: {type: string, const: 'true'}
+                file:
+                  type: string
+                  format: binary
+                  description: Supported WLMS image or MP4/WebM video file; current limit 20 MB.
+      responses:
+        '201':
+          description: Media stored in WLMS
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [media_id, file_uri, size_bytes]
+                properties:
+                  media_id: {type: string, format: uuid}
+                  file_uri: {type: string}
+                  size_bytes: {type: integer}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '413': {description: File exceeds upload limit}
+        '415': {description: Unsupported evidence media type}
+  /api/v1/integrations/naos/reports:
+    post:
+      tags: [Reports]
+      summary: Create a report in the existing WLMS reporting workflow
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: {type: string, minLength: 8, maxLength: 128}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ReportCreate'}
+      responses:
+        '201':
+          description: Report created in WLMS
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ReportCreated'}
+        '200':
+          description: Idempotent replay
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ReportCreated'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '409': {description: Idempotency conflict or report still processing}
+    get:
+      tags: [Reports]
+      summary: List reports for an active linked NAOS farmer/farm
+      parameters:
+        - in: query
+          name: subject_ref
+          required: true
+          schema: {type: string}
+        - in: query
+          name: farm_ref
+          required: true
+          schema: {type: string}
+      responses:
+        '200':
+          description: Farm-scoped report summaries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: {$ref: '#/components/schemas/ReportStatus'}
+  /api/v1/integrations/naos/reports/{reportId}:
+    get:
+      tags: [Reports]
+      summary: Retrieve a report status for the linked farmer/farm
+      parameters:
+        - in: path
+          name: reportId
+          required: true
+          schema: {type: string}
+        - in: query
+          name: subject_ref
+          required: true
+          schema: {type: string}
+        - in: query
+          name: farm_ref
+          required: true
+          schema: {type: string}
+      responses:
+        '200':
+          description: Farm-scoped report status
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ReportStatus'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/v1/integrations/naos/media/{mediaId}:
+    get:
+      tags: [Evidence]
+      summary: Retrieve evidence attached to a report for the linked farmer/farm
+      parameters:
+        - in: path
+          name: mediaId
+          required: true
+          schema: {type: string, format: uuid}
+        - in: query
+          name: subject_ref
+          required: true
+          schema: {type: string}
+        - in: query
+          name: farm_ref
+          required: true
+          schema: {type: string}
+      responses:
+        '200':
+          description: Private evidence bytes
+          content:
+            image/jpeg: {schema: {type: string, format: binary}}
+            image/png: {schema: {type: string, format: binary}}
+            image/webp: {schema: {type: string, format: binary}}
+            video/mp4: {schema: {type: string, format: binary}}
+            video/webm: {schema: {type: string, format: binary}}
+        '404': {$ref: '#/components/responses/NotFound'}
+components:
+  securitySchemes:
+    NaosBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+      description: High-entropy NAOS backend credential. Never expose to a browser or mobile app.
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    Unauthorized:
+      description: Invalid or missing partner credential
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    Forbidden:
+      description: No active consented farmer/farm link or media authorization
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    NotFound:
+      description: Report or evidence not found for this linked farm
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+  schemas:
+    Error:
+      type: object
+      properties:
+        error: {type: string}
+        message: {type: string}
+    ReporterLinkRequest:
+      type: object
+      additionalProperties: false
+      required: [naos_subject_ref, naos_farm_ref, consent]
+      properties:
+        naos_subject_ref: {type: string, minLength: 8, maxLength: 128, pattern: '^[A-Za-z0-9_-]+$'}
+        naos_farm_ref: {type: string, minLength: 8, maxLength: 128, pattern: '^[A-Za-z0-9_-]+$'}
+        wlms_site_ref: {type: [string, 'null'], maxLength: 128}
+        consent:
+          type: object
+          additionalProperties: false
+          required: [granted, purpose, recorded_at, policy_version]
+          properties:
+            granted: {const: true}
+            purpose: {const: wildlife_incident_reporting}
+            recorded_at: {type: string, format: date-time}
+            policy_version: {type: string, minLength: 1, maxLength: 40}
+    ReporterLink:
+      type: object
+      required: [link_id, naos_subject_ref, naos_farm_ref, status, created_at]
+      properties:
+        link_id: {type: string, format: uuid}
+        naos_subject_ref: {type: string}
+        naos_farm_ref: {type: string}
+        status: {const: active}
+        created_at: {type: string, format: date-time}
+    ReportCreate:
+      type: object
+      additionalProperties: false
+      required: [naos_subject_ref, naos_farm_ref, report_type, occurred_at, location, description]
+      properties:
+        naos_subject_ref: {type: string}
+        naos_farm_ref: {type: string}
+        report_type: {enum: [wildlife_sighting, crop_damage, livestock_attack, human_encounter, other]}
+        species_ref: {type: [string, 'null'], maxLength: 80}
+        occurred_at: {type: string, format: date-time}
+        location:
+          type: object
+          additionalProperties: false
+          required: [precision]
+          properties:
+            precision: {enum: [coarse, exact]}
+            zone_ref: {type: [string, 'null'], maxLength: 128}
+            latitude: {type: number, minimum: -90, maximum: 90}
+            longitude: {type: number, minimum: -180, maximum: 180}
+            accuracy_m: {type: number, minimum: 0, maximum: 100000}
+        description: {type: string, minLength: 5, maxLength: 2000}
+        damage_summary: {type: [string, 'null'], maxLength: 1000}
+        crop_type: {type: [string, 'null'], maxLength: 120}
+        livestock_type: {type: [string, 'null'], maxLength: 120}
+        estimated_loss_npr: {type: [number, 'null'], minimum: 0, maximum: 100000000}
+        evidence_media_ids:
+          type: array
+          maxItems: 5
+          items: {type: string, format: uuid}
+    ReportCreated:
+      type: object
+      required: [report_id, entity, status, verification_state, evidence_count]
+      properties:
+        report_id: {type: string}
+        entity: {enum: [WildlifeObservation, HwcCase, Incident]}
+        status: {type: string}
+        verification_state: {enum: [unverified, human_verified, rejected]}
+        evidence_count: {type: integer}
+        created_at: {type: string, format: date-time}
+        duplicate: {type: boolean}
+    ReportStatus:
+      type: object
+      required: [report_id, report_type, status, verification_state, evidence_count]
+      properties:
+        report_id: {type: string}
+        report_type: {type: string}
+        status: {type: string}
+        verification_state: {enum: [unverified, human_verified, rejected]}
+        occurred_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+        evidence_count: {type: integer}
