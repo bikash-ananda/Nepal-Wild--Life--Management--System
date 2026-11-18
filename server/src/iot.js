@@ -120,6 +120,10 @@ export function registerIotRoutes(app, pool, requireAuth, checkOrigin) {
   });
 
   app.get("/api/iot/commands/:commandId", { preHandler: requireAuth }, async (request, reply) => {
+    await pool.query(
+      "UPDATE iot_commands SET status = 'expired' WHERE id = $1 AND status IN ('queued', 'sent') AND expires_at <= now()",
+      [request.params.commandId]
+    );
     const result = await pool.query(
       "SELECT id AS command_id, controller_id, site_id, command, status, result_code, created_at, delivered_at, completed_at FROM iot_commands WHERE id = $1",
       [request.params.commandId]
@@ -136,7 +140,7 @@ export function registerIotRoutes(app, pool, requireAuth, checkOrigin) {
     const result = await pool.query(
       `WITH expired_commands AS (
          UPDATE iot_commands SET status = 'expired'
-         WHERE controller_id = $1 AND status = 'queued' AND expires_at <= now()
+         WHERE controller_id = $1 AND status IN ('queued', 'sent') AND expires_at <= now()
        ), next_commands AS (
          SELECT id FROM iot_commands
          WHERE controller_id = $1 AND status = 'queued' AND expires_at > now()
