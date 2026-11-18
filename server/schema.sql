@@ -318,3 +318,7 @@ CREATE TABLE IF NOT EXISTS naos_partner_idempotency (
   created_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (client_id, idempotency_key)
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS naos_submission_id_uniq
+  ON app_records ((data->>'naos_submission_id'))
+  WHERE data ? 'naos_submission_id';
