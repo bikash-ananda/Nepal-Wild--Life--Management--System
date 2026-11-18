@@ -83,7 +83,8 @@ app.get("/api/health", async (_request, reply) => {
 });
 
 await migrate();
-await pool.query("UPDATE notification_deliveries SET status = 'queued' WHERE status = 'sending'");\nawait pool.query("UPDATE naos_webhook_outbox SET status = 'queued' WHERE status = 'sending'");
+await pool.query("UPDATE notification_deliveries SET status = 'queued' WHERE status = 'sending'");
+await pool.query("UPDATE naos_webhook_outbox SET status = 'queued' WHERE status = 'sending'");
 await seedAdmin(app, pool);
 registerAuthRoutes(app, pool);
 registerRecordRoutes(app, pool, requireAuth, checkOrigin);
@@ -120,11 +121,13 @@ app.post("/api/integrations/send-email", { preHandler: requireAuth, config: { ra
   return { success: true };
 });
 
-let pushWorker;\nlet naosWebhookWorker;
+let pushWorker;
+let naosWebhookWorker;
 let stopCameraEngine = () => {};
 const shutdown = async (signal) => {
   app.log.info({ signal }, "Shutting down API");
-  clearInterval(pushWorker);\n  clearInterval(naosWebhookWorker);
+  clearInterval(pushWorker);
+  clearInterval(naosWebhookWorker);
   await stopCameraEngine();
   await app.close();
   await pool.end();
@@ -141,4 +144,9 @@ stopCameraEngine = startCameraEngine(app, pool);
 pushWorker = setInterval(() => {
   processPushOutbox(pool, app.log).catch((error) => app.log.error({ err: error }, "Push worker iteration failed"));
 }, 5000);
-pushWorker.unref();\n\nnaosWebhookWorker = setInterval(() => {\n  processNaosWebhookOutbox(pool, app.log).catch((error) => app.log.error({ err: error }, "NAOS webhook worker iteration failed"));\n}, 5000);\nnaosWebhookWorker.unref();
+pushWorker.unref();
+
+naosWebhookWorker = setInterval(() => {
+  processNaosWebhookOutbox(pool, app.log).catch((error) => app.log.error({ err: error }, "NAOS webhook worker iteration failed"));
+}, 5000);
+naosWebhookWorker.unref();
