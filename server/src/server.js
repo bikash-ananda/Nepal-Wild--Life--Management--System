@@ -20,6 +20,7 @@ import { registerAlertSubscriptionRoutes } from "./alert-subscriptions.js";
 import { registerWhatsAppAgentRoutes } from "./whatsapp-agent.js";
 import { registerResearchRoutes } from "./research.js";
 import { registerNaosIntegrationRoutes } from "./naos-integration.js";
+import { processNaosWebhookOutbox } from "./naos-webhooks.js";
 
 const production = process.env.NODE_ENV === "production";
 const jwtSecret = process.env.JWT_SECRET || (!production ? "local-development-secret-change-before-deploy" : "");
@@ -119,11 +120,11 @@ app.post("/api/integrations/send-email", { preHandler: requireAuth, config: { ra
   return { success: true };
 });
 
-let pushWorker;
+let pushWorker;\nlet naosWebhookWorker;
 let stopCameraEngine = () => {};
 const shutdown = async (signal) => {
   app.log.info({ signal }, "Shutting down API");
-  clearInterval(pushWorker);
+  clearInterval(pushWorker);\n  clearInterval(naosWebhookWorker);
   await stopCameraEngine();
   await app.close();
   await pool.end();
@@ -140,4 +141,4 @@ stopCameraEngine = startCameraEngine(app, pool);
 pushWorker = setInterval(() => {
   processPushOutbox(pool, app.log).catch((error) => app.log.error({ err: error }, "Push worker iteration failed"));
 }, 5000);
-pushWorker.unref();
+pushWorker.unref();\n\nnaosWebhookWorker = setInterval(() => {\n  processNaosWebhookOutbox(pool, app.log).catch((error) => app.log.error({ err: error }, "NAOS webhook worker iteration failed"));\n}, 5000);\nnaosWebhookWorker.unref();
