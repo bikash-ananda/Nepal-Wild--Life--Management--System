@@ -119,8 +119,8 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={["farmer", "farm_owner", "farm_worker"].includes(user?.role) ? <FarmHome /> : <Home />} />
-        <Route path="/my-farm" element={["farmer", "farm_owner", "farm_worker"].includes(user?.role) ? <FarmHome /> : <Navigate to="/" replace />} />
+        <Route path="/" element={user?.role === "farmer" ? <FarmHome /> : <Home />} />
+        <Route path="/my-farm" element={user?.role === "farmer" ? <FarmHome /> : <Navigate to="/" replace />} />
         <Route path="/national-wildlife" element={<NationalWildlife />} />
         <Route path="/verification-game" element={<VerificationGame />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
