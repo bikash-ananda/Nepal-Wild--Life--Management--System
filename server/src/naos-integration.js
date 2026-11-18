@@ -201,7 +201,25 @@ export function registerNaosIntegrationRoutes(app, pool) {
       if (!previous.rowCount || previous.rows[0].request_hash !== requestHash) {
         return fail(reply, 409, "idempotency_conflict", "This idempotency key was already used for a different report.");
       }
-      if (!previous.rows[0].response_json) return fail(reply, 409, "submission_processing", "This report submission is already being processed; retry shortly.");
+      if (!previous.rows[0].response_json) {
+        const recovered = await pool.query(
+          "SELECT id,data,created_at,updated_at,entity FROM app_records WHERE data->>'naos_submission_id'=$1 LIMIT 1",
+          [idempotencyKey]
+        );
+        if (!recovered.rowCount) return fail(reply, 409, "submission_processing", "This report submission is already being processed; retry shortly.");
+        const recoveredResponse = {
+          report_id: String(recovered.rows[0].id), entity: recovered.rows[0].entity,
+          status: recovered.rows[0].data.status || recovered.rows[0].data.review_status || "submitted",
+          verification_state: recovered.rows[0].data.verified === true ? "human_verified" : "unverified",
+          evidence_count: Array.isArray(recovered.rows[0].data.photos) ? recovered.rows[0].data.photos.length : 0,
+          created_at: recovered.rows[0].created_at, recovered: true,
+        };
+        await pool.query(
+          "UPDATE naos_partner_idempotency SET response_json=$3::jsonb WHERE client_id=$1 AND idempotency_key=$2",
+          [CLIENT_ID, idempotencyKey, JSON.stringify(recoveredResponse)]
+        );
+        return reply.code(200).send({ ...recoveredResponse, duplicate: true });
+      }
       return reply.code(200).send({ ...previous.rows[0].response_json, duplicate: true });
     }
 
@@ -221,6 +239,16 @@ export function registerNaosIntegrationRoutes(app, pool) {
         throw Object.assign(new Error("The linked WLMS site is no longer available."), { statusCode: 409 });
       }
 
+      const estimate = body.estimated_loss_npr == null || body.estimated_loss_npr === "" ? null : Number(body.estimated_loss_npr);
+      if (estimate !== null && (!Number.isFinite(estimate) || estimate < 0 || estimate > 100000000)) {
+        throw Object.assign(new Error("Estimated loss must be between NPR 0 and 100,000,000."), { statusCode: 400 });
+      }
+      if (body.report_type === "crop_damage" && body.crop_type != null && typeof body.crop_type !== "string") {
+        throw Object.assign(new Error("Crop type must be text."), { statusCode: 400 });
+      }
+      if (body.report_type === "livestock_attack" && body.livestock_type != null && typeof body.livestock_type !== "string") {
+        throw Object.assign(new Error("Livestock type must be text."), { statusCode: 400 });
+      }
       const common = {
         naos_submission_id: idempotencyKey,
         naos_subject_ref: body.naos_subject_ref,
@@ -279,7 +307,7 @@ export function registerNaosIntegrationRoutes(app, pool) {
           loss_type: body.report_type === "crop_damage" ? "crop" : "livestock",
           crop_type: String(body.crop_type || "").slice(0, 120),
           livestock_type: String(body.livestock_type || "").slice(0, 120),
-          estimated_loss_npr: body.estimated_loss_npr == null ? null : Number(body.estimated_loss_npr),
+          estimated_loss_npr: estimate,
           reporter_name: "NAOS farmer",
           visibility: "reviewer_only",
         });
