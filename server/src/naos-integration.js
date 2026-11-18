@@ -44,7 +44,7 @@ function consentValid(consent) {
     consent.policy_version.length > 0 && consent.policy_version.length <= 40;
 }
 
-function parseLocation(location) {
+export function parseLocation(location) {
   if (!location || !["coarse", "exact"].includes(location.precision)) {
     throw Object.assign(new Error("Choose coarse or exact location precision."), { statusCode: 400 });
   }
