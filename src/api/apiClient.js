@@ -180,6 +180,30 @@ export const api = {
     },
   },
 
+  research: {
+    publicList: (limit = 100) => request(`/api/public/research?limit=${encodeURIComponent(limit)}`),
+  },
+
+  alertSubscriptions: {
+    create: (payload) => request("/api/public/alert-subscriptions", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+    list: (limit = 50) => request(`/api/admin/alert-subscriptions?limit=${encodeURIComponent(limit)}`),
+    previewMatch: (event) => request("/api/admin/alert-subscriptions/preview-match", {
+      method: "POST",
+      body: JSON.stringify(event),
+    }),
+  },
+
+  whatsappAgent: {
+    get: () => request("/api/admin/whatsapp-agent"),
+    update: (settings) => request("/api/admin/whatsapp-agent", {
+      method: "PATCH",
+      body: JSON.stringify(settings),
+    }),
+  },
+
   notifications: {
     pushConfig: () => request("/api/notifications/push-config"),
 

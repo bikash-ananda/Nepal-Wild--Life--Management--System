@@ -7,6 +7,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { LanguageProvider } from '@/lib/LanguageContext';
 import ScrollToTop from './components/ScrollToTop';
+import PwaUpdateNotice from '@/components/PwaUpdateNotice';
 import Layout from '@/components/Layout';
 const Home = lazy(() => import('@/pages/Home'));
 const Sites = lazy(() => import('@/pages/Sites'));
@@ -68,6 +69,8 @@ const Register = lazy(() => import('@/pages/Register'));
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 const Accounts = lazy(() => import('@/pages/Accounts'));
+const AlertSubscribers = lazy(() => import('@/pages/AlertSubscribers'));
+const WhatsAppAgent = lazy(() => import('@/pages/WhatsAppAgent'));
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -75,11 +78,15 @@ const AuthenticatedApp = () => {
   const location = useLocation();
   const isPublicRoute = location.pathname === "/public-capture";
   const isSpeciesLibrary = location.pathname === "/species-library";
+  const isResearchKnowledge = location.pathname === "/research";
+
   const isPublicHome = ["/welcome", "/public"].includes(location.pathname) || (location.pathname === "/" && !isAuthenticated && !isLoadingAuth);
   const isAuthRoute = ["/login", "/register", "/forgot-password", "/reset-password"].includes(location.pathname);
 
   if (isPublicRoute) return <PublicCapture />;
   if (isSpeciesLibrary) return <SpeciesLibrary />;
+  if (isResearchKnowledge) return <ResearchKnowledge />;
+  if (isResearchKnowledge) return <ResearchKnowledge />;
   if (isPublicHome) return <PublicLanding />;
 
   if (isAuthRoute) {
@@ -148,6 +155,9 @@ const AuthenticatedApp = () => {
         <Route path="/detection-trends" element={<DetectionTrends />} />
         <Route path="/team" element={<Team />} />
         <Route path="/accounts" element={<Accounts />} />
+        <Route path="/alert-subscribers" element={<AlertSubscribers />} />
+        <Route path="/whatsapp-agent" element={<WhatsAppAgent />} />
+        <Route path="/research-manager" element={<ResearchManager />} />
         <Route path="/team/add" element={<AddTeamMember />} />
         <Route path="/team/:id" element={<TeamMemberDetail />} />
         <Route path="/api-integrations" element={<ApiIntegrations />} />
@@ -178,6 +188,7 @@ function App() {
         <QueryClientProvider client={queryClientInstance}>
           <Router>
             <ScrollToTop />
+            <PwaUpdateNotice />
             <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center" role="status" aria-label="Loading page"><div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" /></div>}>
               <AuthenticatedApp />
             </Suspense>

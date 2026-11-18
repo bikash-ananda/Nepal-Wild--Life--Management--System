@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "test": "node --test src/lib/language.test.js src/lib/preparePhotoUpload.test.js src/data/speciesLibrary.test.js",
+    "test": "node --test src/lib/language.test.js src/lib/preparePhotoUpload.test.js src/data/speciesLibrary.test.js src/data/researchKnowledge.test.js",
     "lint": "eslint . --quiet",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc -p ./jsconfig.json",

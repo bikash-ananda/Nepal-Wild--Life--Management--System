@@ -1,5 +1,7 @@
-const CACHE_NAME = "nws-shell-v3";
-const SHELL = ["/", "/index.html", "/manifest.json", "/icons/wildlife.svg?v=3", "/icons/wams-192.png?v=3", "/icons/wams-512.png?v=3"];
+importScripts("/offline-sync.js");
+
+const CACHE_NAME = "nws-shell-v5";
+const SHELL = ["/", "/index.html", "/manifest.json", "/wams-logo.webp?v=4", "/icons/wams-192.png?v=4", "/icons/wams-512.png?v=4"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -31,6 +33,18 @@ self.addEventListener("fetch", (event) => {
   }
 });
 
+self.addEventListener("sync", (event) => {
+  if (event.tag === "wams-public-report-sync") {
+    event.waitUntil(self.wamsSyncOfflineReports());
+  }
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "WAMS_SYNC_PUBLIC_REPORTS") {
+    event.waitUntil?.(self.wamsSyncOfflineReports());
+  }
+});
+
 self.addEventListener("push", (event) => {
   let message = {};
   try { message = event.data ? event.data.json() : {}; } catch { message = {}; }
@@ -40,8 +54,8 @@ self.addEventListener("push", (event) => {
     ? message.url : "/notifications";
   event.waitUntil(self.registration.showNotification(title, {
     body,
-    icon: "/icons/wams-192.png?v=3",
-    badge: "/icons/wams-192.png?v=3",
+    icon: "/wams-logo.webp?v=4",
+    badge: "/icons/wams-192.png?v=4",
     tag: String(message.tag || "wildlife-update").slice(0, 100),
     data: { path },
     renotify: false,
