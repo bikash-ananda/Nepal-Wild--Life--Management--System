@@ -313,7 +313,7 @@ export function registerNaosIntegrationRoutes(app, pool) {
           livestock_type: String(body.livestock_type || "").slice(0, 120),
           estimated_loss_npr: estimate,
           reporter_name: "NAOS farmer",
-          visibility: "reviewer_only",
+          visibility: link.wlms_site_ref ? "site" : "reviewer_only",
         });
       } else {
         entity = "Incident";
