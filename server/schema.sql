@@ -280,3 +280,41 @@ CREATE TABLE IF NOT EXISTS whatsapp_agent_settings (
 INSERT INTO whatsapp_agent_settings (id, official_number, display_name, agent_enabled, live_delivery_enabled, test_mode)
 VALUES (true, '9768004157', 'WLMS Wildlife Alert Assistant', false, false, true)
 ON CONFLICT (id) DO NOTHING;
+
+-- NAOS partner links store opaque external references only. No farmer PII or login credentials.
+CREATE TABLE IF NOT EXISTS naos_reporter_links (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  naos_subject_ref text NOT NULL CHECK (length(naos_subject_ref) BETWEEN 8 AND 128),
+  naos_farm_ref text NOT NULL CHECK (length(naos_farm_ref) BETWEEN 8 AND 128),
+  wlms_site_ref text,
+  consent_purpose text NOT NULL CHECK (consent_purpose = 'wildlife_incident_reporting'),
+  consent_recorded_at timestamptz NOT NULL,
+  consent_policy_version text NOT NULL,
+  status text NOT NULL DEFAULT 'active' CHECK (status IN ('active','revoked')),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (naos_subject_ref, naos_farm_ref)
+);
+CREATE INDEX IF NOT EXISTS naos_reporter_links_farm_idx
+  ON naos_reporter_links (naos_farm_ref, status);
+
+-- This table is only an authorization/association index. Binary evidence remains in media_assets.
+CREATE TABLE IF NOT EXISTS naos_evidence_links (
+  media_id uuid PRIMARY KEY REFERENCES media_assets(id) ON DELETE CASCADE,
+  naos_subject_ref text NOT NULL,
+  naos_farm_ref text NOT NULL,
+  report_id text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS naos_evidence_links_farm_idx
+  ON naos_evidence_links (naos_farm_ref, report_id);
+
+-- Idempotency protects retries across mobile offline synchronization.
+CREATE TABLE IF NOT EXISTS naos_partner_idempotency (
+  client_id text NOT NULL,
+  idempotency_key text NOT NULL,
+  request_hash text NOT NULL,
+  response_json jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (client_id, idempotency_key)
+);
