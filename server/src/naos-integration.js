@@ -224,12 +224,15 @@ export function registerNaosIntegrationRoutes(app, pool) {
     }
 
     try {
+      if (body.evidence_media_ids !== undefined && !Array.isArray(body.evidence_media_ids)) {
+        throw Object.assign(new Error("evidence_media_ids must be an array."), { statusCode: 400 });
+      }
       const mediaIds = Array.isArray(body.evidence_media_ids) ? body.evidence_media_ids : [];
       if (mediaIds.length > 5 || mediaIds.some((id) => !UUID_PATTERN.test(String(id)))) {
         throw Object.assign(new Error("Provide no more than five valid evidence media IDs."), { statusCode: 400 });
       }
       const evidence = mediaIds.length ? await pool.query(
-        "SELECT media_id FROM naos_evidence_links WHERE media_id = ANY($1::uuid[]) AND naos_subject_ref=$2 AND naos_farm_ref=$3 AND report_id IS NULL",
+        "SELECT e.media_id,m.content_type FROM naos_evidence_links e JOIN media_assets m ON m.id=e.media_id WHERE e.media_id = ANY($1::uuid[]) AND e.naos_subject_ref=$2 AND e.naos_farm_ref=$3 AND e.report_id IS NULL",
         [mediaIds, body.naos_subject_ref, body.naos_farm_ref]
       ) : { rows: [] };
       if (evidence.rows.length !== mediaIds.length) {
@@ -284,12 +287,13 @@ export function registerNaosIntegrationRoutes(app, pool) {
           media_asset_id: mediaIds[0] || null,
           visibility: link.wlms_site_ref ? "site" : "reviewer_only",
         });
-        if (mediaIds.length) {
+        const firstImage = evidence.rows.find((item) => String(item.content_type || "").startsWith("image/"));
+        if (firstImage) {
           await createRecord(pool, "VerificationSample", {
             capture_id: "naos:" + idempotencyKey,
             observation_id: record.id,
-            image_uri: "media://" + mediaIds[0],
-            image_url: "/api/media/" + mediaIds[0],
+            image_uri: "media://" + firstImage.media_id,
+            image_url: "/api/media/" + firstImage.media_id,
             species_name: "Unverified",
             status: "pending",
             source: "naos_partner_capture",
@@ -390,8 +394,8 @@ export function registerNaosIntegrationRoutes(app, pool) {
     }
     if (!await activeLink(pool, subjectRef, farmRef)) return fail(reply, 403, "reporter_link_required", "An active consented NAOS farmer/farm link is required.");
     const linked = await pool.query(
-      "SELECT m.storage_key,m.content_type FROM naos_evidence_links e JOIN media_assets m ON m.id=e.media_id WHERE e.media_id=$1 AND e.naos_subject_ref=$2 AND e.naos_farm_ref=$3 AND e.report_id IS NOT NULL",
-      [request.params.mediaId, subjectRef, farmRef]
+      "SELECT m.storage_key,m.content_type FROM naos_evidence_links e JOIN media_assets m ON m.id=e.media_id JOIN app_records r ON r.id=e.report_id AND r.entity = ANY($4::text[]) WHERE e.media_id=$1 AND e.naos_subject_ref=$2 AND e.naos_farm_ref=$3 AND e.report_id IS NOT NULL AND r.data->>'naos_subject_ref'=$2 AND r.data->>'naos_farm_ref'=$3",
+      [request.params.mediaId, subjectRef, farmRef, ["Incident", "HwcCase", "WildlifeObservation"]]
     );
     if (!linked.rowCount) return fail(reply, 404, "not_found", "Evidence file not found.");
     reply.header("Cache-Control", "private, no-store");
