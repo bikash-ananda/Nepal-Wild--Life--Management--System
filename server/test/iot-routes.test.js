@@ -10,7 +10,8 @@ const commands = new Map();
 const pool = {
   async query(sql, params = []) {
     if (sql.includes("FROM app_records") && sql.includes("entity = 'Site'")) {
-      return { rows: params[0] === "site-a" ? [{ id: "site-a" }] : [] };
+      const rows = params[0] === "site-a" ? [{ id: "site-a" }] : [];
+      return { rows, rowCount: rows.length };
     }
     if (sql.startsWith("INSERT INTO iot_controllers")) {
       const [controller_id, site_id, label, token_hash] = params;
