@@ -17,7 +17,7 @@ export function mediaIdFromUri(uri) {
   return match ? match[1] : null;
 }
 
-async function saveUpload(request, pool, visibility, actorId, requireConsent = false) {
+async function saveUpload(request, pool, visibility, actorId, requireConsent = false, allowVideo = false) {
   const part = await request.file();
   if (!part) throw Object.assign(new Error("Choose a file to upload."), { statusCode: 400 });
   if (requireConsent && part.fields?.consent?.value !== "true") {
@@ -25,9 +25,9 @@ async function saveUpload(request, pool, visibility, actorId, requireConsent = f
     throw Object.assign(new Error("Consent is required before uploading public wildlife photos."), { statusCode: 400 });
   }
   const contentType = String(part.mimetype || "").split(";")[0].toLowerCase();
-  if (requireConsent && !contentType.startsWith("image/")) {
+  if (requireConsent && !contentType.startsWith("image/") && !(allowVideo && contentType.startsWith("video/"))) {
     part.file.resume();
-    throw Object.assign(new Error("Public wildlife submissions accept image files only."), { statusCode: 415 });
+    throw Object.assign(new Error(allowVideo ? "Only supported image and video evidence files are accepted." : "Public wildlife submissions accept image files only."), { statusCode: 415 });
   }
   const extension = extensions.get(contentType);
   if (!extension) {
@@ -56,6 +56,11 @@ async function saveUpload(request, pool, visibility, actorId, requireConsent = f
     }
     throw error;
   }
+}
+
+/** Store consented NAOS partner evidence in the existing private WLMS media store. */
+export async function savePartnerUpload(request, pool) {
+  return saveUpload(request, pool, "private", null, true, true);
 }
 
 /** Store a camera-triggered JPEG using the same private media path as field uploads. */
