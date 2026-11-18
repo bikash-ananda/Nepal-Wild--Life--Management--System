@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Activity, ArrowUpRight, Bell, Camera, CheckCircle2, ChevronRight, CircleHelp, Clock3, Leaf, Map, RadioTower, ShieldCheck, Siren, Wifi, WifiOff, Zap } from "lucide-react";
+import { Activity, ArrowUpRight, Bell, Camera, ChevronRight, Leaf, Map, RadioTower, ShieldCheck, Wifi, WifiOff, Zap } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
 
