@@ -31,7 +31,7 @@ export default function IotControllerManager() {
       setSites(siteRows); setControllers(deviceRows);
     } catch (error) { toast({ title: "Could not load IoT registry", description: error.message, variant: "destructive" }); }
     finally { setLoading(false); }
-  }, [siteId, toast]);
+  }, [toast]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -53,9 +53,9 @@ export default function IotControllerManager() {
     <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-5">
       <h2 className="mb-4 text-lg font-semibold">Register a controller</h2>
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="space-y-1.5"><Label>Farm / Site</Label><select className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm" value={siteId} onChange={(event) => setSiteId(event.target.value)}><option value="">Select site</option>{sites.map((site) => <option key={site.id} value={site.id}>{site.name || site.id}</option>)}</select></div>
-        <div className="space-y-1.5"><Label>Controller name</Label><Input value={label} onChange={(event) => setLabel(event.target.value)} /></div>
-        <div className="space-y-1.5"><Label>Unique Controller ID</Label><Input value={controllerId} onChange={(event) => setControllerId(event.target.value)} /></div>
+        <div className="space-y-1.5"><Label>Farm / Site</Label><select className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm" value={siteId} onChange={(event) => setSiteId(event.target.value)}><option value="">फार्म छान्नुहोस्</option>{sites.map((site) => <option key={site.id} value={site.id}>{site.name || site.id}</option>)}</select></div>
+        <div className="space-y-1.5"><Label>Controller name</Label><Input value={label} onChange={(event) => setLabel(event.target.value)} placeholder="उदाहरण: Pokhara-21 Controller 01" /></div>
+        <div className="space-y-1.5"><Label>Unique Controller ID</Label><Input value={controllerId} onChange={(event) => setControllerId(event.target.value)} placeholder="उदाहरण: PK21-ESP32-001" /></div>
       </div>
       <Button className="mt-4" disabled={!siteId || !label.trim() || !controllerId.trim() || saving} onClick={provision}>{saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />} Register ESP32</Button>
       {token && <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4"><div className="mb-2 flex items-center gap-2 font-semibold text-emerald-900"><KeyRound className="h-4 w-4" /> One-time device token</div><code className="block break-all rounded bg-white p-3 text-xs">{token}</code><Button variant="outline" className="mt-3" onClick={() => navigator.clipboard?.writeText(token).then(() => toast({ title: "Token copied" })).catch(() => toast({ title: "Select and copy the token manually" }))}><Copy className="mr-2 h-4 w-4" /> Copy token</Button><p className="mt-2 text-xs text-emerald-900">यो token फेरि देखाइने छैन। Firmware मा सुरक्षित रूपमा राखेपछि यो प्यानल बन्द गर्नुहोस्।</p></div>}
