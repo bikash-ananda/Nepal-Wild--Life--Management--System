@@ -83,7 +83,7 @@ app.get("/api/health", async (_request, reply) => {
 });
 
 await migrate();
-await pool.query("UPDATE notification_deliveries SET status = 'queued' WHERE status = 'sending'");
+await pool.query("UPDATE notification_deliveries SET status = 'queued' WHERE status = 'sending'");\nawait pool.query("UPDATE naos_webhook_outbox SET status = 'queued' WHERE status = 'sending'");
 await seedAdmin(app, pool);
 registerAuthRoutes(app, pool);
 registerRecordRoutes(app, pool, requireAuth, checkOrigin);
