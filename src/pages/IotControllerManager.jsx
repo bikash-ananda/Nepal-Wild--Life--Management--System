@@ -18,8 +18,8 @@ export default function IotControllerManager() {
   const [sites, setSites] = useState([]);
   const [controllers, setControllers] = useState([]);
   const [siteId, setSiteId] = useState("");
-  const [label, setLabel] = useState("Pokhara-21 ESP32-01");
-  const [controllerId, setControllerId] = useState("PK21-ESP32-001");
+  const [label, setLabel] = useState("");
+  const [controllerId, setControllerId] = useState("");
   const [token, setToken] = useState("");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -29,7 +29,6 @@ export default function IotControllerManager() {
     try {
       const [siteRows, deviceRows] = await Promise.all([api.entities.Site.list(), request("/api/iot/controllers")]);
       setSites(siteRows); setControllers(deviceRows);
-      if (!siteId && siteRows.length) setSiteId(String(siteRows[0].id));
     } catch (error) { toast({ title: "Could not load IoT registry", description: error.message, variant: "destructive" }); }
     finally { setLoading(false); }
   }, [siteId, toast]);
