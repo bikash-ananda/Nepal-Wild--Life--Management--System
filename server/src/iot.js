@@ -105,8 +105,8 @@ export function registerIotRoutes(app, pool, requireAuth, checkOrigin) {
     );
     const controller = result.rows[0];
     if (!controller) return reply.code(404).send({ error: "Controller not found." });
-    if (!controller.last_seen_at || Date.now() - new Date(controller.last_seen_at).getTime() > 90000) return reply.code(409).send({ error: "Controller is offline. No command was queued." });
     if (!canAccessSite(request.user, controller.site_id)) return reply.code(403).send({ error: "You do not have access to this farm." });
+    if (!controller.last_seen_at || Date.now() - new Date(controller.last_seen_at).getTime() > 90000) return reply.code(409).send({ error: "Controller is offline. No command was queued." });
     const id = randomUUID();
     const payload = command === "siren"
       ? { command, action, duration_seconds: Number(body.duration_seconds) }
