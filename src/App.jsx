@@ -29,6 +29,8 @@ const DeviceDetail = lazy(() => import('@/pages/DeviceDetail'));
 const DeviceDashboard = lazy(() => import('@/pages/DeviceDashboard'));
 const DeviceAdmin = lazy(() => import('@/pages/DeviceAdmin'));
 const DeviceSetupWizard = lazy(() => import('@/pages/DeviceSetupWizard'));
+const FarmDeviceControl = lazy(() => import('@/pages/FarmDeviceControl'));
+const IotControllerManager = lazy(() => import('@/pages/IotControllerManager'));
 const AIVerification = lazy(() => import('@/pages/AIVerification'));
 const AIModels = lazy(() => import('@/pages/AIModels'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
