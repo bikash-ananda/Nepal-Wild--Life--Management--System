@@ -7,6 +7,7 @@ on:
     branches:
       - integration/wlms-unified-alerts-agent
       - feat/research-knowledge-centre
+      - feature/naos-partner-reporting-api
   workflow_dispatch:
 
 permissions:
