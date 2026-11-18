@@ -107,3 +107,36 @@ test("device endpoints reject missing credentials", async () => {
   const res = await app.inject({ method: "GET", url: "/api/iot/device/commands" });
   assert.equal(res.statusCode, 401);
 });
+test("a controller cannot acknowledge a command assigned to a different controller", async () => {
+  const registered = controllers.get("PK21-ESP32-001");
+  const token = "wlms_test_token_for_device_authentication_123456789";
+  commands.set("foreign-command", {
+    id: "foreign-command",
+    controller_id: "OTHER-ESP32",
+    site_id: "site-b",
+    command: "light",
+    status: "sent",
+  });
+  const res = await app.inject({
+    method: "POST",
+    url: "/api/iot/device/commands/foreign-command/ack",
+    headers: { authorization: `Bearer ${token}` },
+    payload: { outcome: "acknowledged", result_code: "ok" },
+  });
+  assert.equal(res.statusCode, 404);
+  assert.equal(commands.get("foreign-command").status, "sent");
+  assert.ok(registered.enabled);
+});
+
+test("disabled controller credentials are rejected", async () => {
+  const registered = controllers.get("PK21-ESP32-001");
+  const token = "wlms_test_token_for_device_authentication_123456789";
+  registered.enabled = false;
+  const res = await app.inject({
+    method: "GET",
+    url: "/api/iot/device/commands",
+    headers: { authorization: `Bearer ${token}` },
+  });
+  assert.equal(res.statusCode, 401);
+  registered.enabled = true;
+});
