@@ -30,6 +30,18 @@ export default function FarmDeviceControl() {
     return () => window.clearInterval(timer);
   }, [load]);
 
+  useEffect(() => {
+    if (!lastCommand || !["queued", "sent"].includes(lastCommand.status)) return undefined;
+    const poll = async () => {
+      try {
+        const current = await apiRequest(`/api/iot/commands/${encodeURIComponent(lastCommand.command_id)}`);
+        setLastCommand((previous) => previous?.command_id === current.command_id ? { ...previous, ...current } : previous);
+      } catch { /* The command may have expired or the session may have ended. */ }
+    };
+    const timer = window.setInterval(poll, 2500);
+    return () => window.clearInterval(timer);
+  }, [lastCommand]);
+
   const send = async (controller, command, action) => {
     if (command === "siren" && !window.confirm("५ सेकेन्डका लागि आफ्नो फार्मको Siren बजाउने? वरिपरि मानिस, बालबालिका र जनावरको अवस्था जाँच गर्नुहोस्।")) return;
     const key = controller.controller_id + ":" + command;
