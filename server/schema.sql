@@ -322,3 +322,18 @@ CREATE TABLE IF NOT EXISTS naos_partner_idempotency (
 CREATE UNIQUE INDEX IF NOT EXISTS naos_submission_id_uniq
   ON app_records ((data->>'naos_submission_id'))
   WHERE data ? 'naos_submission_id';
+
+-- Signed status-change events for the NAOS server-to-server webhook.
+CREATE TABLE IF NOT EXISTS naos_webhook_outbox (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_type text NOT NULL,
+  payload jsonb NOT NULL,
+  status text NOT NULL DEFAULT 'queued' CHECK (status IN ('queued','sending','delivered','failed')),
+  attempts integer NOT NULL DEFAULT 0,
+  next_attempt_at timestamptz NOT NULL DEFAULT now(),
+  last_error text NOT NULL DEFAULT '',
+  created_at timestamptz NOT NULL DEFAULT now(),
+  delivered_at timestamptz
+);
+CREATE INDEX IF NOT EXISTS naos_webhook_outbox_due_idx
+  ON naos_webhook_outbox (status, next_attempt_at, created_at);
