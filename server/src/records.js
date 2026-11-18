@@ -6,7 +6,7 @@ import { routeReportToOfficers } from "./report-routing.js";
 
 const privilegedEntities = new Set([
   "AIModel", "AuditLog", "AutomationRule", "Camera", "CameraPreset", "DatasetRecord", "Device", "DeviceTemplate",
-  "DeterrentDevice", "DeterrentRule", "EdgeDevice", "NotificationContact",
+  "DeterrentDevice", "DeterrentRule", "EdgeDevice", "NotificationContact", "ResearchStudy",
   "NotificationRule", "ResponseProtocol", "Sensor", "StreamSession", "TeamMember", "TrainingJob", "User", "VerificationSample",
 ]);
 const unscopedPrivilegedReaders = new Map([

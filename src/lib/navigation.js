@@ -1,5 +1,5 @@
 import {
-  LayoutDashboard, MapPin, Camera, Activity, Target,
+  LayoutDashboard, MapPin, Camera, Activity, Target, BookOpen,
   Zap, FileBarChart, Map, Shield, Brain, Workflow,
   Cpu, Settings, Phone, Globe, BarChart3, FileSpreadsheet, Scale,
   Users, Cable, Bell, Leaf, LineChart, ShieldAlert, Swords, Eye, Footprints, Fingerprint, History, Gamepad2, Trophy, ListOrdered, Route, BellRing, MessageCircle
@@ -85,6 +85,7 @@ export const navGroups = [
       { label: "Accounts & Site Access", path: "/accounts", icon: Users, roles: ["admin"] },
       { label: "Farmer Alert Registrations", path: "/alert-subscribers", icon: BellRing, roles: ["admin"] },
       { label: "WhatsApp AI Agent", path: "/whatsapp-agent", icon: MessageCircle, roles: ["admin"] },
+      { label: "Research Manager", path: "/research-manager", icon: BookOpen, roles: ADMIN_ROLES },
       { label: "Team", path: "/team", icon: Users, roles: ALL_ROLES },
       { label: "API & Integrations", path: "/api-integrations", icon: Cable, roles: ADMIN_ROLES },
       { label: "Reports", path: "/reports", icon: FileBarChart, roles: ["super_admin", "wildlife_admin", "government_officer", "admin", "user"] },

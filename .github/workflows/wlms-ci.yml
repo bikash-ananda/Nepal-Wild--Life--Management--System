@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - integration/wlms-unified-alerts-agent
+      - feat/research-knowledge-centre
   workflow_dispatch:
 
 permissions:
