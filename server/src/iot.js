@@ -1,7 +1,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { addAudit } from "./db.js";
 
-const farmerRoles = new Set(["field_officer", "field_worker", "community_reporter", "technician"]);
+const farmerRoles = new Set(["farmer", "field_officer", "field_worker", "community_reporter", "technician"]);
 const allowedCommands = new Set(["siren", "light"]);
 
 function hashToken(token) {
@@ -71,7 +71,7 @@ export function registerIotRoutes(app, pool, requireAuth, checkOrigin) {
       where += " AND site_id = ANY($1::text[])";
     }
     const result = await pool.query(
-      `SELECT controller_id, site_id, label, firmware_version, status, last_seen_at, capabilities, created_at FROM iot_controllers ${where} ORDER BY created_at DESC`,
+      `SELECT controller_id, site_id, label, firmware_version, CASE WHEN status = 'disabled' THEN 'disabled' WHEN last_seen_at IS NULL OR last_seen_at < now() - interval '90 seconds' THEN 'offline' ELSE 'online' END AS status, last_seen_at, capabilities, created_at FROM iot_controllers ${where} ORDER BY created_at DESC`,
       params
     );
     return result.rows;
@@ -125,8 +125,8 @@ export function registerIotRoutes(app, pool, requireAuth, checkOrigin) {
       `WITH next_commands AS (
          SELECT id FROM iot_commands
          WHERE controller_id = $1 AND status = 'queued' AND expires_at > now()
-         ORDER BY created_at ASC
-         FOR UPDATE SKIP LOCKED LIMIT 5
+         ORDER BY created_at ASC LIMIT 5
+         FOR UPDATE SKIP LOCKED
        )
        UPDATE iot_commands c SET status = 'sent', delivered_at = now()
        FROM next_commands n WHERE c.id = n.id
