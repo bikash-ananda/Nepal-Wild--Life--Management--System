@@ -393,6 +393,30 @@ export async function updateRecord(pool, entity, id, patch, actorId = null) {
     [entity, id, JSON.stringify(data), actorId || null]
   );
   await addAudit(actorId, "record.update", entity, id);
+  const reportEntity = ["Incident", "HwcCase", "WildlifeObservation"].includes(entity);
+  const statusChanged = existing.status !== data.status ||
+    existing.review_status !== data.review_status ||
+    existing.verified !== data.verified;
+  if (reportEntity && existing.source === "naos_partner" && statusChanged) {
+    const verificationState = data.verified === true ? "human_verified"
+      : data.review_status === "rejected" ? "rejected" : "unverified";
+    try {
+      await pool.query(
+        "INSERT INTO naos_webhook_outbox (event_type,payload) VALUES ($1,$2::jsonb)",
+        ["report.status_changed", JSON.stringify({
+          report_id: String(id), entity,
+          naos_subject_ref: data.naos_subject_ref,
+          naos_farm_ref: data.naos_farm_ref,
+          report_type: data.naos_report_type || data.observation_type || data.type || "other",
+          status: data.status || data.review_status || "submitted",
+          verification_state,
+          updated_at: now,
+        })]
+      );
+    } catch (error) {
+      console.error("NAOS status webhook enqueue failed", error.message);
+    }
+  }
   return view(result.rows[0], entity);
 }
 
