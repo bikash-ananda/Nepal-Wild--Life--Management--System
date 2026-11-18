@@ -17,7 +17,7 @@ export function mediaIdFromUri(uri) {
   return match ? match[1] : null;
 }
 
-async function saveUpload(request, pool, visibility, actorId, requireConsent = false, allowVideo = false) {
+async function saveUpload(request, pool, visibility, actorId, requireConsent = false, allowVideo = false, safeOriginalName = false) {
   const part = await request.file();
   if (!part) throw Object.assign(new Error("Choose a file to upload."), { statusCode: 400 });
   if (requireConsent && part.fields?.consent?.value !== "true") {
@@ -45,7 +45,7 @@ async function saveUpload(request, pool, visibility, actorId, requireConsent = f
     const sha256 = createHash("sha256").update(await readFile(destination)).digest("hex");
     await pool.query(
       "INSERT INTO media_assets (id, storage_key, original_name, content_type, size_bytes, sha256, visibility, uploaded_by) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-      [id, storageKey, path.basename(part.filename || "upload" + extension).slice(0, 240), contentType, fileStat.size, sha256, visibility, actorId || null]
+      [id, storageKey, safeOriginalName ? `evidence${extension}` : path.basename(part.filename || "upload" + extension).slice(0, 240), contentType, fileStat.size, sha256, visibility, actorId || null]
     );
     await addAudit(actorId, "media.upload", "MediaAsset", id, { content_type: contentType, size_bytes: fileStat.size });
     return { id, file_uri: "media://" + id, file_url: "/api/media/" + id, sha256, size_bytes: fileStat.size };
@@ -60,7 +60,7 @@ async function saveUpload(request, pool, visibility, actorId, requireConsent = f
 
 /** Store consented NAOS partner evidence in the existing private WLMS media store. */
 export async function savePartnerUpload(request, pool) {
-  return saveUpload(request, pool, "private", null, true, true);
+  return saveUpload(request, pool, "private", null, true, true, true);
 }
 
 /** Store a camera-triggered JPEG using the same private media path as field uploads. */
