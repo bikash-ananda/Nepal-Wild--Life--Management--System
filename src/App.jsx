@@ -141,6 +141,8 @@ const AuthenticatedApp = () => {
         <Route path="/device-dashboard" element={<DeviceDashboard />} />
         <Route path="/device-admin" element={<DeviceAdmin />} />
         <Route path="/device-setup" element={<DeviceSetupWizard />} />
+        <Route path="/my-farm/devices" element={<FarmDeviceControl />} />
+        <Route path="/iot-controllers" element={<IotControllerManager />} />
         <Route path="/ai-verification" element={<AIVerification />} />
         <Route path="/ai-models" element={<AIModels />} />
         <Route path="/notifications" element={<Notifications />} />
