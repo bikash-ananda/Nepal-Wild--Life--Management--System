@@ -25,7 +25,7 @@ export default function Layout() {
     items: group.items.map((item) => ({ ...item, label: translateWithFallback(lang, `nav.item.${item.label}`, item.label) })),
   }));
   const roleLabel = translateWithFallback(lang, `role.${userRole}`, roleLabels[userRole] || "User");
-  const isFarmerExperience = ["farmer", "farm_owner", "farm_worker"].includes(userRole);
+  const isFarmerExperience = userRole === "farmer";
   const bottomNavItems = isFarmerExperience ? farmerMobileNavItems : mobileNavItems;
 
   useEffect(() => {
