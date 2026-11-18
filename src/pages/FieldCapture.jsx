@@ -26,6 +26,7 @@ export default function FieldCapture() {
   const [lastCaptureAt, setLastCaptureAt] = useState(null);
   const [sites, setSites] = useState([]);
   const [siteId, setSiteId] = useState("");
+  const [photoConsent, setPhotoConsent] = useState(null);
 
   useEffect(() => {
     api.entities.Site.list().then((availableSites) => {
@@ -157,7 +158,22 @@ export default function FieldCapture() {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
         {/* Capture column */}
         <div className="lg:col-span-3 space-y-4">
-          <CameraViewfinder onCapture={handleCapture} disabled={Boolean(storageError) || loadingQueue || (syncing && online)} />
+          {photoConsent === true ? (
+            <CameraViewfinder onCapture={handleCapture} disabled={Boolean(storageError) || loadingQueue || (syncing && online)} />
+          ) : (
+            <section role="dialog" aria-modal="true" aria-labelledby="photo-consent-title" className="relative overflow-hidden rounded-3xl border-2 border-emerald-200 bg-white p-5 shadow-2xl sm:p-7">
+              <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-emerald-100/70" aria-hidden="true" />
+              <div className="relative mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-emerald-100 text-emerald-800"><Camera className="h-10 w-10" /></div>
+              <h2 id="photo-consent-title" className="relative mt-4 text-center text-xl font-extrabold leading-snug text-slate-950 sm:text-2xl">तस्बिर खिचेर WLMS मा पठाउन अनुमति दिनुहुन्छ?</h2>
+              <p className="relative mt-2 text-center text-sm leading-6 text-slate-700">तपाईंले खिच्नुभएको तस्बिर वन्यजन्तु अवलोकनको रिपोर्टसँग जोडेर परियोजनाका अधिकृत समीक्षकले हेर्न सक्नेछन्। तस्बिर खिच्नुअघि तपाईंको अनुमति आवश्यक छ।</p>
+              <div className="relative mt-5 grid gap-3 sm:grid-cols-2">
+                <button type="button" onClick={() => setPhotoConsent(true)} className="inline-flex min-h-[68px] items-center justify-center gap-3 rounded-2xl bg-emerald-700 px-5 py-4 text-lg font-extrabold text-white shadow-lg transition hover:bg-emerald-800 focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"><span aria-hidden="true" className="text-3xl leading-none">✓</span><span>अनुमति दिनुहोस्</span></button>
+                <button type="button" onClick={() => setPhotoConsent(false)} className="inline-flex min-h-[68px] items-center justify-center gap-3 rounded-2xl border-2 border-slate-300 bg-white px-5 py-4 text-lg font-bold text-slate-800 transition hover:bg-slate-50 focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-slate-400"><span aria-hidden="true" className="text-3xl leading-none">×</span><span>अहिले अनुमति नदिने</span></button>
+              </div>
+              {photoConsent === false && <p role="status" className="relative mt-3 rounded-xl bg-amber-50 p-3 text-center text-sm font-medium text-amber-900">तपाईंले फोटो अनुमति दिनुभएको छैन। फोटो नखिची अन्य विवरण हेर्न वा पृष्ठ छोड्न सक्नुहुन्छ।</p>}
+              <p className="relative mt-3 text-center text-xs text-slate-500">अनुमति दिनु वैकल्पिक हो। अनुमति नदिँदा पनि अन्य रिपोर्टिङ सुविधा प्रयोग गर्न सकिन्छ।</p>
+            </section>
+          )}
 
           <div className="space-y-3">
             {sites.length > 0 && <div className="space-y-1.5">
