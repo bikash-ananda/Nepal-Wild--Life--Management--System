@@ -36,7 +36,7 @@ export default function Layout() {
   }, []);
 
   const unackCount = alerts.filter((a) => !a.acknowledged).length;
-  const isActive = (path) => (path === "/" ? location.pathname === "/" : location.pathname.startsWith(path));
+  const isActive = (path) => (path === "/" ? location.pathname === "/" : path === "/my-farm" ? location.pathname === "/my-farm" : location.pathname.startsWith(path));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/40 to-slate-100 flex">
