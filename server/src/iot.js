@@ -119,6 +119,17 @@ export function registerIotRoutes(app, pool, requireAuth, checkOrigin) {
     return reply.code(202).send({ command_id: id, status: "queued", expires_in_seconds: 30 });
   });
 
+  app.get("/api/iot/commands/:commandId", { preHandler: requireAuth }, async (request, reply) => {
+    const result = await pool.query(
+      "SELECT id AS command_id, controller_id, site_id, command, status, result_code, created_at, delivered_at, completed_at FROM iot_commands WHERE id = $1",
+      [request.params.commandId]
+    );
+    const command = result.rows[0];
+    if (!command) return reply.code(404).send({ error: "Command not found." });
+    if (!canAccessSite(request.user, command.site_id)) return reply.code(403).send({ error: "You do not have access to this farm." });
+    return command;
+  });
+
   // ESP32 polling endpoint. Commands are short-lived and are delivered at most once.
   app.get("/api/iot/device/commands", { preHandler: authenticateDevice }, async (request) => {
     const controller = request.iotController;
