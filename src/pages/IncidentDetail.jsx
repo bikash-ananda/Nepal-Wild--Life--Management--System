@@ -50,10 +50,12 @@ export default function IncidentDetail() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-4">
-          {incident.photos?.length > 0 && (
-            <div className="grid grid-cols-3 gap-2">
-              {incident.photos.map((url, i) => (
-                <img key={i} src={url} alt="" className="rounded-lg w-full aspect-video object-cover border border-slate-200" />
+          {(incident.evidence?.length ? incident.evidence : (incident.photos || []).map((file_url) => ({ file_url, content_type: "image/*" }))).length > 0 && (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {(incident.evidence?.length ? incident.evidence : (incident.photos || []).map((file_url) => ({ file_url, content_type: "image/*" }))).map((evidence, i) => (
+                evidence.content_type?.startsWith("video/")
+                  ? <video key={evidence.media_id || i} src={evidence.file_url} controls playsInline preload="metadata" className="rounded-lg w-full aspect-video object-contain border border-slate-200" />
+                  : <img key={evidence.media_id || i} src={evidence.file_url} alt="" loading="lazy" className="rounded-lg w-full aspect-video object-cover border border-slate-200" />
               ))}
             </div>
           )}
