@@ -7,7 +7,7 @@ import { useLanguage } from "@/lib/LanguageContext";
 import { translateWithFallback } from "@/lib/language";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { getFilteredNavGroups, mobileNavItems, roleLabels } from "@/lib/navigation";
+import { getFilteredNavGroups, mobileNavItems, farmerMobileNavItems, roleLabels } from "@/lib/navigation";
 import LanguageToggle from "@/components/LanguageToggle";
 
 export default function Layout() {
@@ -25,6 +25,8 @@ export default function Layout() {
     items: group.items.map((item) => ({ ...item, label: translateWithFallback(lang, `nav.item.${item.label}`, item.label) })),
   }));
   const roleLabel = translateWithFallback(lang, `role.${userRole}`, roleLabels[userRole] || "User");
+  const isFarmerExperience = ["farmer", "farm_owner", "farm_worker"].includes(userRole);
+  const bottomNavItems = isFarmerExperience ? farmerMobileNavItems : mobileNavItems;
 
   useEffect(() => {
     const loadAlerts = () => api.entities.Alert.list("-triggered_at", 20).then(setAlerts).catch(() => {});
@@ -194,7 +196,7 @@ export default function Layout() {
 
       {/* Mobile Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 flex items-center justify-around px-2 py-2 lg:hidden">
-        {mobileNavItems.map((item) => {
+        {bottomNavItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
           return (
@@ -202,12 +204,12 @@ export default function Layout() {
               key={item.path}
               to={item.path}
               className={cn(
-                "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors",
-                active ? "text-emerald-600" : "text-slate-400"
+                "flex min-w-[56px] flex-col items-center gap-1 rounded-xl px-3 py-2 transition-colors",
+                active ? "bg-emerald-50 text-emerald-700" : "text-slate-400"
               )}
             >
-              <Icon className="w-5 h-5" />
-              <span className="text-[10px] font-medium">{translateWithFallback(lang, `nav.item.${item.label}`, item.label)}</span>
+              <Icon className="h-5 w-5" />
+              <span className="text-[10px] font-semibold">{translateWithFallback(lang, `nav.item.${item.label}`, item.label)}</span>
             </Link>
           );
         })}
