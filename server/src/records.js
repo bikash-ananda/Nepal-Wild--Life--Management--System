@@ -222,7 +222,7 @@ export function canWrite(user, entity) {
   if (entity === "VerificationSample") return ["admin", "researcher", "reviewer"].includes(user.role);
   if (["admin", "researcher"].includes(user.role)) return true;
   if (user.role === "technician" && technicianInventoryEntities.has(entity)) return true;
-  return fieldWriteEntities.has(entity) && ["reviewer", "field_officer", "field_worker", "community_reporter"].includes(user.role);
+  return fieldWriteEntities.has(entity) && ["reviewer", "farmer", "field_officer", "field_worker", "community_reporter"].includes(user.role);
 }
 
 export function canChangeRecordSite(user, current, patch) {
