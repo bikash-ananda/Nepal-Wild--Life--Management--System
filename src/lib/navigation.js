@@ -140,3 +140,11 @@ export const mobileNavItems = [
   { label: "Alerts", path: "/notifications", icon: Bell },
   { label: "Team", path: "/team", icon: Users },
 ];
+
+export const farmerMobileNavItems = [
+  { label: "Home", path: "/my-farm", icon: LayoutDashboard },
+  { label: "Devices", path: "/my-farm/devices", icon: Activity },
+  { label: "Report", path: "/field-capture", icon: Camera },
+  { label: "Map", path: "/map", icon: Map },
+  { label: "Alerts", path: "/notifications", icon: Bell },
+];
