@@ -232,11 +232,12 @@ export function registerNaosIntegrationRoutes(app, pool) {
         throw Object.assign(new Error("Provide no more than five valid evidence media IDs."), { statusCode: 400 });
       }
       const evidence = mediaIds.length ? await pool.query(
-        "SELECT e.media_id,m.content_type FROM naos_evidence_links e JOIN media_assets m ON m.id=e.media_id WHERE e.media_id = ANY($1::uuid[]) AND e.naos_subject_ref=$2 AND e.naos_farm_ref=$3 AND e.report_id IS NULL",
-        [mediaIds, body.naos_subject_ref, body.naos_farm_ref]
+        "UPDATE naos_evidence_links e SET report_id='pending:' || $4 FROM media_assets m WHERE e.media_id=m.id AND e.media_id = ANY($1::uuid[]) AND e.naos_subject_ref=$2 AND e.naos_farm_ref=$3 AND e.report_id IS NULL RETURNING e.media_id,m.content_type",
+        [mediaIds, body.naos_subject_ref, body.naos_farm_ref, idempotencyKey]
       ) : { rows: [] };
       if (evidence.rows.length !== mediaIds.length) {
-        throw Object.assign(new Error("One or more evidence files are not available to this linked farm."), { statusCode: 403 });
+        await pool.query("UPDATE naos_evidence_links SET report_id=NULL WHERE report_id=$1", ["pending:" + idempotencyKey]);
+        throw Object.assign(new Error("One or more evidence files are unavailable or already attached to another report."), { statusCode: 403 });
       }
       if (link.wlms_site_ref && !await getRecord(pool, "Site", link.wlms_site_ref)) {
         throw Object.assign(new Error("The linked WLMS site is no longer available."), { statusCode: 409 });
@@ -330,8 +331,8 @@ export function registerNaosIntegrationRoutes(app, pool) {
 
       if (mediaIds.length) {
         await pool.query(
-          "UPDATE naos_evidence_links SET report_id=$1 WHERE media_id=ANY($2::uuid[]) AND report_id IS NULL",
-          [record.id, mediaIds]
+          "UPDATE naos_evidence_links SET report_id=$1 WHERE report_id=$2",
+          [record.id, "pending:" + idempotencyKey]
         );
       }
       let officeRouting = { routed: 0, reason: "not_applicable" };
@@ -355,6 +356,7 @@ export function registerNaosIntegrationRoutes(app, pool) {
       });
       return reply.code(201).send(response);
     } catch (error) {
+      await pool.query("UPDATE naos_evidence_links SET report_id=NULL WHERE report_id=$1", ["pending:" + idempotencyKey]).catch(() => {});
       await pool.query("DELETE FROM naos_partner_idempotency WHERE client_id=$1 AND idempotency_key=$2 AND response_json IS NULL", [CLIENT_ID, idempotencyKey]).catch(() => {});
       return fail(reply, error.statusCode || 500, "report_submission_failed",
         error.statusCode ? error.message : "WLMS could not accept the report. Please retry using the same idempotency key.");
