@@ -78,7 +78,11 @@ function reportResponse(row, entity) {
     verification_state: data.verified === true ? "human_verified" : data.review_status === "rejected" ? "rejected" : "unverified",
     occurred_at: data.occurred_at || data.observed_at || data.reported_at || row.created_at,
     updated_at: row.updated_at,
-    evidence_count: Array.isArray(data.photos) ? data.photos.length : (data.photo_uri ? 1 : 0),
+    evidence_count: Array.isArray(data.evidence) ? data.evidence.length : (Array.isArray(data.photos) ? data.photos.length : (data.photo_uri ? 1 : 0)),
+    evidence: Array.isArray(data.evidence) ? data.evidence.map((item) => ({
+      media_id: String(item.media_id || "").slice(0, 64),
+      content_type: String(item.content_type || "").slice(0, 80),
+    })).filter((item) => item.media_id) : [],
   };
 }
 
