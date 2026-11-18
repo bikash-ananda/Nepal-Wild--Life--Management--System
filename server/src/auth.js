@@ -4,7 +4,7 @@ import nodemailer from "nodemailer";
 import { addAudit } from "./db.js";
 
 export const allowedRoles = new Set([
-  "admin", "researcher", "reviewer", "field_officer", "field_worker", "community_reporter", "technician"
+  "admin", "researcher", "reviewer", "farmer", "field_officer", "field_worker", "community_reporter", "technician"
 ]);
 
 export function publicUser(row) {
