@@ -16,6 +16,7 @@ const roles = [
   { value: "admin", label: "Administrator" },
   { value: "researcher", label: "Researcher" },
   { value: "reviewer", label: "Reviewer" },
+  { value: "farmer", label: "Farmer" },
   { value: "field_officer", label: "Field officer" },
   { value: "field_worker", label: "Field worker" },
   { value: "community_reporter", label: "Community reporter" },
