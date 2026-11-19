@@ -3,6 +3,7 @@ import { MapPin, Clock, Camera, Brain, ChevronDown, ChevronUp, PenTool, SkipForw
 import { cn } from "@/lib/utils";
 import BoundingBoxEditor from "./BoundingBoxEditor";
 import PrivateImage from "@/components/PrivateImage";
+import PrivateAudio from "@/components/PrivateAudio";
 
 const verificationOptions = [
   "Monkey", "Wild Boar", "Elephant", "Leopard", "Bear",
@@ -52,6 +53,8 @@ export default function VerificationCard({ sample, onVerify, onSkip }) {
           {sample.site_name || "Unknown Site"}
         </div>
       </div>
+
+      {sample.audio_uri && <div className="mb-3"><PrivateAudio fileUri={sample.audio_uri} /></div>}
 
       {/* Metadata Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3 text-xs">
