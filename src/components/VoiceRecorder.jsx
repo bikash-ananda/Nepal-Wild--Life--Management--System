@@ -24,7 +24,7 @@ export default function VoiceRecorder({ value, onChange, disabled = false, langu
 
   const np = language === "np";
   useEffect(() => {
-    if (!value) { setAudioUrl(""); return undefined; }
+    if (!value) { setAudioUrl(""); setConsent(false); return undefined; }
     const url = URL.createObjectURL(value);
     setAudioUrl(url);
     return () => URL.revokeObjectURL(url);
