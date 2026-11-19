@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { LanguageProvider } from '@/lib/LanguageContext';
 import ScrollToTop from './components/ScrollToTop';
 import PwaUpdateNotice from '@/components/PwaUpdateNotice';
+import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 import Layout from '@/components/Layout';
 const Home = lazy(() => import('@/pages/Home'));
 const Sites = lazy(() => import('@/pages/Sites'));
@@ -71,6 +72,8 @@ const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 const Accounts = lazy(() => import('@/pages/Accounts'));
 const AlertSubscribers = lazy(() => import('@/pages/AlertSubscribers'));
 const WhatsAppAgent = lazy(() => import('@/pages/WhatsAppAgent'));
+const ResearchKnowledge = lazy(() => import('@/pages/ResearchKnowledge'));
+const ResearchManager = lazy(() => import('@/pages/ResearchManager'));
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -85,7 +88,6 @@ const AuthenticatedApp = () => {
 
   if (isPublicRoute) return <PublicCapture />;
   if (isSpeciesLibrary) return <SpeciesLibrary />;
-  if (isResearchKnowledge) return <ResearchKnowledge />;
   if (isResearchKnowledge) return <ResearchKnowledge />;
   if (isPublicHome) return <PublicLanding />;
 
