@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowUpRight, BookOpen, Leaf, Search, ShieldCheck, Cpu, CalendarDays } from "lucide-react";
 import { officialResearchSources, preventionMethods, researchReviewedOn, researchStudies as curatedStudies, technologyStatusLabels } from "@/data/researchKnowledge";
