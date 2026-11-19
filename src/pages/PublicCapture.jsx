@@ -4,6 +4,7 @@ import {
   Satellite, Loader2, Camera, RefreshCw, MapPin,
 } from "lucide-react";
 import CameraViewfinder from "@/components/field/CameraViewfinder";
+import VoiceRecorder from "@/components/VoiceRecorder";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -40,6 +41,7 @@ export default function PublicCapture() {
   const [manualLongitude, setManualLongitude] = useState("");
   const [notes, setNotes] = useState("");
   const [pendingPhoto, setPendingPhoto] = useState(null);
+  const [audioNote, setAudioNote] = useState(null);
 
   useEffect(() => {
     requestOfflineStoragePersistence().catch(() => {});
@@ -71,6 +73,7 @@ export default function PublicCapture() {
       restoredUrl = URL.createObjectURL(draft.photo_blob);
       const payload = draft.payload || {};
       setPendingPhoto(restoredUrl);
+      setAudioNote(draft.audio_blob instanceof Blob ? draft.audio_blob : null);
       setConsent(true);
       setConsentAt(payload.consent_at || draft.consent_at || null);
       setCaptureMetadata({
@@ -179,16 +182,12 @@ export default function PublicCapture() {
     setCaptureMetadata({ capture_id: captureId, captured_at: capturedAt, coords: freshFix });
     try {
       const blob = await (await fetch(photoDataUrl)).blob();
-      await saveCaptureDraft({ id: captureId, payload: basePayload, photoBlob: blob, consentAt });
+      await saveCaptureDraft({ id: captureId, payload: basePayload, photoBlob: blob, audioBlob: audioNote, consentAt });
       if (!freshFix) await updateOfflineReport(captureId, { status: "draft" });
     } catch (error) {
       toast({ title: lang === "np" ? "तस्बिर फोनमा सुरक्षित गर्न सकिएन" : "Could not save photo on this device", description: error.message, variant: "destructive" });
     }
-    if (freshFix) {
-      syncOfflineReports().catch(() => {});
-      requestOfflineReportSync().catch(() => {});
-      return;
-    }
+    if (freshFix) return;
     setCaptureLocationBusy(true);
     try {
       const freshCoords = await refreshGps();
@@ -205,10 +204,8 @@ export default function PublicCapture() {
           consent_at: consentAt,
           consent_text_version: "wlms-public-capture-v1",
         },
-        status: "pending",
+        status: "draft",
       });
-      syncOfflineReports().catch(() => {});
-      requestOfflineReportSync().catch(() => {});
     } catch {
       // The photo draft remains saved; the reporter can retry GPS or enter coordinates manually.
     } finally {
@@ -242,11 +239,12 @@ export default function PublicCapture() {
         submitter_name: submitterName,
         notes,
         captured_at: captureMetadata?.captured_at || new Date().toISOString(),
+        audio_consent: Boolean(audioNote),
       };
       if (existingDraft) {
-        await updateOfflineReport(captureId, { kind: "capture", payload, photo_blob: blob, status: "pending", lock_until: null, last_error: "" });
+        await updateOfflineReport(captureId, { kind: "capture", payload, photo_blob: blob, audio_blob: audioNote, status: "pending", lock_until: null, last_error: "" });
       } else {
-        await enqueueOfflineReport({ id: captureId, kind: "capture", payload, photoBlob: blob });
+        await enqueueOfflineReport({ id: captureId, kind: "capture", payload, photoBlob: blob, audioBlob: audioNote });
       }
       await syncOfflineReports();
       const saved = await getOfflineReport(captureId);
@@ -254,6 +252,7 @@ export default function PublicCapture() {
       if (saved?.status !== "synced") requestOfflineReportSync().catch(() => {});
       setPendingPhoto(null);
       setCaptureMetadata(null);
+      setAudioNote(null);
       setConsent(false);
       setConsentAt(null);
       setManualLatitude("");
@@ -335,6 +334,9 @@ export default function PublicCapture() {
             <CameraViewfinder onCapture={handleCapture} disabled={submitting || !consent} />
           </div>
         )}
+        <div className="mb-4">
+          <VoiceRecorder value={audioNote} onChange={setAudioNote} language={lang} disabled={submitting} />
+        </div>
 
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-emerald-50 px-3 py-3">
           <p className="text-xs leading-5 text-emerald-950">{lang === "np" ? "जनावरको पहिचान वा व्यवहारबारे जान्न चाहनुहुन्छ?" : "Want to learn about the animal or compare species?"}</p>
