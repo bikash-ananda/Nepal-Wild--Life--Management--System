@@ -80,6 +80,9 @@ async function createCapture(pool, body, user, isPublic = false) {
   const media = await pool.query("SELECT id FROM media_assets WHERE id = $1 AND content_type LIKE 'image/%'", [mediaId]);
   if (!media.rowCount) throw Object.assign(new Error("Uploaded photo was not found."), { statusCode: 404 });
   const audioUri = String(body.audio_uri || "");
+  if (isPublic && audioUri && body.audio_consent !== true) {
+    throw Object.assign(new Error("Separate consent is required before sharing a voice recording."), { statusCode: 400 });
+  }
   const audioMediaId = audioUri ? mediaIdFromUri(audioUri) : null;
   if (audioUri && !audioMediaId) throw Object.assign(new Error("The voice recording reference is invalid."), { statusCode: 400 });
   if (audioMediaId) {
