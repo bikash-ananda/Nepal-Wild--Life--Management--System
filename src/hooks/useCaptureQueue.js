@@ -138,10 +138,17 @@ export function useCaptureQueue(online, onProcessed) {
         mark({ status: "processing", error: undefined });
         try {
           const upload = await api.integrations.Core.UploadPrivateFile({ file: item.photoBlob });
+          let audioUri = item.audio_uri || "";
+          if (item.audioBlob && !audioUri) {
+            const audioUpload = await api.integrations.Core.UploadPrivateFile({ file: item.audioBlob });
+            audioUri = audioUpload.file_uri;
+            mark({ audio_uri: audioUri });
+          }
           const result = await api.functions.invoke("fieldCapture", {
             action: "processCapture",
             capture_id: item.capture_id,
             photo_uri: upload.file_uri,
+            audio_uri: audioUri || undefined,
             latitude: item.latitude,
             longitude: item.longitude,
             accuracy: item.accuracy,
