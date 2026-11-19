@@ -95,7 +95,7 @@ export default function PwaInstallPrompt() {
           ) : (
             <>
               <p className="mb-1 font-semibold">{ne ? "Browser बाट Install गर्ने तरिका" : "Install from your browser"}</p>
-              <p>{ne ? "Chrome/Edge को address bar मा देखिने Install आइकन वा ⋮ Menu खोल्नुहोस् र Install app / Add to Home Screen छान्नुहोस्।" : "Use the install icon in the address bar, or open the browser menu (⋮) and choose Install app / Add to Home Screen."}</p>
+              <p>{ne ? "Android मा Chrome को ⋮ Menu बाट Install app वा Add to Home Screen छान्नुहोस्। Windows मा Edge/Chrome को Install आइकन वा Menu बाट Install this site as an app छान्नुहोस्। विकल्प नदेखिएमा हालको Browser ले App install समर्थन नगर्न सक्छ।" : "On Android, open Chrome’s ⋮ menu and choose Install app or Add to Home Screen. On Windows, use the Install icon or the Edge/Chrome menu and choose Install this site as an app. If no option appears, your current browser may not support PWA installation."}</p>
             </>
           )}
         </div>
