@@ -17,6 +17,7 @@ export default function PwaInstallPrompt() {
   const { lang } = useLanguage();
   const [installEvent, setInstallEvent] = useState(() => window.__wamsDeferredInstallPrompt || null);
   const [installed, setInstalled] = useState(isStandalone);
+  const [dismissed, setDismissed] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [busy, setBusy] = useState(false);
   const ios = useMemo(isIosDevice, []);
@@ -40,7 +41,7 @@ export default function PwaInstallPrompt() {
     };
   }, []);
 
-  if (installed) return null;
+  if (installed || dismissed) return null;
 
   const install = async () => {
     if (!installEvent) {
@@ -77,7 +78,7 @@ export default function PwaInstallPrompt() {
         <button type="button" onClick={install} disabled={busy} className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full bg-emerald-800 px-4 text-xs font-semibold text-white hover:bg-emerald-900 disabled:opacity-60">
           <Download className="h-4 w-4" />{busy ? (ne ? "खुल्दैछ…" : "Opening…") : (ne ? "Install" : "Install")}
         </button>
-        <button type="button" onClick={() => setInstalled(true)} aria-label={ne ? "बन्द गर्नुहोस्" : "Dismiss"} className="rounded-full p-2 text-slate-500 hover:bg-slate-100">
+        <button type="button" onClick={() => setDismissed(true)} aria-label={ne ? "बन्द गर्नुहोस्" : "Dismiss"} className="rounded-full p-2 text-slate-500 hover:bg-slate-100">
           <X className="h-4 w-4" />
         </button>
       </div>
