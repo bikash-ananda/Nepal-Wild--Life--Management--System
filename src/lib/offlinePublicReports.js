@@ -51,7 +51,7 @@ async function withStore(mode, callback) {
   }
 }
 
-export async function saveCaptureDraft({ id, payload, photoBlob, consentAt = null }) {
+export async function saveCaptureDraft({ id, payload, photoBlob, audioBlob = null, consentAt = null }) {
   if (!id || !(photoBlob instanceof Blob) || !payload || typeof payload !== "object") {
     throw new Error("The photo could not be saved on this device.");
   }
@@ -60,7 +60,8 @@ export async function saveCaptureDraft({ id, payload, photoBlob, consentAt = nul
     kind: "capture",
     payload,
     photo_blob: photoBlob,
-    status: consentAt ? "pending" : "draft",
+    audio_blob: audioBlob,
+    status: "draft",
     consent_at: consentAt || null,
     consent_text_version: consentAt ? "wlms-public-capture-v1" : null,
     attempts: 0,
@@ -76,7 +77,7 @@ export async function deleteOfflineReport(id) {
   return withStore("readwrite", (store) => store.delete(String(id)));
 }
 
-export async function enqueueOfflineReport({ id, kind, payload, photoBlob = null }) {
+export async function enqueueOfflineReport({ id, kind, payload, photoBlob = null, audioBlob = null }) {
   if (!id || !["damage", "capture"].includes(kind) || !payload || typeof payload !== "object") {
     throw new Error("The report could not be prepared for offline storage.");
   }
@@ -85,6 +86,7 @@ export async function enqueueOfflineReport({ id, kind, payload, photoBlob = null
     kind,
     payload,
     photo_blob: photoBlob,
+    audio_blob: audioBlob,
     status: "pending",
     attempts: 0,
     created_at: new Date().toISOString(),
@@ -179,9 +181,30 @@ async function sendCapture(record) {
     photoUri = upload.file_uri;
     await updateOfflineReport(record.id, { photo_uri: photoUri });
   }
+  let audioUri = record.audio_uri || "";
+  if (record.audio_blob instanceof Blob && !audioUri) {
+    const audioForm = new FormData();
+    audioForm.append("consent", "true");
+    audioForm.append("audio_consent", "true");
+    audioForm.append("file", record.audio_blob, "wams-voice-note.webm");
+    const audioResponse = await fetch("/api/public/uploads", {
+      method: "POST",
+      credentials: "include",
+      body: audioForm,
+    });
+    const audioUpload = await audioResponse.json().catch(() => ({}));
+    if (!audioResponse.ok || !audioUpload.file_uri) {
+      const error = new Error(audioUpload.error || "The voice recording could not be uploaded.");
+      error.status = audioResponse.status;
+      throw error;
+    }
+    audioUri = audioUpload.file_uri;
+    await updateOfflineReport(record.id, { audio_uri: audioUri });
+  }
   return postJson("/api/functions/publicCapture", {
     ...record.payload,
     photo_uri: photoUri,
+    audio_uri: audioUri || undefined,
     capture_id: record.id,
     consent: true,
   });
@@ -216,7 +239,7 @@ export async function syncOfflineReports({ onProgress } = {}) {
     try {
       if (record.kind === "capture") await sendCapture(record);
       else await sendDamage(record);
-      await updateOfflineReport(record.id, { status: "synced", photo_blob: null, lock_until: null, last_error: "" });
+      await updateOfflineReport(record.id, { status: "synced", photo_blob: null, audio_blob: null, lock_until: null, last_error: "" });
       synced += 1;
       onProgress?.({ id: record.id, status: "synced" });
     } catch (error) {
