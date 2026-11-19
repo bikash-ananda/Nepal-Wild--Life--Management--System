@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from '@/App.jsx'
+import AppErrorBoundary from '@/components/AppErrorBoundary'
 import '@/index.css'
 
 // Capture the browser's install event before React routes mount.
@@ -21,5 +22,7 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <App />
+  <AppErrorBoundary>
+    <App />
+  </AppErrorBoundary>
 )
