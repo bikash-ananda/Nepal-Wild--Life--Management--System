@@ -65,7 +65,7 @@ export default function PwaInstallPrompt() {
   };
 
   return (
-    <aside className="fixed bottom-3 left-3 right-3 z-[90] mx-auto max-w-lg rounded-2xl border border-emerald-200 bg-white/95 p-3 shadow-xl backdrop-blur sm:bottom-5">
+    <aside className="fixed bottom-20 left-3 right-3 z-[90] mx-auto max-w-lg rounded-2xl border border-emerald-200 bg-white/95 p-3 shadow-xl backdrop-blur sm:bottom-5">
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-900 text-white">
           <Smartphone className="h-5 w-5" />
