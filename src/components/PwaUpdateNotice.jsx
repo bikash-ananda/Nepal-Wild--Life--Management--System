@@ -21,10 +21,12 @@ export default function PwaUpdateNotice() {
     };
     navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
     window.addEventListener("focus", checkForUpdate);
+    document.addEventListener("visibilitychange", checkForUpdate);
     checkForUpdate();
     return () => {
       navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
       window.removeEventListener("focus", checkForUpdate);
+      document.removeEventListener("visibilitychange", checkForUpdate);
     };
   }, []);
 

@@ -2,6 +2,17 @@
 
 Self-hosted field-research platform for wildlife observations and human–wildlife conflict, beginning with monkey crop-raiding in Pokhara Metropolitan City, Ward 21. The browser app uses a local REST API, PostgreSQL, private file storage, and a camera media relay. The field workflow supports personal mobile cameras, GPS, offline capture, and a separate connection profile for every farm camera.
 
+## Install on desktop, Android, and iPhone
+
+WLMS is distributed as an installable Progressive Web App (PWA) from the same HTTPS origin. No separate app server or mobile build pipeline is required for the installable web app.
+
+- **Android:** open the site in Chrome, use the in-app Install prompt, or choose Install app / Add to Home Screen from the browser menu.
+- **Windows desktop:** open the site in Edge or Chrome and choose Install this site as an app from the browser install icon/menu. The installed window behaves like a desktop app.
+- **iPhone and iPad:** open the site in Safari, tap Share, choose Add to Home Screen, and confirm. iOS does not expose the same automatic install prompt as Chromium browsers, so WLMS displays these manual steps.
+- **Other desktop/mobile browsers:** installation depends on that browser's PWA support; use its Install or Add to Home Screen menu when available.
+
+The service worker checks for a new release when the app is opened or brought back into focus. A new worker takes control and WLMS displays an in-app update notice; the user can apply it with Update/reload. The app shell and queued field reports are kept separately from the versioned static cache, so applying an app update does not intentionally clear offline report data. An internet connection is required to receive new releases. iOS and browser vendors control their own installation and background-update behavior; this is not an App Store or Google Play Store listing.
+
 ## Local development
 
 Requirements: Node.js 24 LTS and PostgreSQL 16 or newer.
