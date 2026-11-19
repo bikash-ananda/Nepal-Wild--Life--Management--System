@@ -4,6 +4,7 @@ import { Satellite, WifiOff, Wifi, MapPin, Loader2, NotebookPen, Camera, History
 import { api } from "@/api/apiClient";
 import PageHeader from "@/components/PageHeader";
 import CameraViewfinder from "@/components/field/CameraViewfinder";
+import VoiceRecorder from "@/components/VoiceRecorder";
 import CaptureResultCard from "@/components/field/CaptureResultCard";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
@@ -27,6 +28,7 @@ export default function FieldCapture() {
   const [sites, setSites] = useState([]);
   const [siteId, setSiteId] = useState("");
   const [photoConsent, setPhotoConsent] = useState(null);
+  const [audioNote, setAudioNote] = useState(null);
 
   useEffect(() => {
     api.entities.Site.list().then((availableSites) => {
@@ -66,6 +68,7 @@ export default function FieldCapture() {
     try {
       await enqueue({
         photoDataUrl,
+        audioBlob: audioNote || undefined,
         latitude: location.latitude,
         longitude: location.longitude,
         accuracy: location.accuracy ?? null,
@@ -80,6 +83,7 @@ export default function FieldCapture() {
     }
     setLastCaptureAt(Date.now());
     setNotes("");
+    setAudioNote(null);
     if (online) flush();
   };
 
@@ -159,7 +163,10 @@ export default function FieldCapture() {
         {/* Capture column */}
         <div className="lg:col-span-3 space-y-4">
           {photoConsent === true ? (
-            <CameraViewfinder onCapture={handleCapture} disabled={Boolean(storageError) || loadingQueue || (syncing && online)} />
+            <>
+              <CameraViewfinder onCapture={handleCapture} disabled={Boolean(storageError) || loadingQueue || (syncing && online)} />
+              <VoiceRecorder value={audioNote} onChange={setAudioNote} disabled={Boolean(storageError) || syncing} />
+            </>
           ) : (
             <section role="dialog" aria-modal="true" aria-labelledby="photo-consent-title" className="relative overflow-hidden rounded-3xl border-2 border-emerald-200 bg-white p-5 shadow-2xl sm:p-7">
               <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-emerald-100/70" aria-hidden="true" />
