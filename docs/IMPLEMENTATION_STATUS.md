@@ -1,6 +1,6 @@
 # WAMS Implementation Status
 
-**Updated:** 2026-11-16
+**Updated:** 2026-11-19
 **Checkout:** `p2p-control` (local changes are not committed)
 
 This note records verified implementation boundaries for the master development directive. It is not a production-readiness sign-off.
@@ -17,6 +17,7 @@ This note records verified implementation boundaries for the master development 
 - Mobile capture has an IndexedDB retry queue and the PWA registers a service worker. Field capture and incident forms request location only from an explicit user action; the incident forms retain manual coordinate entry.
 - Incident and HWC evidence photos are re-encoded in the browser, resized to a 1600-pixel maximum edge, and stripped of embedded camera metadata before upload. JPG, PNG, and WebP are supported; failed uploads now report a retryable error instead of silently disappearing.
 - Incident and conflict descriptions support browser speech transcription in English or Nepali when the browser provides SpeechRecognition. The reporter can edit the text and submit manually.
+- Optional voice evidence recording is available on mobile field/public capture and incident/HWC report forms. It uses browser MediaRecorder, requires separate microphone and sharing consent, is limited to 90 seconds and 8 MB, can be previewed or removed before submission, and is stored as a private audio asset linked to the report. Public offline capture stores the audio Blob in IndexedDB and uploads it with the report after explicit submission. Authorized reviewers can play the recording from case details or the human-verification card.
 - Browser push is queued only after a reviewer confirms a monkey label. The delivery worker retries failures and removes expired subscriptions. Exact farm coordinates are omitted from the push message.
 - Species content is a static client-side catalog. Each listed mammal now links to a reviewed Nepal mammals source or DNPWC species profile; snow leopard also links to the 2024–2030 Government action plan. Source publication years and printed page references are shown in the bilingual species details. Older conservation categories are not copied into the catalog. The underlying ecological references include 2011 and 2017 material, so they are a documented baseline rather than a current conservation-status feed. Image credit/license/source fields remain separate. An administrator publishing and review workflow is not implemented.
 - Technical assessment: the application is a React/Vite PWA backed by a same-origin Fastify REST API and PostgreSQL, with Docker/Caddy deployment files. Existing authentication is cookie-based and API routes enforce role/site permissions. The current pilot keeps JSONB record storage and has no live database/provider environment available for end-to-end acceptance.
@@ -38,7 +39,7 @@ This note records verified implementation boundaries for the master development 
 ## Current incremental changes
 
 - Language selection persists in browser storage and updates the document language. Unknown translations fall back to English labels.
-- Current-location and voice-transcription controls are available on incident and human-wildlife-conflict forms.
+- Current-location, voice-transcription, and optional voice-recording controls are available on incident and human-wildlife-conflict forms.
 - Incident and HWC evidence photos are browser-compressed and stripped of camera metadata before upload.
 - New incident, conflict, sighting, and patrol submissions are marked as research records (`is_demo: false`).
 - Backend validation now covers coordinate pairs, coordinate ranges, location accuracy, and field-role site assignment changes.
