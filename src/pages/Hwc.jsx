@@ -8,6 +8,7 @@ import SeverityBadge from "@/components/SeverityBadge";
 import StatusBadge from "@/components/StatusBadge";
 import DemoBadge from "@/components/DemoBadge";
 import PhotoUpload from "@/components/PhotoUpload";
+import VoiceRecorder from "@/components/VoiceRecorder";
 import VoiceTranscriptionInput from "@/components/VoiceTranscriptionInput";
 import CurrentLocationButton from "@/components/CurrentLocationButton";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ export default function Hwc() {
   const [form, setForm] = useState({ conflict_type: "crop_damage", species: "", description: "", latitude: "", longitude: "", location_name: "", affected_crop: "", affected_livestock: "", livestock_count: 0, estimated_damage: "", human_casualties: "", urgency: "medium", occurred_at: "", site_id: "" });
   const [sites, setSites] = useState([]);
   const [photos, setPhotos] = useState([]);
+  const [audioNote, setAudioNote] = useState(null);
   const [creating, setCreating] = useState(false);
 
   const load = () => {
@@ -55,6 +57,7 @@ export default function Hwc() {
     setCreating(true);
     try {
       const me = await api.auth.me().catch(() => null);
+      const audioUpload = audioNote ? await api.integrations.Core.UploadPrivateFile({ file: audioNote }) : null;
       const result = await api.entities.HwcCase.create({
         case_id: "HWC-" + Date.now().toString(36).toUpperCase(),
         conflict_type: form.conflict_type,
@@ -66,6 +69,7 @@ export default function Hwc() {
         location_name: form.location_name,
         site_id: form.site_id || undefined,
         photos,
+        audio_uri: audioUpload?.file_uri || undefined,
         affected_crop: form.affected_crop,
         affected_livestock: form.affected_livestock,
         livestock_count: Number(form.livestock_count) || 0,
@@ -82,6 +86,7 @@ export default function Hwc() {
       toast({ title: t("hwc.reportedToast"), description: result.office_routing?.routed ? t("hwc.sentToOfficers", { count: result.office_routing.routed }) : undefined, variant: "success" });
       setOpen(false);
       setPhotos([]);
+      setAudioNote(null);
       load();
     } catch {
       toast({ title: t("hwc.failedToast"), variant: "destructive" });
@@ -222,6 +227,7 @@ export default function Hwc() {
             <div className="col-span-2">
               <Label className="block mb-2">{t("common.evidencePhotos")}</Label>
               <PhotoUpload value={photos} onChange={setPhotos} />
+              <div className="mt-3"><VoiceRecorder value={audioNote} onChange={setAudioNote} disabled={creating} /></div>
             </div>
           </div>
           <DialogFooter>

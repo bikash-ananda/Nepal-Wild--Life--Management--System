@@ -6,6 +6,7 @@ import SeverityBadge from "@/components/SeverityBadge";
 import StatusBadge from "@/components/StatusBadge";
 import DemoBadge from "@/components/DemoBadge";
 import CaseTimeline from "@/components/CaseTimeline";
+import PrivateAudio from "@/components/PrivateAudio";
 
 export default function IncidentDetail() {
   const { id } = useParams();
@@ -57,7 +58,8 @@ export default function IncidentDetail() {
               ))}
             </div>
           )}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5">
+          <PrivateAudio fileUri={incident.audio_uri} />
+<div className="bg-white rounded-2xl border border-slate-200 p-5">
             <h3 className="font-semibold text-slate-800 mb-3">Description</h3>
             <p className="text-sm text-slate-600 whitespace-pre-wrap">{incident.description || "No description provided."}</p>
             {incident.investigation_notes && (

@@ -77,8 +77,18 @@ async function createCapture(pool, body, user, isPublic = false) {
   const photoUri = String(body.photo_uri || body.file_uri || "");
   const mediaId = mediaIdFromUri(photoUri);
   if (!mediaId) throw Object.assign(new Error("A valid uploaded photo is required."), { statusCode: 400 });
-  const media = await pool.query("SELECT id FROM media_assets WHERE id = $1", [mediaId]);
+  const media = await pool.query("SELECT id FROM media_assets WHERE id = $1 AND content_type LIKE 'image/%'", [mediaId]);
   if (!media.rowCount) throw Object.assign(new Error("Uploaded photo was not found."), { statusCode: 404 });
+  const audioUri = String(body.audio_uri || "");
+  if (isPublic && audioUri && body.audio_consent !== true) {
+    throw Object.assign(new Error("Separate consent is required before sharing a voice recording."), { statusCode: 400 });
+  }
+  const audioMediaId = audioUri ? mediaIdFromUri(audioUri) : null;
+  if (audioUri && !audioMediaId) throw Object.assign(new Error("The voice recording reference is invalid."), { statusCode: 400 });
+  if (audioMediaId) {
+    const audio = await pool.query("SELECT id FROM media_assets WHERE id = $1 AND content_type LIKE 'audio/%'", [audioMediaId]);
+    if (!audio.rowCount) throw Object.assign(new Error("The voice recording was not found."), { statusCode: 404 });
+  }
 
   const captureId = String(body.capture_id || body.event_id || mediaId);
   if (captureId.length > 180) throw Object.assign(new Error("Capture ID is too long."), { statusCode: 400 });
@@ -123,6 +133,8 @@ async function createCapture(pool, body, user, isPublic = false) {
     plot_id: String(body.plot_id || ""),
     photos: [photoUri],
     media_asset_id: mediaId,
+    audio_uri: audioUri || null,
+    audio_media_asset_id: audioMediaId,
     consent_given: isPublic ? true : undefined,
     consent_at: isPublic && body.consent_at && Number.isFinite(Date.parse(body.consent_at)) ? new Date(body.consent_at).toISOString() : null,
     consent_text_version: isPublic ? String(body.consent_text_version || "wlms-public-capture-v1").slice(0, 80) : null,
@@ -150,6 +162,7 @@ async function createCapture(pool, body, user, isPublic = false) {
     observation_id: observation.id,
     image_uri: photoUri,
     image_url: "/api/media/" + mediaId,
+    audio_uri: audioUri || null,
     species_name: "Unverified",
     status: "pending",
     source: isPublic ? "public_capture" : "field_capture",

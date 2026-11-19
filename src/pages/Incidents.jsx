@@ -8,6 +8,7 @@ import SeverityBadge from "@/components/SeverityBadge";
 import StatusBadge from "@/components/StatusBadge";
 import DemoBadge from "@/components/DemoBadge";
 import PhotoUpload from "@/components/PhotoUpload";
+import VoiceRecorder from "@/components/VoiceRecorder";
 import VoiceTranscriptionInput from "@/components/VoiceTranscriptionInput";
 import CurrentLocationButton from "@/components/CurrentLocationButton";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ export default function Incidents() {
   const [form, setForm] = useState({ type: "poaching", severity: "medium", species: "", description: "", latitude: "", longitude: "", location_name: "", occurred_at: "", site_id: "" });
   const [sites, setSites] = useState([]);
   const [photos, setPhotos] = useState([]);
+  const [audioNote, setAudioNote] = useState(null);
   const [creating, setCreating] = useState(false);
 
   const load = () => {
@@ -63,6 +65,7 @@ export default function Incidents() {
     setCreating(true);
     try {
       const me = await api.auth.me().catch(() => null);
+      const audioUpload = audioNote ? await api.integrations.Core.UploadPrivateFile({ file: audioNote }) : null;
       const result = await api.entities.Incident.create({
         incident_id: "INC-" + Date.now().toString(36).toUpperCase(),
         type: form.type,
@@ -75,6 +78,7 @@ export default function Incidents() {
         location_name: form.location_name,
         site_id: form.site_id || undefined,
         photos,
+        audio_uri: audioUpload?.file_uri || undefined,
         reported_by: me?.id || "",
         reporter_name: me?.full_name || me?.email || "Field Report",
         reporter_role: me?.role || "",
@@ -86,6 +90,7 @@ export default function Incidents() {
       setOpen(false);
       setForm({ type: "poaching", severity: "medium", species: "", description: "", latitude: "", longitude: "", location_name: "", occurred_at: "", site_id: "" });
       setPhotos([]);
+      setAudioNote(null);
       load();
     } catch {
       toast({ title: t("incidents.failedToast"), variant: "destructive" });
@@ -209,6 +214,7 @@ export default function Incidents() {
             <div className="col-span-2">
               <Label className="block mb-2">{t("common.evidencePhotos")}</Label>
               <PhotoUpload value={photos} onChange={setPhotos} />
+              <div className="mt-3"><VoiceRecorder value={audioNote} onChange={setAudioNote} disabled={creating} /></div>
             </div>
           </div>
           <DialogFooter>

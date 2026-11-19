@@ -10,6 +10,7 @@ const extensions = new Map([
   ["image/jpeg", ".jpg"], ["image/png", ".png"], ["image/webp", ".webp"], ["image/gif", ".gif"],
   ["video/mp4", ".mp4"], ["video/webm", ".webm"], ["application/pdf", ".pdf"],
   ["text/plain", ".txt"], ["text/csv", ".csv"],
+  ["audio/webm", ".webm"], ["audio/mp4", ".m4a"], ["audio/ogg", ".ogg"], ["audio/mpeg", ".mp3"],
 ]);
 
 export function mediaIdFromUri(uri) {
@@ -25,9 +26,14 @@ async function saveUpload(request, pool, visibility, actorId, requireConsent = f
     throw Object.assign(new Error("Consent is required before uploading public wildlife photos."), { statusCode: 400 });
   }
   const contentType = String(part.mimetype || "").split(";")[0].toLowerCase();
-  if (requireConsent && !contentType.startsWith("image/")) {
-    part.file.resume();
-    throw Object.assign(new Error("Public wildlife submissions accept image files only."), { statusCode: 415 });
+  if (requireConsent) {
+    const isImage = ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(contentType);
+    const isConsentedAudio = ["audio/webm", "audio/mp4", "audio/ogg", "audio/mpeg"].includes(contentType)
+      && part.fields?.audio_consent?.value === "true";
+    if (!isImage && !isConsentedAudio) {
+      part.file.resume();
+      throw Object.assign(new Error("Public submissions accept supported images, or audio with separate recording consent."), { statusCode: 415 });
+    }
   }
   const extension = extensions.get(contentType);
   if (!extension) {
@@ -186,6 +192,7 @@ export async function canAccessMedia(pool, user, id, uploadedBy) {
      WHERE data->'photos' @> jsonb_build_array($1::text)
         OR data->>'image_uri' = $1
         OR data->>'photo_uri' = $1
+        OR data->>'audio_uri' = $1
         OR data->>'image_url' = $2
         OR data->>'media_asset_id' = $3`,
     [uri, url, id]

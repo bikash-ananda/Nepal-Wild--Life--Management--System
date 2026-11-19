@@ -4,6 +4,7 @@ import {
   Satellite, Loader2, Camera, RefreshCw, MapPin,
 } from "lucide-react";
 import CameraViewfinder from "@/components/field/CameraViewfinder";
+import VoiceRecorder from "@/components/VoiceRecorder";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -14,12 +15,12 @@ const labels = {
   en: {
     title: "WLMS — Wildlife Management System", subtitle: "Report wildlife from anywhere in the world — no account needed",
     gpsLoading: "Acquiring GPS…", gpsLocked: "GPS locked", noGps: "No GPS fix", enableGps: "GPS can use satellite signals without internet. Allow location access; HTTPS is required. A fix may take longer or be unavailable in some places.", refreshGps: "Get / refresh GPS", gettingGps: "Getting location…", manualCoordinates: "Or enter coordinates manually", latitude: "Latitude", longitude: "Longitude", coordinatePair: "Enter both latitude and longitude, or leave both blank.", coordinateInvalid: "Check coordinates: latitude −90 to 90, longitude −180 to 180.",
-    captured: "Captured photo", retake: "Retake", name: "Your name (optional)", namePlaceholder: "e.g. Ram Sharma", country: "Country", countryPlaceholder: "e.g. Nepal", countryRequired: "Enter the country where this photo was taken.", province: "State / Province / Region (optional)", district: "District / County (optional)", location: "Location / Area name", locationPlaceholder: "City, village, farm or landmark", notes: "Notes (optional)", notesPlaceholder: "What was the animal doing?", submit: "Submit report for review", submitting: "Submitting report…", thankYou: "Thank you! Your report was received.", flagship: "Priority species — reviewer attention requested", privacy: "Photos are stored privately. Reports are reviewed before they are treated as confirmed.", consentBeforeCapture: "Consent is required before taking and saving a photo. You can withdraw before capture.", backgroundSyncNote: "The report is queued after capture. Background upload depends on browser and device support; keep WLMS open until upload is confirmed when possible.", submitted: "Your report was received for human review.", language: "नेपाली", consent: "I agree WLMS may save and upload this photo, its capture time and the GPS location I provide to authorized reviewers for wildlife observation and safety analysis. Exact location is restricted.", locationRequired: "Location is required. Allow GPS or enter both coordinates manually.", gpsPrecision: "GPS is an estimate. Check its displayed accuracy before sending.",
+    captured: "Captured photo", retake: "Retake", name: "Your name (optional)", namePlaceholder: "e.g. Ram Sharma", country: "Country", countryPlaceholder: "e.g. Nepal", countryRequired: "Enter the country where this photo was taken.", province: "State / Province / Region (optional)", district: "District / County (optional)", location: "Location / Area name", locationPlaceholder: "City, village, farm or landmark", notes: "Notes (optional)", notesPlaceholder: "What was the animal doing?", submit: "Submit report for review", submitting: "Submitting report…", thankYou: "Thank you! Your report was received.", flagship: "Priority species — reviewer attention requested", privacy: "Photos are stored privately. Reports are reviewed before they are treated as confirmed.", consentBeforeCapture: "Consent is required before taking and saving a photo. You can withdraw before capture.", backgroundSyncNote: "The report is queued after you submit it. Background upload depends on browser and device support; keep WLMS open until upload is confirmed when possible.", submitted: "Your report was received for human review.", language: "नेपाली", consent: "I agree WLMS may save and upload this photo, its capture time and the GPS location I provide to authorized reviewers for wildlife observation and safety analysis. Exact location is restricted.", locationRequired: "Location is required. Allow GPS or enter both coordinates manually.", gpsPrecision: "GPS is an estimate. Check its displayed accuracy before sending.",
   },
   np: {
     title: "WLMS — मानव–वन्यजन्तु व्यवस्थापन प्रणाली", subtitle: "विश्वको जुनसुकै ठाउँबाट वन्यजन्तुको जानकारी दिनुहोस् — खाता आवश्यक छैन",
     gpsLoading: "GPS खोज्दै…", gpsLocked: "GPS प्राप्त भयो", noGps: "GPS स्थान प्राप्त भएन", enableGps: "GPS ले इन्टरनेटबिना पनि उपग्रहबाट स्थान लिन सक्छ। स्थान अनुमति दिनुहोस्; HTTPS आवश्यक छ। केही ठाउँमा स्थान पत्ता लगाउन समय लाग्न सक्छ।", refreshGps: "GPS लिनुहोस् / फेरि खोज्नुहोस्", gettingGps: "स्थान खोज्दै…", manualCoordinates: "वा निर्देशाङ्क आफैँ लेख्नुहोस्", latitude: "अक्षांश", longitude: "देशान्तर", coordinatePair: "अक्षांश र देशान्तर दुवै लेख्नुहोस् वा दुवै खाली छोड्नुहोस्।", coordinateInvalid: "निर्देशाङ्क जाँच्नुहोस्: अक्षांश −९० देखि ९० र देशान्तर −१८० देखि १८० सम्म।",
-    captured: "तस्बिर खिचियो", retake: "फेरि खिच्नुहोस्", name: "तपाईंको नाम (वैकल्पिक)", namePlaceholder: "जस्तै: राम शर्मा", country: "देश", countryPlaceholder: "जस्तै: नेपाल", countryRequired: "तस्बिर खिचिएको देश लेख्नुहोस्।", province: "प्रदेश / राज्य / क्षेत्र (वैकल्पिक)", district: "जिल्ला / काउन्टी (वैकल्पिक)", location: "स्थान / क्षेत्र", locationPlaceholder: "सहर, गाउँ, खेत वा चिनारीको स्थान", notes: "टिप्पणी (वैकल्पिक)", notesPlaceholder: "जनावरले के गरिरहेको थियो?", submit: "समीक्षाका लागि पठाउनुहोस्", submitting: "पठाउँदै…", thankYou: "धन्यवाद! तपाईंको विवरण प्राप्त भयो।", flagship: "प्राथमिक प्रजाति — समीक्षकले हेर्नुपर्ने", privacy: "तस्बिर निजी रूपमा सुरक्षित हुन्छ। पुष्टि भएको मान्नुअघि विवरण समीक्षा गरिन्छ।", consentBeforeCapture: "तस्बिर खिचेर सुरक्षित गर्नुअघि स्वीकृति आवश्यक छ। तस्बिर खिच्नुअघि स्वीकृति फिर्ता लिन सक्नुहुन्छ।", backgroundSyncNote: "तस्बिर खिचेपछि विवरण पठाउन लाममा राखिन्छ। एप बन्द भएपछि स्वतः पठिने सुविधा ब्राउजर र फोनमा निर्भर हुन्छ; सम्भव भए सर्भरबाट प्राप्त भएको पुष्टि नहुँदासम्म WLMS खुला राख्नुहोस्।", submitted: "तपाईंको विवरण मानव समीक्षाका लागि प्राप्त भयो।", language: "English", consent: "यो तस्बिर, खिचिएको समय र मैले दिएको GPS स्थान WLMS ले सुरक्षित गरी वन्यजन्तु अवलोकन तथा सुरक्षा विश्लेषणका लागि अधिकृत समीक्षकलाई पठाउन सक्छ भन्नेमा म सहमत छु। वास्तविक स्थानमा पहुँच सीमित हुनेछ।", locationRequired: "स्थान आवश्यक छ। GPS अनुमति दिनुहोस् वा दुवै निर्देशाङ्क आफैँ लेख्नुहोस्।", gpsPrecision: "GPS अनुमानित हुन्छ। पठाउनुअघि देखाइएको शुद्धता जाँच्नुहोस्।",
+    captured: "तस्बिर खिचियो", retake: "फेरि खिच्नुहोस्", name: "तपाईंको नाम (वैकल्पिक)", namePlaceholder: "जस्तै: राम शर्मा", country: "देश", countryPlaceholder: "जस्तै: नेपाल", countryRequired: "तस्बिर खिचिएको देश लेख्नुहोस्।", province: "प्रदेश / राज्य / क्षेत्र (वैकल्पिक)", district: "जिल्ला / काउन्टी (वैकल्पिक)", location: "स्थान / क्षेत्र", locationPlaceholder: "सहर, गाउँ, खेत वा चिनारीको स्थान", notes: "टिप्पणी (वैकल्पिक)", notesPlaceholder: "जनावरले के गरिरहेको थियो?", submit: "समीक्षाका लागि पठाउनुहोस्", submitting: "पठाउँदै…", thankYou: "धन्यवाद! तपाईंको विवरण प्राप्त भयो।", flagship: "प्राथमिक प्रजाति — समीक्षकले हेर्नुपर्ने", privacy: "तस्बिर निजी रूपमा सुरक्षित हुन्छ। पुष्टि भएको मान्नुअघि विवरण समीक्षा गरिन्छ।", consentBeforeCapture: "तस्बिर खिचेर सुरक्षित गर्नुअघि स्वीकृति आवश्यक छ। तस्बिर खिच्नुअघि स्वीकृति फिर्ता लिन सक्नुहुन्छ।", backgroundSyncNote: "रिपोर्ट पठाएपछि विवरण लाममा राखिन्छ। एप बन्द भएपछि स्वतः पठिने सुविधा ब्राउजर र फोनमा निर्भर हुन्छ; सम्भव भए सर्भरबाट प्राप्त भएको पुष्टि नहुँदासम्म WLMS खुला राख्नुहोस्।", submitted: "तपाईंको विवरण मानव समीक्षाका लागि प्राप्त भयो।", language: "English", consent: "यो तस्बिर, खिचिएको समय र मैले दिएको GPS स्थान WLMS ले सुरक्षित गरी वन्यजन्तु अवलोकन तथा सुरक्षा विश्लेषणका लागि अधिकृत समीक्षकलाई पठाउन सक्छ भन्नेमा म सहमत छु। वास्तविक स्थानमा पहुँच सीमित हुनेछ।", locationRequired: "स्थान आवश्यक छ। GPS अनुमति दिनुहोस् वा दुवै निर्देशाङ्क आफैँ लेख्नुहोस्।", gpsPrecision: "GPS अनुमानित हुन्छ। पठाउनुअघि देखाइएको शुद्धता जाँच्नुहोस्।",
   },
 };
 
@@ -40,6 +41,7 @@ export default function PublicCapture() {
   const [manualLongitude, setManualLongitude] = useState("");
   const [notes, setNotes] = useState("");
   const [pendingPhoto, setPendingPhoto] = useState(null);
+  const [audioNote, setAudioNote] = useState(null);
 
   useEffect(() => {
     requestOfflineStoragePersistence().catch(() => {});
@@ -57,6 +59,11 @@ export default function PublicCapture() {
   }, []);
   const [captureMetadata, setCaptureMetadata] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!captureMetadata?.capture_id) return;
+    updateOfflineReport(captureMetadata.capture_id, { audio_blob: audioNote }).catch(() => {});
+  }, [audioNote, captureMetadata?.capture_id]);
   const [consent, setConsent] = useState(false);
   const [consentAt, setConsentAt] = useState(null);
   const [captureLocationBusy, setCaptureLocationBusy] = useState(false);
@@ -71,6 +78,7 @@ export default function PublicCapture() {
       restoredUrl = URL.createObjectURL(draft.photo_blob);
       const payload = draft.payload || {};
       setPendingPhoto(restoredUrl);
+      setAudioNote(draft.audio_blob instanceof Blob ? draft.audio_blob : null);
       setConsent(true);
       setConsentAt(payload.consent_at || draft.consent_at || null);
       setCaptureMetadata({
@@ -179,16 +187,12 @@ export default function PublicCapture() {
     setCaptureMetadata({ capture_id: captureId, captured_at: capturedAt, coords: freshFix });
     try {
       const blob = await (await fetch(photoDataUrl)).blob();
-      await saveCaptureDraft({ id: captureId, payload: basePayload, photoBlob: blob, consentAt });
+      await saveCaptureDraft({ id: captureId, payload: basePayload, photoBlob: blob, audioBlob: audioNote, consentAt });
       if (!freshFix) await updateOfflineReport(captureId, { status: "draft" });
     } catch (error) {
       toast({ title: lang === "np" ? "तस्बिर फोनमा सुरक्षित गर्न सकिएन" : "Could not save photo on this device", description: error.message, variant: "destructive" });
     }
-    if (freshFix) {
-      syncOfflineReports().catch(() => {});
-      requestOfflineReportSync().catch(() => {});
-      return;
-    }
+    if (freshFix) return;
     setCaptureLocationBusy(true);
     try {
       const freshCoords = await refreshGps();
@@ -205,10 +209,8 @@ export default function PublicCapture() {
           consent_at: consentAt,
           consent_text_version: "wlms-public-capture-v1",
         },
-        status: "pending",
+        status: "draft",
       });
-      syncOfflineReports().catch(() => {});
-      requestOfflineReportSync().catch(() => {});
     } catch {
       // The photo draft remains saved; the reporter can retry GPS or enter coordinates manually.
     } finally {
@@ -242,11 +244,12 @@ export default function PublicCapture() {
         submitter_name: submitterName,
         notes,
         captured_at: captureMetadata?.captured_at || new Date().toISOString(),
+        audio_consent: Boolean(audioNote),
       };
       if (existingDraft) {
-        await updateOfflineReport(captureId, { kind: "capture", payload, photo_blob: blob, status: "pending", lock_until: null, last_error: "" });
+        await updateOfflineReport(captureId, { kind: "capture", payload, photo_blob: blob, audio_blob: audioNote, status: "pending", lock_until: null, last_error: "" });
       } else {
-        await enqueueOfflineReport({ id: captureId, kind: "capture", payload, photoBlob: blob });
+        await enqueueOfflineReport({ id: captureId, kind: "capture", payload, photoBlob: blob, audioBlob: audioNote });
       }
       await syncOfflineReports();
       const saved = await getOfflineReport(captureId);
@@ -254,6 +257,7 @@ export default function PublicCapture() {
       if (saved?.status !== "synced") requestOfflineReportSync().catch(() => {});
       setPendingPhoto(null);
       setCaptureMetadata(null);
+      setAudioNote(null);
       setConsent(false);
       setConsentAt(null);
       setManualLatitude("");
@@ -262,7 +266,7 @@ export default function PublicCapture() {
         title: t.submitted,
         description: saved?.status === "synced"
           ? (point.accuracy == null ? t.thankYou : `${t.gpsPrecision} (±${Math.round(point.accuracy)} m)`)
-          : (lang === "np" ? "तस्बिर, समय र स्थान फोनमा सुरक्षित भयो। इन्टरनेट आएपछि स्वतः पठाइनेछ।" : "Photo, time and location are saved on this device. They will upload automatically when internet is available."),
+          : (lang === "np" ? "तस्बिर, वैकल्पिक आवाज, समय र स्थान फोनमा सुरक्षित भयो। इन्टरनेट आएपछि स्वतः पठाइनेछ।" : "Photo, optional voice note, time and location are saved on this device. They will upload automatically when internet is available."),
       });
     } catch (e) {
       const description = e.message === "COORDINATE_PAIR" ? t.coordinatePair
@@ -335,6 +339,9 @@ export default function PublicCapture() {
             <CameraViewfinder onCapture={handleCapture} disabled={submitting || !consent} />
           </div>
         )}
+        <div className="mb-4">
+          <VoiceRecorder value={audioNote} onChange={setAudioNote} language={lang} disabled={submitting} />
+        </div>
 
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-emerald-50 px-3 py-3">
           <p className="text-xs leading-5 text-emerald-950">{lang === "np" ? "जनावरको पहिचान वा व्यवहारबारे जान्न चाहनुहुन्छ?" : "Want to learn about the animal or compare species?"}</p>
