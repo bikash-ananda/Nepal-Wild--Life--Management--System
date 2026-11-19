@@ -59,6 +59,11 @@ export default function PublicCapture() {
   }, []);
   const [captureMetadata, setCaptureMetadata] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!captureMetadata?.capture_id) return;
+    updateOfflineReport(captureMetadata.capture_id, { audio_blob: audioNote }).catch(() => {});
+  }, [audioNote, captureMetadata?.capture_id]);
   const [consent, setConsent] = useState(false);
   const [consentAt, setConsentAt] = useState(null);
   const [captureLocationBusy, setCaptureLocationBusy] = useState(false);
