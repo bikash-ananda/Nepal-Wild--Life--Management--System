@@ -119,3 +119,91 @@ frontend, the AI container, or VPS deployment. That preserves the current human
 review flow and avoids deploying an unvalidated monkey classifier. Integration
 should follow only after local model availability, holdout results, reviewer
 approval, and resource measurements are documented.
+
+## YOLO26 optional provider (initial integration)
+
+The `YOLO26Provider` provides an optional local Ultralytics runtime adapter for image bytes and returns the project's normalized `Detection` schema. It loads lazily, defaults to CPU, and keeps weights outside Git. This provider is **not yet connected to the live API, camera-stream processing, or alert pipeline**; use it for isolated inference/benchmark work first.
+
+Install runtime dependencies in a dedicated environment (verify current package/model licensing and compatibility before deployment):
+
+```bash
+python -m pip install ultralytics pillow
+```
+
+Example offline use:
+
+```python
+from ai_pipeline.wildlife_ai.yolo26_provider import YOLO26Provider
+provider = YOLO26Provider("yolo26n.pt", device="cpu", confidence=0.25)
+results = provider.detect(open("sample.jpg", "rb").read())
+for result in results:
+    print(result.label, result.confidence, result.bbox)
+```
+
+The default `yolo26n.pt` is a generic pretrained detector. It is **not monkey-trained**; verify its class list. For monkey detection, obtain licensed and reviewed monkey examples, fine-tune a custom checkpoint, and validate on camera/encounter-separated data before production use. Benchmark `yolo26n` and `yolo26s` with the same dataset and hardware. Do not treat confidence as calibrated probability or use detections to automatically activate deterrents.
+
+
+## Offline YOLO26 latency benchmark
+
+With Ultralytics and Pillow installed and a representative local image folder available (do not use private field images in public CI), run:
+
+```bash
+python -m ai_pipeline.yolo26_benchmark ./samples/wildlife --models yolo26n.pt yolo26s.pt --device cpu --output ./benchmark.json
+```
+
+The benchmark reports image count, detection count, mean/median/p95 latency for each checkpoint. It intentionally does not report accuracy: detection counts and confidence scores cannot establish species correctness. Run both checkpoints on the same test images/hardware and separately calculate accuracy using reviewer-labeled boxes/species.
+
+
+## Remote model/data storage strategy (proposal)
+
+Avoid filling the shared VPS with research datasets or unused model weights. Use remote repositories as the source of truth and only keep actively selected model weights in a controlled local cache.
+
+### Suggested tiers
+- **Public model/dataset registry:** Hugging Face Hub public model and dataset repositories; store links, revisions, license, checksum, task, class taxonomy and evaluation notes in a project manifest. Public Hub storage is best-effort on free accounts; confirm current account quotas and terms for large uploads.
+- **Research/training datasets:** use upstream public dataset sources (including Kaggle where terms allow), fetch only the subset needed for research, and keep dataset provenance, license, split and checksums. Do not copy datasets wholesale to the VPS.
+- **Production inference:** download only selected checkpoint(s) on first use into a dedicated cache volume/path with bounded capacity and an eviction policy. Keep the active production checkpoint pinned by immutable revision/checksum. Never auto-update production weights without validation and approval.
+- **Remote inference endpoints:** optional experiments only. Free hosted inference/demo services may sleep, throttle, change quotas, or expose public endpoint/source. Do not depend on a free endpoint for 24/7 production camera alerts. Implement timeout, retry/backoff, queueing, degraded status and local fallback only if a remote endpoint is explicitly configured.
+- **Private field data:** camera captures, farmer reports, and identifiable media remain in our controlled storage by default; do not upload to public repositories. Upload only de-identified, permissioned samples to private/approved dataset storage with retention and access controls.
+
+### Model manifest concept
+Each model record should contain: provider/model identifier, upstream URL/repository and immutable revision, license, task (detector/classifier), label map/taxonomy, file checksums, expected artifact size, supported device, benchmark report reference, approval state, and cache policy. The application must display `model unavailable` / `unknown species` rather than silently downloading a large or unapproved model or claiming certainty.
+
+### Cache policy for shared VPS
+- Dedicated directory/volume, configurable maximum bytes; no storing in Git, Docker image layers, or application release folder.
+- Keep only approved production checkpoint(s) plus recently-used benchmark assets; evict inactive research checkpoints.
+- Downloads must be resumable, checksum-verified, license-checked, and rate-limited.
+- Use external research/training workers (when free resources are available) for training and large dataset processing. Treat free compute as intermittent and never as production uptime guarantee.
+- Before any deployment, inspect disk/RAM, model artifact size, and container volume impacts; do not touch unrelated projects or shared host Caddy.
+
+This is architecture documentation only; remote registry/cache, external compute, and production inference routing are not implemented by this PR.
+
+
+## Global model and dataset discovery with bounded cache
+
+The catalog at `wildlife_ai/model_catalog.json` is a discovery list only; it does
+not enable downloads. Research candidates include YOLO26, MegaDetector, SpeciesNet,
+GBIF, iNaturalist, Wildlife Insights, Hugging Face and Kaggle. Verify each exact
+artifact's license, immutable revision, taxonomy, provenance and suitability
+before approval. Dataset rights can vary at image/record level.
+
+`wildlife_ai/model_cache.py` provides a standard-library-only, opt-in artifact
+cache. Downloading requires an explicit asset definition with HTTPS URL on the
+allowlist, pinned SHA-256 and a byte cap. It rejects unapproved redirect hosts,
+uses temporary files plus atomic rename, verifies checksum, and applies LRU
+eviction to meet the requested cache quota. It does not download or update
+anything during application startup or live camera operation.
+
+Defaults: cache under `~/.cache/wlms/models`, configured by
+`WLMS_MODEL_CACHE`; 2 GiB maximum default, configurable with
+`WLMS_MODEL_CACHE_LIMIT_BYTES`. These are conservative defaults, not a VPS
+resource guarantee. Review actual VPS free disk/RAM and active models before
+increasing limits. Only approved model assets should be passed to
+`download_asset()`; keep model files outside Git and Docker build contexts.
+
+Run dependency-free cache safety tests with:
+
+```bash
+python -m unittest discover -s tests -p "test_model_cache.py" -v
+```
+
+Catalog items are not production-approved, downloaded, benchmarked or deployed.
