@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "purpose": "Discovery catalog only; entries are not approved for download until exact artifact, immutable revision, license, size and checksum are reviewed.",
+  "models": [
+    {"id":"yolo26","category":"object_detection","provider":"Ultralytics","source":"https://github.com/ultralytics/ultralytics","status":"candidate","download_enabled":false,"notes":"Generic pretrained models; no monkey class in standard COCO taxonomy. Fine-tuned weights require validation and license review."},
+    {"id":"megadetector","category":"animal_person_vehicle_detection","provider":"Microsoft AI for Earth / Wildlife Insights community","source":"https://github.com/agentmorris/MegaDetector","status":"candidate","download_enabled":false,"notes":"Animal/person/vehicle detector, not species classification. Check model and code licenses."},
+    {"id":"speciesnet","category":"species_classification","provider":"Google","source":"https://github.com/google/SpeciesNet","status":"candidate","download_enabled":false,"notes":"Species ID candidate; verify current release, taxonomy coverage for Nepal and artifact/license terms."}
+  ],
+  "datasets": [
+    {"id":"gbif","category":"biodiversity_occurrence","source":"https://www.gbif.org/","status":"discovery_source","notes":"Occurrence records and associated metadata; image rights and data terms vary by record."},
+    {"id":"inat","category":"citizen_science_observations","source":"https://www.inaturalist.org/","status":"discovery_source","notes":"Check observation-level license and suitability; not all observations are suitable training imagery."},
+    {"id":"wildlife_insights","category":"camera_trap_research","source":"https://www.wildlifeinsights.org/","status":"discovery_source","notes":"Explore datasets and tools; access, permissions, terms and licenses vary."},
+    {"id":"huggingface_hub","category":"model_and_dataset_registry","source":"https://huggingface.co/","status":"discovery_source","notes":"Use immutable revisions and model cards; public hosting is not a universal unlimited-free guarantee."},
+    {"id":"kaggle","category":"dataset_research","source":"https://www.kaggle.com/datasets","status":"discovery_source","notes":"Review each dataset license and terms; do not automatically mirror large datasets to VPS."}
+  ],
+  "download_policy": {
+    "automatic_downloads": false,
+    "checksum_required": true,
+    "immutable_revision_required": true,
+    "license_review_required": true,
+    "max_cache_bytes_default": 2147483648,
+    "cache_path_default": "~/.cache/wlms/models",
+    "runtime_downloads": "disabled unless explicit approval and allowlisted source metadata are supplied"
+  }
+}
