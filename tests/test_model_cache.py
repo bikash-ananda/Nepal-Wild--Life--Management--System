@@ -78,7 +78,7 @@ class ModelCacheTests(unittest.TestCase):
                 with self.assertRaises(ModelCacheError):
                     download_asset(asset, Path(td), cache_limit_bytes=2048)
 
-    def test_redirect_to_unapproved_host_is_rejected(self):
+    def test_cache_evicts_unpinned_old_file_to_fit_quota(self):\n        payload = b"new"\n        with tempfile.TemporaryDirectory() as td:\n            old = Path(td) / "old.bin"\n            old.write_bytes(b"1234")\n            with patch("ai_pipeline.wildlife_ai.model_cache.urllib.request.build_opener",\n                       return_value=FakeOpener(FakeResponse(payload))):\n                download_asset(self.asset(payload), Path(td), cache_limit_bytes=5)\n            self.assertFalse(old.exists())\n            self.assertLessEqual(cache_usage(Path(td)), 5)\n\n    def test_pinned_file_is_not_evicted_and_quota_error_is_clear(self):\n        payload = b"new"\n        with tempfile.TemporaryDirectory() as td:\n            pinned = Path(td) / "pinned.bin"\n            pinned.write_bytes(b"1234")\n            with patch("ai_pipeline.wildlife_ai.model_cache.urllib.request.build_opener",\n                       return_value=FakeOpener(FakeResponse(payload))):\n                with self.assertRaises(ModelCacheError):\n                    download_asset(self.asset(payload), Path(td), cache_limit_bytes=5,\n                                  pinned_assets={"pinned.bin"})\n            self.assertTrue(pinned.exists())\n\n    def test_redirect_to_unapproved_host_is_rejected(self):
         payload = b"abc"
         with tempfile.TemporaryDirectory() as td:
             with patch("ai_pipeline.wildlife_ai.model_cache.urllib.request.build_opener",
