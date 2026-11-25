@@ -119,3 +119,25 @@ frontend, the AI container, or VPS deployment. That preserves the current human
 review flow and avoids deploying an unvalidated monkey classifier. Integration
 should follow only after local model availability, holdout results, reviewer
 approval, and resource measurements are documented.
+
+## YOLO26 optional provider (initial integration)
+
+The `YOLO26Provider` provides an optional local Ultralytics runtime adapter for image bytes and returns the project's normalized `Detection` schema. It loads lazily, defaults to CPU, and keeps weights outside Git. This provider is **not yet connected to the live API, camera-stream processing, or alert pipeline**; use it for isolated inference/benchmark work first.
+
+Install runtime dependencies in a dedicated environment (verify current package/model licensing and compatibility before deployment):
+
+```bash
+python -m pip install ultralytics pillow
+```
+
+Example offline use:
+
+```python
+from ai_pipeline.wildlife_ai.yolo26_provider import YOLO26Provider
+provider = YOLO26Provider("yolo26n.pt", device="cpu", confidence=0.25)
+results = provider.detect(open("sample.jpg", "rb").read())
+for result in results:
+    print(result.label, result.confidence, result.bbox)
+```
+
+The default `yolo26n.pt` is a generic pretrained detector. It is **not monkey-trained**; verify its class list. For monkey detection, obtain licensed and reviewed monkey examples, fine-tune a custom checkpoint, and validate on camera/encounter-separated data before production use. Benchmark `yolo26n` and `yolo26s` with the same dataset and hardware. Do not treat confidence as calibrated probability or use detections to automatically activate deterrents.
