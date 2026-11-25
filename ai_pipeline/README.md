@@ -152,3 +152,27 @@ python -m ai_pipeline.yolo26_benchmark ./samples/wildlife --models yolo26n.pt yo
 ```
 
 The benchmark reports image count, detection count, mean/median/p95 latency for each checkpoint. It intentionally does not report accuracy: detection counts and confidence scores cannot establish species correctness. Run both checkpoints on the same test images/hardware and separately calculate accuracy using reviewer-labeled boxes/species.
+
+
+## Remote model/data storage strategy (proposal)
+
+Avoid filling the shared VPS with research datasets or unused model weights. Use remote repositories as the source of truth and only keep actively selected model weights in a controlled local cache.
+
+### Suggested tiers
+- **Public model/dataset registry:** Hugging Face Hub public model and dataset repositories; store links, revisions, license, checksum, task, class taxonomy and evaluation notes in a project manifest. Public Hub storage is best-effort on free accounts; confirm current account quotas and terms for large uploads.
+- **Research/training datasets:** use upstream public dataset sources (including Kaggle where terms allow), fetch only the subset needed for research, and keep dataset provenance, license, split and checksums. Do not copy datasets wholesale to the VPS.
+- **Production inference:** download only selected checkpoint(s) on first use into a dedicated cache volume/path with bounded capacity and an eviction policy. Keep the active production checkpoint pinned by immutable revision/checksum. Never auto-update production weights without validation and approval.
+- **Remote inference endpoints:** optional experiments only. Free hosted inference/demo services may sleep, throttle, change quotas, or expose public endpoint/source. Do not depend on a free endpoint for 24/7 production camera alerts. Implement timeout, retry/backoff, queueing, degraded status and local fallback only if a remote endpoint is explicitly configured.
+- **Private field data:** camera captures, farmer reports, and identifiable media remain in our controlled storage by default; do not upload to public repositories. Upload only de-identified, permissioned samples to private/approved dataset storage with retention and access controls.
+
+### Model manifest concept
+Each model record should contain: provider/model identifier, upstream URL/repository and immutable revision, license, task (detector/classifier), label map/taxonomy, file checksums, expected artifact size, supported device, benchmark report reference, approval state, and cache policy. The application must display `model unavailable` / `unknown species` rather than silently downloading a large or unapproved model or claiming certainty.
+
+### Cache policy for shared VPS
+- Dedicated directory/volume, configurable maximum bytes; no storing in Git, Docker image layers, or application release folder.
+- Keep only approved production checkpoint(s) plus recently-used benchmark assets; evict inactive research checkpoints.
+- Downloads must be resumable, checksum-verified, license-checked, and rate-limited.
+- Use external research/training workers (when free resources are available) for training and large dataset processing. Treat free compute as intermittent and never as production uptime guarantee.
+- Before any deployment, inspect disk/RAM, model artifact size, and container volume impacts; do not touch unrelated projects or shared host Caddy.
+
+This is architecture documentation only; remote registry/cache, external compute, and production inference routing are not implemented by this PR.
