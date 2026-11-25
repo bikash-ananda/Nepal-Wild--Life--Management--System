@@ -34,8 +34,8 @@ class FakeOpener:
 
 class ModelCacheTests(unittest.TestCase):
     def asset(self, payload=b"test model"):
-        return {"filename":"demo-model.bin", "url":"https://huggingface.co/example/file",
-                "sha256":hashlib.sha256(payload).hexdigest(), "max_bytes":1024}
+        return {"filename": "demo-model.bin", "url": "https://huggingface.co/example/file",
+                "sha256": hashlib.sha256(payload).hexdigest(), "max_bytes": 1024}
 
     def test_requires_https_approved_host_and_checksum(self):
         bad = self.asset()
@@ -78,7 +78,30 @@ class ModelCacheTests(unittest.TestCase):
                 with self.assertRaises(ModelCacheError):
                     download_asset(asset, Path(td), cache_limit_bytes=2048)
 
-    def test_cache_evicts_unpinned_old_file_to_fit_quota(self):\n        payload = b"new"\n        with tempfile.TemporaryDirectory() as td:\n            old = Path(td) / "old.bin"\n            old.write_bytes(b"1234")\n            with patch("ai_pipeline.wildlife_ai.model_cache.urllib.request.build_opener",\n                       return_value=FakeOpener(FakeResponse(payload))):\n                download_asset(self.asset(payload), Path(td), cache_limit_bytes=5)\n            self.assertFalse(old.exists())\n            self.assertLessEqual(cache_usage(Path(td)), 5)\n\n    def test_pinned_file_is_not_evicted_and_quota_error_is_clear(self):\n        payload = b"new"\n        with tempfile.TemporaryDirectory() as td:\n            pinned = Path(td) / "pinned.bin"\n            pinned.write_bytes(b"1234")\n            with patch("ai_pipeline.wildlife_ai.model_cache.urllib.request.build_opener",\n                       return_value=FakeOpener(FakeResponse(payload))):\n                with self.assertRaises(ModelCacheError):\n                    download_asset(self.asset(payload), Path(td), cache_limit_bytes=5,\n                                  pinned_assets={"pinned.bin"})\n            self.assertTrue(pinned.exists())\n\n    def test_redirect_to_unapproved_host_is_rejected(self):
+    def test_cache_evicts_unpinned_old_file_to_fit_quota(self):
+        payload = b"new"
+        with tempfile.TemporaryDirectory() as td:
+            old = Path(td) / "old.bin"
+            old.write_bytes(b"1234")
+            with patch("ai_pipeline.wildlife_ai.model_cache.urllib.request.build_opener",
+                       return_value=FakeOpener(FakeResponse(payload))):
+                download_asset(self.asset(payload), Path(td), cache_limit_bytes=5)
+            self.assertFalse(old.exists())
+            self.assertLessEqual(cache_usage(Path(td)), 5)
+
+    def test_pinned_file_is_not_evicted_and_quota_error_is_clear(self):
+        payload = b"new"
+        with tempfile.TemporaryDirectory() as td:
+            pinned = Path(td) / "pinned.bin"
+            pinned.write_bytes(b"1234")
+            with patch("ai_pipeline.wildlife_ai.model_cache.urllib.request.build_opener",
+                       return_value=FakeOpener(FakeResponse(payload))):
+                with self.assertRaises(ModelCacheError):
+                    download_asset(self.asset(payload), Path(td), cache_limit_bytes=5,
+                                  pinned_assets={"pinned.bin"})
+            self.assertTrue(pinned.exists())
+
+    def test_redirect_to_unapproved_host_is_rejected(self):
         payload = b"abc"
         with tempfile.TemporaryDirectory() as td:
             with patch("ai_pipeline.wildlife_ai.model_cache.urllib.request.build_opener",
