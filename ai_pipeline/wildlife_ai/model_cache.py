@@ -26,6 +26,14 @@ class ModelCacheError(RuntimeError):
     pass
 
 
+class ApprovedRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Reject redirects to hosts outside the explicit allowlist."""
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if urlparse(newurl).hostname not in ALLOWED_HOSTS or urlparse(newurl).scheme != "https":
+            raise ModelCacheError("redirect to non-approved host rejected")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
 def validate_asset(asset: dict[str, Any]) -> tuple[str, str, int]:
     name, url, digest = asset.get("filename"), asset.get("url"), asset.get("sha256")
     max_bytes = asset.get("max_bytes")
