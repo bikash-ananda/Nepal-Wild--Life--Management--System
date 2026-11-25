@@ -95,7 +95,7 @@ def download_asset(asset: dict[str, Any], cache_dir: Path = DEFAULT_CACHE_DIR,
     os.close(fd)
     tmp_path: Path | None = None
     try:
-        _evict_lru(cache_dir, cache_limit_bytes - max_bytes, protect=name)
+        _evict_lru(cache_dir, cache_limit_bytes - max_bytes, set(pinned_assets or ()) | {name})
         request = urllib.request.Request(url, headers={"User-Agent": "WLMS-ModelCache/1.0"})
         with urllib.request.urlopen(request, timeout=45) as response:
             final_host = urlparse(response.geturl()).hostname
