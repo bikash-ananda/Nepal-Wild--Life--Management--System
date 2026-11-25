@@ -85,7 +85,7 @@ class ModelCacheTests(unittest.TestCase):
             old.write_bytes(b"1234")
             with patch("ai_pipeline.wildlife_ai.model_cache.urllib.request.build_opener",
                        return_value=FakeOpener(FakeResponse(payload))):
-                download_asset(self.asset(payload), Path(td), cache_limit_bytes=5)
+                asset = self.asset(payload)\n                asset["max_bytes"] = len(payload)\n                download_asset(asset, Path(td), cache_limit_bytes=5)
             self.assertFalse(old.exists())
             self.assertLessEqual(cache_usage(Path(td)), 5)
 
