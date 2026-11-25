@@ -203,7 +203,7 @@ increasing limits. Only approved model assets should be passed to
 Run dependency-free cache safety tests with:
 
 ```bash
-python -m unittest tests.test_model_cache -v
+python -m unittest discover -s tests -p "test_model_cache.py" -v
 ```
 
 Catalog items are not production-approved, downloaded, benchmarked or deployed.
