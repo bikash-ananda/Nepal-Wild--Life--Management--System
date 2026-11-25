@@ -176,3 +176,34 @@ Each model record should contain: provider/model identifier, upstream URL/reposi
 - Before any deployment, inspect disk/RAM, model artifact size, and container volume impacts; do not touch unrelated projects or shared host Caddy.
 
 This is architecture documentation only; remote registry/cache, external compute, and production inference routing are not implemented by this PR.
+
+
+## Global model and dataset discovery with bounded cache
+
+The catalog at `wildlife_ai/model_catalog.json` is a discovery list only; it does
+not enable downloads. Research candidates include YOLO26, MegaDetector, SpeciesNet,
+GBIF, iNaturalist, Wildlife Insights, Hugging Face and Kaggle. Verify each exact
+artifact's license, immutable revision, taxonomy, provenance and suitability
+before approval. Dataset rights can vary at image/record level.
+
+`wildlife_ai/model_cache.py` provides a standard-library-only, opt-in artifact
+cache. Downloading requires an explicit asset definition with HTTPS URL on the
+allowlist, pinned SHA-256 and a byte cap. It rejects unapproved redirect hosts,
+uses temporary files plus atomic rename, verifies checksum, and applies LRU
+eviction to meet the requested cache quota. It does not download or update
+anything during application startup or live camera operation.
+
+Defaults: cache under `~/.cache/wlms/models`, configured by
+`WLMS_MODEL_CACHE`; 2 GiB maximum default, configurable with
+`WLMS_MODEL_CACHE_LIMIT_BYTES`. These are conservative defaults, not a VPS
+resource guarantee. Review actual VPS free disk/RAM and active models before
+increasing limits. Only approved model assets should be passed to
+`download_asset()`; keep model files outside Git and Docker build contexts.
+
+Run dependency-free cache safety tests with:
+
+```bash
+python -m unittest tests.test_model_cache -v
+```
+
+Catalog items are not production-approved, downloaded, benchmarked or deployed.
