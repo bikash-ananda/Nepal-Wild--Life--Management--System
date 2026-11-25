@@ -141,3 +141,14 @@ for result in results:
 ```
 
 The default `yolo26n.pt` is a generic pretrained detector. It is **not monkey-trained**; verify its class list. For monkey detection, obtain licensed and reviewed monkey examples, fine-tune a custom checkpoint, and validate on camera/encounter-separated data before production use. Benchmark `yolo26n` and `yolo26s` with the same dataset and hardware. Do not treat confidence as calibrated probability or use detections to automatically activate deterrents.
+
+
+## Offline YOLO26 latency benchmark
+
+With Ultralytics and Pillow installed and a representative local image folder available (do not use private field images in public CI), run:
+
+```bash
+python -m ai_pipeline.yolo26_benchmark ./samples/wildlife --models yolo26n.pt yolo26s.pt --device cpu --output ./benchmark.json
+```
+
+The benchmark reports image count, detection count, mean/median/p95 latency for each checkpoint. It intentionally does not report accuracy: detection counts and confidence scores cannot establish species correctness. Run both checkpoints on the same test images/hardware and separately calculate accuracy using reviewer-labeled boxes/species.
