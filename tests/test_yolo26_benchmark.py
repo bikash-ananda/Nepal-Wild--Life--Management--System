@@ -14,7 +14,7 @@ class BenchmarkTests(unittest.TestCase):
                 self.model_id = "fake:" + model_name
             def detect(self, image):
                 return [fake_detection, fake_detection]
-        with patch("ai_pipeline.yolo26_benchmark.YOLO26Provider", FakeProvider):
+        with patch("ai_pipeline.yolo26_benchmark.YOLO26Provider", FakeProvider), \\\n             patch.object(Path, "read_bytes", return_value=b"fake image bytes"):
              result = benchmark(["mock.pt"], [Path("a.jpg")], "cpu", 0.2)
         report = result["results"][0]
         self.assertEqual(report["images"], 1)
