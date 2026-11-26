@@ -164,9 +164,24 @@ export default function CameraSetupWizard({ open, onOpenChange, sites = [], onCr
     setBusy(true);
     try {
       if (isEditing) {
+        await api.entities.Camera.update(camera.id, {
+          name: form.name.trim(),
+          camera_id: form.camera_id.trim() || camera.camera_id || `CAM-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
+          brand: form.brand.trim() || "Generic",
+          model: form.model.trim(),
+          serial_number: form.serial_number.trim(),
+          site_id: String(site.id),
+          site_name: site.name || camera.site_name || "",
+          municipality: site.municipality || camera.municipality || "Pokhara",
+          district: site.district || camera.district || "Kaski",
+          ward: form.ward.trim() || site.ward || "",
+          latitude: form.latitude === "" ? null : Number(form.latitude),
+          longitude: form.longitude === "" ? null : Number(form.longitude),
+          installation_description: form.installation_description.trim(),
+        });
         const saved = await api.cameras.configure(camera.id, toConnectionPayload());
-        if (saved.state === "apply_failed") toast({ title: "Profile saved; stream service needs a retry", description: saved.last_error || "Open camera details and retry the server apply.", variant: "destructive" });
-        else toast({ title: "Camera route applied", description: "The saved profile is available to authorized site users." });
+        if (saved.state === "apply_failed") toast({ title: "Camera details saved; stream service needs a retry", description: saved.last_error || "Open camera details and retry the server apply.", variant: "destructive" });
+        else toast({ title: "Camera details and route saved", description: "The updated camera record and route are available to authorized site users." });
       } else {
         const result = await api.cameras.setup({
           camera: {
@@ -194,22 +209,35 @@ export default function CameraSetupWizard({ open, onOpenChange, sites = [], onCr
   };
 
   const saveInventoryOnly = async () => {
-    if (isEditing || !validateIdentity()) return;
+    if (!validateIdentity()) return;
     setBusy(true);
+    const cameraPayload = {
+      name: form.name.trim(),
+      camera_id: form.camera_id.trim() || camera?.camera_id || `CAM-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
+      brand: form.brand.trim() || "Generic",
+      model: form.model.trim(),
+      serial_number: form.serial_number.trim(),
+      site_id: String(site.id),
+      site_name: site.name || camera?.site_name || "",
+      municipality: site.municipality || camera?.municipality || "Pokhara",
+      district: site.district || camera?.district || "Kaski",
+      ward: form.ward.trim() || site.ward || "",
+      latitude: form.latitude === "" ? null : Number(form.latitude),
+      longitude: form.longitude === "" ? null : Number(form.longitude),
+      installation_description: form.installation_description.trim(),
+    };
     try {
-      await api.entities.Camera.create({
-        name: form.name.trim(),
-        camera_id: form.camera_id.trim() || `CAM-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
-        brand: form.brand.trim() || "Generic", model: form.model.trim(), serial_number: form.serial_number.trim(),
-        site_id: String(site.id), site_name: site.name, municipality: site.municipality || "Pokhara", district: site.district || "Kaski",
-        ward: form.ward.trim() || site.ward || "", latitude: form.latitude === "" ? null : Number(form.latitude),
-        longitude: form.longitude === "" ? null : Number(form.longitude), installation_description: form.installation_description.trim(),
-      });
-      toast({ title: "Camera saved to inventory", description: "You can configure its network route later." });
+      if (isEditing) {
+        await api.entities.Camera.update(camera.id, cameraPayload);
+        toast({ title: "Camera details saved", description: "The inventory details were updated. The existing stream route was not changed." });
+      } else {
+        await api.entities.Camera.create(cameraPayload);
+        toast({ title: "Camera saved to inventory", description: "You can configure its network route later." });
+      }
       onOpenChange(false);
       onCreated?.();
     } catch (error) {
-      toast({ title: "Could not save camera", description: error.message, variant: "destructive" });
+      toast({ title: "Could not save camera details", description: error.message, variant: "destructive" });
     } finally {
       setBusy(false);
     }
@@ -246,7 +274,7 @@ export default function CameraSetupWizard({ open, onOpenChange, sites = [], onCr
         })}
       </nav>}
 
-      {(!isEditing && step === 1) && <section className="space-y-4">
+      {(isEditing || step === 1) && <section className="space-y-4">
         <div className="flex items-start gap-3 rounded-xl bg-slate-50 p-3 text-sm text-slate-600"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" /><p>Tell us which farm camera this is and which site should receive its events. GPS is optional; you can add it from the farm location.</p></div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Camera name" required><Input value={form.name} onChange={(event) => setCameraField("name", event.target.value)} placeholder="North field entrance" autoFocus /></Field>
@@ -308,6 +336,7 @@ export default function CameraSetupWizard({ open, onOpenChange, sites = [], onCr
         </div>
         <div className="flex flex-wrap justify-end gap-2">
           {!isEditing && step === 1 && <Button type="button" variant="outline" onClick={saveInventoryOnly} disabled={busy}>Save inventory only</Button>}
+          {isEditing && <Button type="button" variant="outline" onClick={saveInventoryOnly} disabled={busy}>Save details only</Button>}
           {!isEditing && step < 3 && <Button type="button" onClick={goNext} disabled={busy} className="bg-emerald-600 hover:bg-emerald-700">Continue</Button>}
           {(isEditing || step === 3) && <Button type="button" onClick={saveActive} disabled={busy || testState !== "success"} className="bg-emerald-600 hover:bg-emerald-700">{busy ? "Applying…" : isEditing ? "Save and apply route" : "Add camera and activate"}</Button>}
         </div>

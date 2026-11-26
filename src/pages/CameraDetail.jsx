@@ -30,6 +30,7 @@ export default function CameraDetail() {
   const [camera, setCamera] = useState(null);
   const [connection, setConnection] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [wizardOpen, setWizardOpen] = useState(false);
   const [status, setStatus] = useState(null);
   const [retrying, setRetrying] = useState(false);
@@ -45,6 +46,7 @@ export default function CameraDetail() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError("");
 
     const [cameraResult, connectionResult, statusResult] =
       await Promise.allSettled([
@@ -53,9 +55,8 @@ export default function CameraDetail() {
         api.cameras.status(),
       ]);
 
-    setCamera(
-      cameraResult.status === "fulfilled" ? cameraResult.value : null
-    );
+    setCamera(cameraResult.status === "fulfilled" ? cameraResult.value : null);
+    if (cameraResult.status === "rejected") setLoadError(cameraResult.reason?.message || "The camera record could not be loaded. Check your access and try again.");
 
     setConnection(
       connectionResult.status === "fulfilled"
@@ -63,11 +64,8 @@ export default function CameraDetail() {
         : null
     );
 
-    setStatus(
-      statusResult.status === "fulfilled"
-        ? statusResult.value.find((row) => row.camera_id === id) || null
-        : null
-    );
+    const cameraStatuses = statusResult.status === "fulfilled" && Array.isArray(statusResult.value) ? statusResult.value : [];
+    setStatus(cameraStatuses.find((row) => String(row.camera_id) === String(id)) || null);
 
     setLoading(false);
   }, [id, canManage]);
@@ -170,12 +168,14 @@ export default function CameraDetail() {
 
   if (!camera) {
     return (
-      <p className="py-20 text-center text-sm text-slate-500">
-        Camera not found.{" "}
-        <Link to="/cameras" className="text-emerald-700">
-          Back to cameras
-        </Link>
-      </p>
+      <main className="mx-auto max-w-2xl py-16 text-center">
+        <p className="text-base font-medium text-slate-800">{loadError ? "Unable to load this camera" : "Camera not found"}</p>
+        <p className="mt-2 text-sm text-slate-500">{loadError || "This camera may have been removed or you may not have access to it."}</p>
+        <div className="mt-5 flex justify-center gap-3">
+          <Button type="button" variant="outline" onClick={load}>Try again</Button>
+          <Button asChild><Link to="/cameras">Back to cameras</Link></Button>
+        </div>
+      </main>
     );
   }
 
@@ -304,7 +304,7 @@ export default function CameraDetail() {
         {connection?.configured && (
           <Detail
             label="Stream type"
-            value={`${connection.protocol.toUpperCase()} · port ${connection.port}`}
+            value={`${String(connection.protocol || "RTSP").toUpperCase()} · port ${connection.port || "—"}`}
           />
         )}
 
