@@ -209,22 +209,35 @@ export default function CameraSetupWizard({ open, onOpenChange, sites = [], onCr
   };
 
   const saveInventoryOnly = async () => {
-    if (isEditing || !validateIdentity()) return;
+    if (!validateIdentity()) return;
     setBusy(true);
+    const cameraPayload = {
+      name: form.name.trim(),
+      camera_id: form.camera_id.trim() || camera?.camera_id || `CAM-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
+      brand: form.brand.trim() || "Generic",
+      model: form.model.trim(),
+      serial_number: form.serial_number.trim(),
+      site_id: String(site.id),
+      site_name: site.name || camera?.site_name || "",
+      municipality: site.municipality || camera?.municipality || "Pokhara",
+      district: site.district || camera?.district || "Kaski",
+      ward: form.ward.trim() || site.ward || "",
+      latitude: form.latitude === "" ? null : Number(form.latitude),
+      longitude: form.longitude === "" ? null : Number(form.longitude),
+      installation_description: form.installation_description.trim(),
+    };
     try {
-      await api.entities.Camera.create({
-        name: form.name.trim(),
-        camera_id: form.camera_id.trim() || `CAM-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
-        brand: form.brand.trim() || "Generic", model: form.model.trim(), serial_number: form.serial_number.trim(),
-        site_id: String(site.id), site_name: site.name, municipality: site.municipality || "Pokhara", district: site.district || "Kaski",
-        ward: form.ward.trim() || site.ward || "", latitude: form.latitude === "" ? null : Number(form.latitude),
-        longitude: form.longitude === "" ? null : Number(form.longitude), installation_description: form.installation_description.trim(),
-      });
-      toast({ title: "Camera saved to inventory", description: "You can configure its network route later." });
+      if (isEditing) {
+        await api.entities.Camera.update(camera.id, cameraPayload);
+        toast({ title: "Camera details saved", description: "The inventory details were updated. The existing stream route was not changed." });
+      } else {
+        await api.entities.Camera.create(cameraPayload);
+        toast({ title: "Camera saved to inventory", description: "You can configure its network route later." });
+      }
       onOpenChange(false);
       onCreated?.();
     } catch (error) {
-      toast({ title: "Could not save camera", description: error.message, variant: "destructive" });
+      toast({ title: "Could not save camera details", description: error.message, variant: "destructive" });
     } finally {
       setBusy(false);
     }
@@ -323,6 +336,7 @@ export default function CameraSetupWizard({ open, onOpenChange, sites = [], onCr
         </div>
         <div className="flex flex-wrap justify-end gap-2">
           {!isEditing && step === 1 && <Button type="button" variant="outline" onClick={saveInventoryOnly} disabled={busy}>Save inventory only</Button>}
+          {isEditing && <Button type="button" variant="outline" onClick={saveInventoryOnly} disabled={busy}>Save details only</Button>}
           {!isEditing && step < 3 && <Button type="button" onClick={goNext} disabled={busy} className="bg-emerald-600 hover:bg-emerald-700">Continue</Button>}
           {(isEditing || step === 3) && <Button type="button" onClick={saveActive} disabled={busy || testState !== "success"} className="bg-emerald-600 hover:bg-emerald-700">{busy ? "Applying…" : isEditing ? "Save and apply route" : "Add camera and activate"}</Button>}
         </div>
