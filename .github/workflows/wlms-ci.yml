@@ -5,6 +5,7 @@ on:
     branches: [main]
   push:
     branches:
+      - main
       - integration/wlms-unified-alerts-agent
       - feat/research-knowledge-centre
   workflow_dispatch:
